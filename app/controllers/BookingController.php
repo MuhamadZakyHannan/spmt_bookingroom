@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../core/Controller.php';
+require_once __DIR__ . '/../core/SawService.php';
 
 class BookingController extends Controller {
     private $roomModel;
@@ -39,6 +40,10 @@ class BookingController extends Controller {
             $end_time = trim($_POST['end_time'] ?? '');
             $purpose = trim($_POST['purpose'] ?? '');
             $attendees_count = (int)($_POST['attendees_count'] ?? 1);
+            $activity_type = trim($_POST['activity_type'] ?? 'internal_divisi');
+            if (!array_key_exists($activity_type, SawService::ACTIVITY_TYPES)) {
+                $activity_type = 'internal_divisi';
+            }
 
             if (!$room_id || empty($title) || empty($date) || empty($start_time) || empty($end_time) || empty($user_name) || empty($user_dept)) {
                 $error = 'Harap isi semua kolom wajib (*)!';
@@ -53,47 +58,51 @@ class BookingController extends Controller {
                     $error = 'Jumlah peserta (' . $attendees_count . ' orang) melebihi kapasitas maksimum ' . $room_info['name'] . ' (' . $room_info['capacity'] . ' orang).';
                 } else {
                     $conflict = $this->bookingModel->checkConflict($room_id, $date, $start_time, $end_time);
+                    $isAdmin = is_admin();
 
                     if ($conflict) {
-                        $error = 'Gagal! Ruangan ini sudah dipesan pada waktu tersebut untuk agenda "' . htmlspecialchars($conflict['title']) . '" (' . format_time($conflict['start_time']) . ' - ' . format_time($conflict['end_time']) . '). Silakan pilih jadwal atau ruangan lain.';
+                        // Jika jadwal bentrok, pengajuan tetap diterima sebagai 'pending'
+                        // untuk diputuskan oleh Admin menggunakan rekomendasi metode SAW
+                        $status = 'pending';
+                        $msg = 'Pengajuan booking berhasil dikirim (Status: Pending). Sistem mendeteksi potensi jadwal bersamaan pada ruangan ini untuk agenda "' . htmlspecialchars($conflict['title']) . '". Pengajuan Anda telah dicatat untuk penentuan prioritas persetujuan oleh Administrator menggunakan metode SAW.';
                     } else {
-                        // Khusus role admin, langsung confirmed tanpa perlu persetujuan
-                        $isAdmin = is_admin();
+                        // Khusus role admin tanpa bentrok, langsung confirmed
                         $status = $isAdmin ? 'confirmed' : 'pending';
+                        $msg = $isAdmin 
+                            ? 'Pemesanan ruangan oleh Admin berhasil dibuat dan langsung terkonfirmasi ke jadwal!' 
+                            : 'Pengajuan booking berhasil dikirim! Status saat ini menunggu persetujuan (approval) dari Administrator.';
+                    }
 
-                        $data = [
-                            'user_id' => $_SESSION['user_id'],
-                            'user_name' => $user_name,
-                            'user_dept' => $user_dept,
-                            'room_id' => $room_id,
-                            'title' => $title,
-                            'date' => $date,
-                            'start_time' => $start_time,
-                            'end_time' => $end_time,
-                            'purpose' => $purpose,
-                            'attendees_count' => $attendees_count,
-                            'status' => $status
-                        ];
+                    $data = [
+                        'user_id' => $_SESSION['user_id'],
+                        'user_name' => $user_name,
+                        'user_dept' => $user_dept,
+                        'room_id' => $room_id,
+                        'title' => $title,
+                        'date' => $date,
+                        'start_time' => $start_time,
+                        'end_time' => $end_time,
+                        'purpose' => $purpose,
+                        'activity_type' => $activity_type,
+                        'attendees_count' => $attendees_count,
+                        'status' => $status
+                    ];
 
-                        if ($this->bookingModel->create($data)) {
-                            $msg = $isAdmin 
-                                ? 'Pemesanan ruangan oleh Admin berhasil dibuat dan langsung terkonfirmasi ke jadwal!' 
-                                : 'Pengajuan booking berhasil dikirim! Status saat ini menunggu persetujuan (approval) dari Administrator.';
-                            set_flash('success', $msg);
+                    if ($this->bookingModel->create($data)) {
+                        set_flash('success', $msg);
 
-                            if ($isAjax) {
-                                header('Content-Type: application/json');
-                                echo json_encode([
-                                    'success' => true,
-                                    'message' => $msg,
-                                    'redirect' => 'my_bookings.php'
-                                ]);
-                                exit;
-                            }
-                            $this->redirect('my_bookings.php');
-                        } else {
-                            $error = 'Gagal menyimpan pemesanan, terjadi kesalahan database.';
+                        if ($isAjax) {
+                            header('Content-Type: application/json');
+                            echo json_encode([
+                                'success' => true,
+                                'message' => $msg,
+                                'redirect' => 'my_bookings.php'
+                            ]);
+                            exit;
                         }
+                        $this->redirect('my_bookings.php');
+                    } else {
+                        $error = 'Gagal menyimpan pemesanan, terjadi kesalahan database.';
                     }
                 }
             }
@@ -118,6 +127,8 @@ class BookingController extends Controller {
             'start_time' => $start_time,
             'end_time' => $end_time,
             'purpose' => $purpose,
+            'activity_type' => $activity_type ?? 'internal_divisi',
+            'activity_types' => SawService::ACTIVITY_TYPES,
             'attendees_count' => $attendees_count,
             'error' => $error
         ]);

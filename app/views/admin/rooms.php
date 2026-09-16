@@ -3,7 +3,7 @@
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
     <div>
         <h1 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            <i class="fas fa-door-open text-amber-500"></i> Kelola Ruangan Rapat
+            <i class="text-amber-500"></i> Kelola Ruangan Rapat
         </h1>
         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Tambah ruangan baru, upload foto, dan edit informasi kapasitas, lokasi, fasilitas, serta status.</p>
     </div>
@@ -129,7 +129,7 @@
                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Upload Foto Ruangan</label>
                 <div class="flex items-center gap-4">
                     <div class="w-20 h-20 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
-                        <img id="addPhotoPreview" src="public/rooms/r-1.jpg" class="w-full h-full object-cover" alt="Preview Foto">
+                        <img id="addPhotoPreview" src="public/rooms/KalTim.jpeg" class="w-full h-full object-cover" alt="Preview Foto">
                     </div>
                     <div class="flex-1">
                         <input 
@@ -223,7 +223,7 @@
                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Foto Ruangan</label>
                 <div class="flex items-center gap-4">
                     <div class="w-20 h-20 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
-                        <img id="editPhotoPreview" src="public/rooms/r-1.jpg" class="w-full h-full object-cover" alt="Preview Foto">
+                        <img id="editPhotoPreview" src="public/rooms/KalTim.jpeg" class="w-full h-full object-cover" alt="Preview Foto">
                     </div>
                     <div class="flex-1">
                         <input 
@@ -278,7 +278,7 @@
                     </tr>
                 <?php endif; ?>
                 <?php foreach ($rooms as $r): 
-                    $roomSlot = 'public/rooms/r-' . $r['id'] . '.jpg';
+                    $roomSlot = 'public/rooms/KalTim.jpeg';
                     $imgSrc = $r['image'] ?: $roomSlot;
 
                     $roomPayload = [
@@ -297,7 +297,7 @@
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition">
                         <!-- Ruangan (Foto + Nama + Kode) -->
                         <td class="py-3.5 px-4 flex items-center gap-3">
-                            <img src="<?php echo htmlspecialchars($imgSrc); ?>" onerror="this.onerror=null; this.src='public/rooms/r-1.jpg';" class="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shadow-sm shrink-0">
+                            <img src="<?php echo htmlspecialchars($imgSrc); ?>" onerror="this.onerror=null; this.src='public/rooms/KalTim.jpeg';" class="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shadow-sm shrink-0">
                             <div>
                                 <div class="font-bold text-slate-900 dark:text-white text-sm"><?php echo htmlspecialchars($r['name']); ?></div>
                                 <div class="text-[10px] font-mono text-brand-600 dark:text-brand-400 font-bold">[<?php echo htmlspecialchars($r['code']); ?>]</div>
@@ -369,7 +369,7 @@
 
 <script>
     const rawAdminRooms = <?php echo json_encode(array_map(function($r) {
-        $roomSlot = 'public/rooms/r-' . $r['id'] . '.jpg';
+        $roomSlot = 'public/rooms/KalTim.jpeg';
         return [
             'id' => (int)$r['id'],
             'code' => $r['code'],
@@ -409,7 +409,7 @@
         document.getElementById('editStatus').value = room.status || 'available';
         
         const preview = document.getElementById('editPhotoPreview');
-        preview.src = room.image || 'public/rooms/r-1.jpg';
+        preview.src = room.image || 'public/rooms/KalTim.jpeg';
 
         const modal = document.getElementById('editModal');
         modal.classList.remove('hidden');
@@ -616,7 +616,7 @@
             html += `
                 <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition">
                     <td class="py-3.5 px-4 flex items-center gap-3">
-                        <img src="${escapeHtml(r.image)}" onerror="this.onerror=null; this.src='public/rooms/r-1.jpg';" class="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shadow-sm shrink-0">
+                        <img src="${escapeHtml(r.image)}" onerror="this.onerror=null; this.src='public/rooms/KalTim.jpeg';" class="w-12 h-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shadow-sm shrink-0">
                         <div>
                             <div class="font-bold text-slate-900 dark:text-white text-sm">${displayName}</div>
                             <div class="text-[10px] font-mono text-brand-600 dark:text-brand-400 font-bold">[${displayCode}]</div>

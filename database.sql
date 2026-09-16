@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
     purpose TEXT,
+    activity_type VARCHAR(50) DEFAULT 'internal_divisi',
     attendees_count INT DEFAULT 1,
     status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'confirmed',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -72,12 +73,12 @@ INSERT INTO users (id, name, email, password, role, avatar) VALUES
 
 -- Seed Data: rooms (Daftar 6 Ruangan Rapat)
 INSERT INTO rooms (id, code, name, capacity, location, floor, status, image, description, facilities) VALUES
-(1, 'R-KBT', 'Ruang Rapat Kalibaru Timur', 15, 'Lantai 1, Divisi Komersial', 'Lantai 1', 'available', 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=700&auto=format&fit=crop&q=80', 'Ruang rapat representatif berkapasitas 15 kursi dengan suasana sejuk dan fasilitas proyektor untuk presentasi.', 'AC, Proyektor, 15 Kursi'),
-(2, 'R-KBB', 'Ruang Rapat Kalibaru Barat', 15, 'Lantai 1, Divisi Keuangan', 'Lantai 1', 'occupied', 'https://images.unsplash.com/photo-1517502884422-41eaead166d4?w=700&auto=format&fit=crop&q=80', 'Ruang rapat modern untuk koordinasi tim dan pertemuan kerja, dilengkapi AC dan proyektor resolusi tinggi.', 'AC, Proyektor, 15 Kursi'),
-(3, 'R-SMD', 'Ruang Rapat Samudera', 60, 'Lantai 2', 'Lantai 2', 'available', 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=700&auto=format&fit=crop&q=80', 'Aula rapat besar berkapasitas 60 kursi yang didukung sound system mikrofon, pendingin AC, dan proyektor layar lebar.', 'AC, 60 Kursi, Proyektor, Mikrofon'),
-(4, 'R-NST', 'Ruang Rapat Nusantara', 15, 'Lantai 2', 'Lantai 2', 'available', 'https://images.unsplash.com/photo-1577495508048-b635879837f1?w=700&auto=format&fit=crop&q=80', 'Ruang pertemuan nyaman berkapasitas 15 kursi dengan TV LCD jernih untuk tayangan materi serta pendingin ruangan AC.', 'TV LCD, 15 Kursi, AC'),
-(5, 'R-PLD', 'Ruang Rapat Pelabuhan Dalam', 10, 'Lantai 2, Divisi Teknik', 'Lantai 2', 'available', 'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=700&auto=format&fit=crop&q=80', 'Ruang rapat fokus berkapasitas 10 kursi, cocok untuk evaluasi operasional harian dengan proyektor dan AC.', 'Proyektor, AC, 10 Kursi'),
-(6, 'R-PLR', 'Ruang Rapat Pelra', 10, 'Lantai 2, Divisi SDM', 'Lantai 2', 'available', 'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=700&auto=format&fit=crop&q=80', 'Ruang rapat tim berkapasitas 10 kursi dengan sirkulasi udara optimal berkat AC dan kipas, serta proyektor presentasi.', 'Proyektor, AC, Kipas, 10 Kursi');
+(1, 'R-KBT', 'Ruang Rapat Kalibaru Timur', 15, 'Lantai 1, Divisi Komersial', 'Lantai 1', 'available', 'public/rooms/KalTim.jpeg', 'Ruang rapat representatif berkapasitas 15 kursi dengan suasana sejuk dan fasilitas proyektor untuk presentasi.', 'AC, Proyektor, 15 Kursi'),
+(2, 'R-KBB', 'Ruang Rapat Kalibaru Barat', 15, 'Lantai 1, Divisi Keuangan', 'Lantai 1', 'occupied', 'public/rooms/KalBar.jpeg', 'Ruang rapat modern untuk koordinasi tim dan pertemuan kerja, dilengkapi AC dan proyektor resolusi tinggi.', 'AC, Proyektor, 15 Kursi'),
+(3, 'R-SMD', 'Ruang Rapat Samudera', 60, 'Lantai 2', 'Lantai 2', 'available', 'public/rooms/Samudra.jpeg', 'Aula rapat besar berkapasitas 60 kursi yang didukung sound system mikrofon, pendingin AC, dan proyektor layar lebar.', 'AC, 60 Kursi, Proyektor, Mikrofon'),
+(4, 'R-NST', 'Ruang Rapat Nusantara', 15, 'Lantai 2', 'Lantai 2', 'available', 'public/rooms/Nusantara.jpeg', 'Ruang pertemuan nyaman berkapasitas 15 kursi dengan TV LCD jernih untuk tayangan materi serta pendingin ruangan AC.', 'TV LCD, 15 Kursi, AC'),
+(5, 'R-PLD', 'Ruang Rapat Pelabuhan Dalam', 10, 'Lantai 2, Divisi Teknik', 'Lantai 2', 'available', 'public/rooms/Peldam.jpeg', 'Ruang rapat fokus berkapasitas 10 kursi, cocok untuk evaluasi operasional harian dengan proyektor dan AC.', 'Proyektor, AC, 10 Kursi'),
+(6, 'R-PLR', 'Ruang Rapat Pelra', 10, 'Lantai 2, Divisi SDM', 'Lantai 2', 'available', 'public/rooms/Pelra.jpeg', 'Ruang rapat tim berkapasitas 10 kursi dengan sirkulasi udara optimal berkat AC dan kipas, serta proyektor presentasi.', 'Proyektor, AC, Kipas, 10 Kursi');
 
 -- Seed Data: room_displays (Display Token untuk Akses Monitor Kiosk)
 INSERT INTO room_displays (id, room_id, display_name, display_token) VALUES

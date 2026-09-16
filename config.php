@@ -108,4 +108,19 @@ function format_time($time_str) {
     if (!$time_str) return '-';
     return date('H:i', strtotime($time_str));
 }
+
+// Autoloader untuk class di folder app/core, app/models, app/controllers
+spl_autoload_register(function ($class) {
+    $paths = [
+        __DIR__ . '/app/core/' . $class . '.php',
+        __DIR__ . '/app/models/' . $class . '.php',
+        __DIR__ . '/app/controllers/' . $class . '.php'
+    ];
+    foreach ($paths as $file) {
+        if (file_exists($file)) {
+            require_once $file;
+            return;
+        }
+    }
+});
 ?>

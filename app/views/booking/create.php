@@ -85,6 +85,41 @@
                 </select>
             </div>
 
+            <!-- Tingkat Kepentingan Kegiatan (Kriteria K1 SAW) -->
+            <div>
+                <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                    Tingkat Kepentingan Kegiatan (Kriteria K1 SAW) *
+                </label>
+                <div class="relative flex items-center">
+                    <span class="absolute left-3.5 text-slate-400 pointer-events-none">
+                        <i class="fas fa-layer-group"></i>
+                    </span>
+                    <select name="activity_type" class="w-full pl-10 pr-8 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition cursor-pointer appearance-none" required>
+                        <option value="direksi_eksternal" <?php echo ($activity_type ?? '') === 'direksi_eksternal' ? 'selected' : ''; ?>>
+                            🌟 Rapat dengan Direksi / Pihak Eksternal (Prioritas Tertinggi - Bobot 5)
+                        </option>
+                        <option value="antar_divisi" <?php echo ($activity_type ?? '') === 'antar_divisi' ? 'selected' : ''; ?>>
+                            🔷 Rapat Koordinasi Antar Divisi (Bobot 4)
+                        </option>
+                        <option value="internal_divisi" <?php echo ($activity_type ?? 'internal_divisi') === 'internal_divisi' ? 'selected' : ''; ?>>
+                            🔹 Rapat Internal Divisi (Bobot 3)
+                        </option>
+                        <option value="pelatihan" <?php echo ($activity_type ?? '') === 'pelatihan' ? 'selected' : ''; ?>>
+                            🔸 Sosialisasi / Pelatihan (Bobot 2)
+                        </option>
+                        <option value="rutin" <?php echo ($activity_type ?? '') === 'rutin' ? 'selected' : ''; ?>>
+                            ▫️ Kegiatan Rutin / Non-Prioritas (Bobot 1)
+                        </option>
+                    </select>
+                    <span class="absolute right-3.5 text-slate-400 pointer-events-none text-xs">
+                        <i class="fas fa-chevron-down"></i>
+                    </span>
+                </div>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                    * Kategori ini digunakan oleh Sistem Pendukung Keputusan (Metode SAW) jika terjadi bentrok jadwal pada ruangan dan waktu yang sama.
+                </p>
+            </div>
+
             <!-- Meeting Title -->
             <div>
                 <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">Judul Meeting / Agenda *</label>
@@ -123,6 +158,14 @@
             <div>
                 <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">Tujuan / Catatan Tambahan</label>
                 <textarea name="purpose" rows="3" class="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="Jelaskan secara singkat tujuan atau kebutuhan khusus (misal: perlu tambahan mikrofon)..."><?php echo htmlspecialchars($purpose); ?></textarea>
+            </div>
+
+            <!-- Notice SPK SAW -->
+            <div class="p-4 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60 text-sky-900 dark:text-sky-300 text-xs flex items-start gap-3">
+                <i class="fas fa-info-circle text-sky-600 dark:text-sky-400 text-base mt-0.5 shrink-0"></i>
+                <div class="leading-relaxed">
+                    <strong>Integrasi SPK SAW:</strong> Jika jadwal yang Anda pilih bersamaan dengan agenda lain, pengajuan tetap akan diterima ke sistem (status <em>Pending</em>). Sistem pendukung keputusan (metode SAW) akan menghitung pembobotan (K1 Kepentingan, K2 Peserta, K3 Durasi, K4 Waktu Pengajuan, K5 Frekuensi Divisi) untuk memberikan rekomendasi prioritas terbaik kepada Administrator.
+                </div>
             </div>
 
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">

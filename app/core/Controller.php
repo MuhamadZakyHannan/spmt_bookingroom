@@ -2,6 +2,8 @@
 /**
  * Base Controller Class
  */
+require_once __DIR__ . '/SawService.php';
+
 class Controller {
     /**
      * Load Model

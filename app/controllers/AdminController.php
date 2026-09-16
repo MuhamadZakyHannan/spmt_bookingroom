@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../core/Controller.php';
+require_once __DIR__ . '/../core/SawService.php';
 
 class AdminController extends Controller {
     private $roomModel;
@@ -14,7 +15,7 @@ class AdminController extends Controller {
         $this->displayModel = $this->model('DisplayModel');
     }
 
-    private function handleRoomImageUpload($file, $existingImage = 'public/rooms/r-1.jpg') {
+    private function handleRoomImageUpload($file, $existingImage = 'public/rooms/KalTim.jpeg') {
         if (isset($file) && is_array($file) && ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
             $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
             $fileName = $file['name'];
@@ -60,7 +61,7 @@ class AdminController extends Controller {
                 } else if ($this->roomModel->getByCode($code)) {
                     $error = 'Kode ruangan ' . $code . ' sudah ada dalam database!';
                 } else {
-                    $imagePath = $this->handleRoomImageUpload($_FILES['room_image'] ?? null, 'public/rooms/r-1.jpg');
+                    $imagePath = $this->handleRoomImageUpload($_FILES['room_image'] ?? null, 'public/rooms/KalTim.jpeg');
 
                     $data = [
                         'code' => $code,
@@ -103,7 +104,7 @@ class AdminController extends Controller {
                     if ($checkCode && $checkCode['id'] != $room_id) {
                         $error = 'Kode ruangan ' . $code . ' sudah digunakan oleh ruangan lain!';
                     } else {
-                        $existingImage = $currentRoom['image'] ?: ('public/rooms/r-' . $room_id . '.jpg');
+                        $existingImage = $currentRoom['image'] ?: 'public/rooms/KalTim.jpeg';
                         $imagePath = $this->handleRoomImageUpload($_FILES['room_image'] ?? null, $existingImage);
 
                         $data = [
@@ -159,6 +160,21 @@ class AdminController extends Controller {
             $action = $_POST['action'] ?? '';
             $booking_id = (int)($_POST['booking_id'] ?? 0);
 
+            if ($action === 'apply_saw_decision') {
+                $winner_id = (int)($_POST['winner_id'] ?? 0);
+                $loser_ids_raw = $_POST['loser_ids'] ?? '';
+                $loser_ids = array_filter(array_map('intval', explode(',', $loser_ids_raw)));
+
+                if ($winner_id > 0) {
+                    if ($this->bookingModel->resolveConflict($winner_id, $loser_ids)) {
+                        set_flash('success', 'Rekomendasi keputusan SAW berhasil diterapkan! Jadwal terpilih disetujui (Confirmed), dan jadwal bentrok lainnya otomatis dibatalkan.');
+                    } else {
+                        set_flash('danger', 'Gagal menerapkan keputusan SAW.');
+                    }
+                }
+                $this->redirect('admin_bookings.php');
+            }
+
             if ($booking_id > 0) {
                 if ($action === 'update_status') {
                     $status = trim($_POST['status'] ?? 'confirmed');
@@ -177,10 +193,39 @@ class AdminController extends Controller {
 
         $bookings = $this->bookingModel->getAllBookings($search, $status_filter);
 
+        // Analisis SPK SAW untuk seluruh kelompok jadwal yang bertabrakan / berkonflik
+        $conflictGroupsRaw = $this->bookingModel->getConflictingGroups();
+        $conflictAnalyses = [];
+
+        $usageCallback = function($dept, $date) {
+            return $this->bookingModel->getDivisionMonthlyUsageCount($dept, $date);
+        };
+
+        foreach ($conflictGroupsRaw as $cg) {
+            $analysis = SawService::analyzeConflictGroup($cg['bookings'], $usageCallback);
+            if (!empty($analysis)) {
+                $conflictAnalyses[] = array_merge($cg, [
+                    'saw' => $analysis
+                ]);
+            }
+        }
+
+        $conflictBookingIds = [];
+        foreach ($conflictAnalyses as $ca) {
+            foreach ($ca['bookings'] as $cb) {
+                $conflictBookingIds[$cb['id']] = [
+                    'group_id' => $ca['group_id'],
+                    'room_name' => $ca['room_name']
+                ];
+            }
+        }
+
         $this->view('admin/bookings', [
             'bookings' => $bookings,
             'search' => $search,
-            'status_filter' => $status_filter
+            'status_filter' => $status_filter,
+            'conflict_analyses' => $conflictAnalyses,
+            'conflict_booking_ids' => $conflictBookingIds
         ]);
     }
 

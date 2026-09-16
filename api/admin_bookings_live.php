@@ -23,6 +23,15 @@ $status = trim($_GET['status'] ?? '');
 
 $bookings = $bookingModel->getAllBookings($search, $status);
 
+$conflictGroupsRaw = $bookingModel->getConflictingGroups();
+$conflictBookingIds = [];
+foreach ($conflictGroupsRaw as $cg) {
+    foreach ($cg['bookings'] as $cb) {
+        $conflictBookingIds[$cb['id']] = true;
+    }
+}
+$actTypes = SawService::ACTIVITY_TYPES;
+
 $formattedBookings = [];
 $pendingCount = 0;
 $confirmedCount = 0;
@@ -30,6 +39,9 @@ $confirmedCount = 0;
 foreach ($bookings as $b) {
     if ($b['status'] === 'pending') $pendingCount++;
     if ($b['status'] === 'confirmed') $confirmedCount++;
+
+    $actKey = $b['activity_type'] ?? 'internal_divisi';
+    $actLabel = $actTypes[$actKey]['label'] ?? 'Rapat Internal';
 
     $formattedBookings[] = [
         'id' => (int)$b['id'],
@@ -46,7 +58,9 @@ foreach ($bookings as $b) {
         'start_time' => substr($b['start_time'], 0, 5),
         'end_time' => substr($b['end_time'], 0, 5),
         'attendees_count' => (int)$b['attendees_count'],
-        'status' => $b['status']
+        'status' => $b['status'],
+        'activity_type_label' => $actLabel,
+        'is_conflict' => isset($conflictBookingIds[$b['id']])
     ];
 }
 

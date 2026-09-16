@@ -25,26 +25,46 @@ class BookingModel {
         return $stmt->fetchAll();
     }
 
-    public function checkConflict($roomId, $date, $startTime, $endTime) {
+    public function checkConflict($roomId, $date, $startTime, $endTime, $excludeId = 0) {
         if (!$this->db) return false;
-        $stmt = $this->db->prepare("SELECT id, title, start_time, end_time FROM bookings 
+        $stmt = $this->db->prepare("SELECT id, title, start_time, end_time, status FROM bookings 
                                     WHERE room_id = ? 
                                     AND date = ? 
                                     AND status IN ('confirmed', 'pending')
+                                    AND id != ?
                                     AND (
                                         (start_time < ? AND end_time > ?) OR
                                         (start_time < ? AND end_time > ?) OR
                                         (start_time >= ? AND end_time <= ?)
                                     )");
-        $stmt->execute([$roomId, $date, $endTime, $startTime, $endTime, $startTime, $startTime, $endTime]);
+        $stmt->execute([$roomId, $date, $excludeId, $endTime, $startTime, $endTime, $startTime, $startTime, $endTime]);
         return $stmt->fetch();
     }
 
     public function create($data) {
         if (!$this->db) return false;
         
-        // Cek apakah tabel memiliki kolom user_name dan user_dept
+        $activity_type = $data['activity_type'] ?? 'internal_divisi';
+
         try {
+            $stmt = $this->db->prepare("INSERT INTO bookings (user_id, room_id, title, date, start_time, end_time, purpose, activity_type, attendees_count, status, user_name, user_dept) 
+                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            return $stmt->execute([
+                $data['user_id'],
+                $data['room_id'],
+                $data['title'],
+                $data['date'],
+                $data['start_time'],
+                $data['end_time'],
+                $data['purpose'],
+                $activity_type,
+                $data['attendees_count'],
+                $data['status'],
+                $data['user_name'] ?? null,
+                $data['user_dept'] ?? null
+            ]);
+        } catch (Exception $e) {
+            // Fallback jika database belum ada kolom activity_type
             $stmt = $this->db->prepare("INSERT INTO bookings (user_id, room_id, title, date, start_time, end_time, purpose, attendees_count, status, user_name, user_dept) 
                                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             return $stmt->execute([
@@ -60,21 +80,143 @@ class BookingModel {
                 $data['user_name'] ?? null,
                 $data['user_dept'] ?? null
             ]);
+        }
+    }
+
+    public function getDivisionMonthlyUsageCount($dept, $date) {
+        if (!$this->db || empty($dept)) return 0;
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM bookings 
+                                    WHERE user_dept = ? 
+                                    AND MONTH(date) = MONTH(?) 
+                                    AND YEAR(date) = YEAR(?) 
+                                    AND status IN ('confirmed', 'completed')");
+        $stmt->execute([$dept, $date, $date]);
+        return (int)$stmt->fetchColumn();
+    }
+
+    /**
+     * Mendeteksi dan mengelompokkan pemesanan yang bertabrakan (bentrok waktu & ruangan)
+     * Hanya kelompok yang memiliki minimal satu status 'pending' yang dianalisis untuk rekomendasi
+     */
+    public function getConflictingGroups() {
+        if (!$this->db) return [];
+
+        $sql = "SELECT b.*, r.name as room_name, r.code as room_code, r.capacity as room_capacity, r.location as room_location,
+                       IFNULL(b.user_name, u.name) as user_name, 
+                       u.email as user_email,
+                       IFNULL(b.user_dept, 'Internal') as user_dept 
+                FROM bookings b 
+                JOIN rooms r ON b.room_id = r.id 
+                LEFT JOIN users u ON b.user_id = u.id 
+                WHERE b.status IN ('pending', 'confirmed') 
+                ORDER BY b.date ASC, b.room_id ASC, b.start_time ASC";
+        $stmt = $this->db->query($sql);
+        $allBookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($allBookings)) return [];
+
+        // Kelompokkan per room_id dan date
+        $byRoomDate = [];
+        foreach ($allBookings as $b) {
+            $key = $b['room_id'] . '_' . $b['date'];
+            $byRoomDate[$key][] = $b;
+        }
+
+        $conflictGroups = [];
+        $groupId = 1;
+
+        foreach ($byRoomDate as $key => $roomDateBookings) {
+            if (count($roomDateBookings) < 2) continue;
+
+            $n = count($roomDateBookings);
+            $adj = array_fill(0, $n, []);
+
+            for ($i = 0; $i < $n; $i++) {
+                $startA = strtotime($roomDateBookings[$i]['start_time']);
+                $endA = strtotime($roomDateBookings[$i]['end_time']);
+
+                for ($j = $i + 1; $j < $n; $j++) {
+                    $startB = strtotime($roomDateBookings[$j]['start_time']);
+                    $endB = strtotime($roomDateBookings[$j]['end_time']);
+
+                    // Overlap: max(startA, startB) < min(endA, endB)
+                    if ($startA < $endB && $endA > $startB) {
+                        $adj[$i][] = $j;
+                        $adj[$j][] = $i;
+                    }
+                }
+            }
+
+            $visited = array_fill(0, $n, false);
+            for ($i = 0; $i < $n; $i++) {
+                if ($visited[$i]) continue;
+
+                $clusterIndices = [];
+                $queue = [$i];
+                $visited[$i] = true;
+
+                while (!empty($queue)) {
+                    $curr = array_shift($queue);
+                    $clusterIndices[] = $curr;
+
+                    foreach ($adj[$curr] as $neighbor) {
+                        if (!$visited[$neighbor]) {
+                            $visited[$neighbor] = true;
+                            $queue[] = $neighbor;
+                        }
+                    }
+                }
+
+                if (count($clusterIndices) >= 2) {
+                    $groupBookings = [];
+                    $hasPending = false;
+                    foreach ($clusterIndices as $idx) {
+                        $item = $roomDateBookings[$idx];
+                        if ($item['status'] === 'pending') {
+                            $hasPending = true;
+                        }
+                        $groupBookings[] = $item;
+                    }
+
+                    if ($hasPending) {
+                        $first = $groupBookings[0];
+                        $conflictGroups[] = [
+                            'group_id' => $groupId++,
+                            'room_id' => $first['room_id'],
+                            'room_name' => $first['room_name'],
+                            'room_code' => $first['room_code'],
+                            'date' => $first['date'],
+                            'bookings' => $groupBookings
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $conflictGroups;
+    }
+
+    public function resolveConflict($winnerId, array $loserIds) {
+        if (!$this->db) return false;
+        try {
+            $this->db->beginTransaction();
+
+            // Setujui pemenang
+            $stmtWin = $this->db->prepare("UPDATE bookings SET status = 'confirmed' WHERE id = ?");
+            $stmtWin->execute([$winnerId]);
+
+            // Batalkan pengajuan yang kalah
+            if (!empty($loserIds)) {
+                $placeholders = implode(',', array_fill(0, count($loserIds), '?'));
+                $stmtLose = $this->db->prepare("UPDATE bookings SET status = 'cancelled' WHERE id IN ($placeholders)");
+                $stmtLose->execute($loserIds);
+            }
+
+            $this->db->commit();
+            return true;
         } catch (Exception $e) {
-            // Fallback jika database belum ada kolom user_name / user_dept
-            $stmt = $this->db->prepare("INSERT INTO bookings (user_id, room_id, title, date, start_time, end_time, purpose, attendees_count, status) 
-                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            return $stmt->execute([
-                $data['user_id'],
-                $data['room_id'],
-                $data['title'],
-                $data['date'],
-                $data['start_time'],
-                $data['end_time'],
-                $data['purpose'],
-                $data['attendees_count'],
-                $data['status']
-            ]);
+            $this->db->rollBack();
+            return false;
         }
     }
 

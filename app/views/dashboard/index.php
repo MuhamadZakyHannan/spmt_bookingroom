@@ -147,7 +147,7 @@
                     <?php foreach ($rooms as $room): ?>
                         <div class="bg-white dark:bg-slate-800/90 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:border-brand-300 dark:hover:border-brand-500 transition duration-200">
                             <div class="relative h-44 bg-slate-100 dark:bg-slate-900 overflow-hidden">
-                                <img src="<?php echo htmlspecialchars($room['image'] ?: 'public/rooms/r-' . $room['id'] . '.jpg'); ?>" onerror="this.onerror=null; this.src='public/rooms/r-1.jpg';" class="w-full h-full object-cover" alt="<?php echo htmlspecialchars($room['name']); ?>">
+                                <img src="<?php echo htmlspecialchars($room['image'] ?: 'public/rooms/KalTim.jpeg'); ?>" onerror="this.onerror=null; this.src='public/rooms/KalTim.jpeg';" class="w-full h-full object-cover" alt="<?php echo htmlspecialchars($room['name']); ?>">
                                 <div class="absolute top-3 right-3">
                                     <?php if ($room['status'] === 'available'): ?>
                                         <span class="px-2.5 py-1 bg-emerald-500 text-white text-xs font-bold rounded-lg shadow-md flex items-center gap-1">
@@ -367,6 +367,31 @@
                     </select>
                 </div>
 
+                <!-- Tingkat Kepentingan Kegiatan (Kriteria K1 SAW) -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                        Tingkat Kepentingan Kegiatan (Kriteria K1 SAW) *
+                    </label>
+                    <div class="relative flex items-center">
+                        <span class="absolute left-3.5 text-slate-400 pointer-events-none">
+                            <i class="fas fa-layer-group"></i>
+                        </span>
+                        <select name="activity_type" id="modalActivityType" class="w-full pl-10 pr-8 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition cursor-pointer appearance-none" required>
+                            <option value="direksi_eksternal">🌟 Rapat dengan Direksi / Pihak Eksternal (Prioritas Tertinggi - Bobot 5)</option>
+                            <option value="antar_divisi">🔷 Rapat Koordinasi Antar Divisi (Bobot 4)</option>
+                            <option value="internal_divisi" selected>🔹 Rapat Internal Divisi (Bobot 3)</option>
+                            <option value="pelatihan">🔸 Sosialisasi / Pelatihan (Bobot 2)</option>
+                            <option value="rutin">▫️ Kegiatan Rutin / Non-Prioritas (Bobot 1)</option>
+                        </select>
+                        <span class="absolute right-3.5 text-slate-400 pointer-events-none text-xs">
+                            <i class="fas fa-chevron-down"></i>
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                        * Kategori ini digunakan oleh Sistem Pendukung Keputusan (Metode SAW) jika terjadi bentrok jadwal pada ruangan dan waktu yang sama.
+                    </p>
+                </div>
+
                 <!-- Meeting Title -->
                 <div>
                     <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">Judul Meeting / Agenda *</label>
@@ -408,6 +433,14 @@
                     <textarea name="purpose" id="modalPurpose" rows="3" class="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="Jelaskan secara singkat tujuan atau kebutuhan khusus (misal: perlu tambahan mikrofon)..."></textarea>
                 </div>
 
+                <!-- Notice SPK SAW -->
+                <div class="p-3.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60 text-sky-900 dark:text-sky-300 text-xs flex items-start gap-2.5">
+                    <i class="fas fa-info-circle text-sky-600 dark:text-sky-400 text-sm mt-0.5 shrink-0"></i>
+                    <div class="leading-relaxed">
+                        <strong>Integrasi SPK SAW:</strong> Jika jadwal yang Anda pilih beririsan dengan agenda lain, pengajuan tetap akan diterima (status <em>Pending</em>) untuk dianalisis prioritasnya oleh Administrator menggunakan metode SAW.
+                    </div>
+                </div>
+
                 <!-- Modal Footer Actions -->
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
                     <button type="button" onclick="closeBookingModal()" class="py-2.5 px-5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-sm transition">
@@ -435,7 +468,7 @@
             'floor' => $r['floor'] ?? '',
             'facilities' => $r['facilities'] ?? '',
             'description' => $r['description'] ?? '',
-            'image' => $r['image'] ?: 'public/rooms/r-' . $r['id'] . '.jpg',
+            'image' => $r['image'] ?: 'public/rooms/KalTim.jpeg',
             'status' => $r['status'] ?? 'available'
         ];
     }, $rooms), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
@@ -684,7 +717,7 @@
             html += `
                 <div class="bg-white dark:bg-slate-800/90 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:border-brand-300 dark:hover:border-brand-500 transition duration-200">
                     <div class="relative h-44 bg-slate-100 dark:bg-slate-900 overflow-hidden">
-                        <img src="${escapeHtml(room.image)}" onerror="this.onerror=null; this.src='public/rooms/r-1.jpg';" class="w-full h-full object-cover" alt="${escapeHtml(room.name)}">
+                        <img src="${escapeHtml(room.image)}" onerror="this.onerror=null; this.src='public/rooms/KalTim.jpeg';" class="w-full h-full object-cover" alt="${escapeHtml(room.name)}">
                         <div class="absolute top-3 right-3">
                             ${statusBadge}
                         </div>
