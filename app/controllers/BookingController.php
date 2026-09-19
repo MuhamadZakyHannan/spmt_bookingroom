@@ -5,18 +5,20 @@ require_once __DIR__ . '/../core/SawService.php';
 class BookingController extends Controller {
     private $roomModel;
     private $bookingModel;
+    private $notificationModel;
 
     public function __construct() {
         $this->roomModel = $this->model('RoomModel');
         $this->bookingModel = $this->model('BookingModel');
+        $this->notificationModel = $this->model('NotificationModel');
     }
 
     public function create() {
         $this->requireAuth();
 
         $selected_room_id = (int)($_GET['room_id'] ?? 0);
-        $user_name = '';
-        $user_dept = '';
+        $user_name = $_SESSION['user_name'] ?? '';
+        $user_dept = $_SESSION['department'] ?? '';
         $title = '';
         $date = date('Y-m-d');
         $start_time = '09:00';
@@ -28,6 +30,8 @@ class BookingController extends Controller {
         $rooms = $this->roomModel->getActiveRooms();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->validateCsrf('booking.php');
+
             $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') 
                       || (isset($_POST['is_ajax']) && $_POST['is_ajax'] === '1');
 
@@ -89,6 +93,11 @@ class BookingController extends Controller {
                     ];
 
                     if ($this->bookingModel->create($data)) {
+                        if ($status === 'pending') {
+                            $this->notificationModel->createForPendingBooking(
+                                $this->bookingModel->getLastInsertId()
+                            );
+                        }
                         set_flash('success', $msg);
 
                         if ($isAjax) {
@@ -138,6 +147,7 @@ class BookingController extends Controller {
         $this->requireAuth();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'cancel') {
+            $this->validateCsrf('my_bookings.php');
             $booking_id = (int)($_POST['booking_id'] ?? 0);
             if ($booking_id > 0) {
                 if ($this->bookingModel->cancel($booking_id, $_SESSION['user_id'], is_admin())) {

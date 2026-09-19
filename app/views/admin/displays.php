@@ -115,6 +115,7 @@
                                         
                                         <!-- Regenerate Token -->
                                         <form method="POST" action="admin_displays.php" onsubmit="return confirm('Regenerasi token baru untuk display ini? URL lama tidak akan bisa diakses lagi.')" class="inline">
+                                            <?php echo csrf_field(); ?>
                                             <input type="hidden" name="action" value="regenerate_token">
                                             <input type="hidden" name="display_id" value="<?php echo $disp['id']; ?>">
                                             <button type="submit" class="p-1.5 text-slate-400 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-lg transition" title="Buat Token Baru">
@@ -124,6 +125,7 @@
 
                                         <!-- Delete -->
                                         <form method="POST" action="admin_displays.php" onsubmit="return confirm('Hapus konfigurasi display monitor ini?')" class="inline">
+                                            <?php echo csrf_field(); ?>
                                             <input type="hidden" name="action" value="delete">
                                             <input type="hidden" name="display_id" value="<?php echo $disp['id']; ?>">
                                             <button type="submit" class="p-1.5 text-slate-400 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition" title="Hapus Display">
@@ -157,6 +159,7 @@
         </div>
 
         <form method="POST" action="admin_displays.php" class="space-y-4">
+            <?php echo csrf_field(); ?>
             <input type="hidden" name="action" value="create">
 
             <div>

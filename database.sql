@@ -47,12 +47,35 @@ CREATE TABLE IF NOT EXISTS bookings (
     status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'confirmed',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
+    FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
+    INDEX idx_bookings_room_date_status (room_id, date, status),
+    INDEX idx_bookings_date_status (date, status),
+    INDEX idx_bookings_user_status (user_id, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Table: notifications (Notifikasi booking pending per akun Administrator)
+CREATE TABLE IF NOT EXISTS notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    recipient_user_id INT NOT NULL,
+    booking_id INT NOT NULL,
+    type VARCHAR(50) NOT NULL DEFAULT 'booking_pending',
+    title VARCHAR(150) NOT NULL,
+    message VARCHAR(255) NOT NULL,
+    is_read TINYINT(1) NOT NULL DEFAULT 0,
+    read_at TIMESTAMP NULL DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (recipient_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    UNIQUE KEY uq_notification_recipient_booking_type (recipient_user_id, booking_id, type),
+    INDEX idx_notifications_recipient_unread (recipient_user_id, is_read, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Opsional (Jika tabel bookings sudah ada di database lokal Anda):
 -- ALTER TABLE bookings ADD COLUMN user_name VARCHAR(100) DEFAULT NULL AFTER user_id;
 -- ALTER TABLE bookings ADD COLUMN user_dept VARCHAR(100) DEFAULT NULL AFTER user_name;
+-- CREATE INDEX idx_bookings_room_date_status ON bookings (room_id, date, status);
+-- CREATE INDEX idx_bookings_date_status ON bookings (date, status);
+-- CREATE INDEX idx_bookings_user_status ON bookings (user_id, status);
 
 -- Table: room_displays (Monitor Display Kiosk Pintu Ruangan)
 CREATE TABLE IF NOT EXISTS room_displays (

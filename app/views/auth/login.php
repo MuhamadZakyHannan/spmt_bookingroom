@@ -4,24 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Masuk - MeetSpace MVC</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS (Local Compiled Standalone) -->
+    <link rel="stylesheet" href="public/css/tailwind.min.css">
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                        }
-                    }
-                }
-            }
-        }
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -58,6 +43,7 @@
         <?php endif; ?>
 
         <form method="POST" action="login.php" class="space-y-4">
+            <?php echo csrf_field(); ?>
             <div>
                 <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Alamat Email</label>
                 <div class="relative">

@@ -181,11 +181,12 @@
                         <!-- Actions -->
                         <div class="flex sm:flex-row lg:flex-col gap-2 items-stretch lg:items-end justify-end border-t lg:border-t-0 pt-3 lg:pt-0 shrink-0">
                             <?php if (in_array($b['status'], ['pending', 'confirmed'])): ?>
-                                <form method="POST" action="my_bookings.php" class="w-full sm:w-auto" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan & menghapus pemesanan ini dari riwayat?')">
+                                <form method="POST" action="my_bookings.php" class="w-full sm:w-auto" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pemesanan ini?')">
+                                    <?php echo csrf_field(); ?>
                                     <input type="hidden" name="action" value="cancel">
                                     <input type="hidden" name="booking_id" value="<?php echo $b['id']; ?>">
                                     <button type="submit" class="w-full px-3.5 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
-                                        <i class="fas fa-trash-alt"></i> Batalkan & Hapus
+                                        <i class="fas fa-ban"></i> Batalkan Pemesanan
                                     </button>
                                 </form>
                             <?php else: ?>
@@ -271,6 +272,7 @@
         ];
     }, $my_bookings)); ?>;
 
+    const csrfHiddenField = '<?php echo addslashes(csrf_field()); ?>';
     const myBookingSearchInput = document.getElementById('myBookingSearchInput');
     const clearMyBookingSearchBtn = document.getElementById('clearMyBookingSearchBtn');
     const myBookingSuggestionsBox = document.getElementById('myBookingSuggestionsBox');
@@ -524,11 +526,12 @@
             let actionHtml = '';
             if (isPending || isConfirmed) {
                 actionHtml = `
-                    <form method="POST" action="my_bookings.php" class="w-full sm:w-auto" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan & menghapus pemesanan ini dari riwayat?')">
+                    <form method="POST" action="my_bookings.php" class="w-full sm:w-auto" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pemesanan ini?')">
+                        ${csrfHiddenField}
                         <input type="hidden" name="action" value="cancel">
                         <input type="hidden" name="booking_id" value="${b.id}">
                         <button type="submit" class="w-full px-3.5 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
-                            <i class="fas fa-trash-alt"></i> Batalkan & Hapus
+                            <i class="fas fa-ban"></i> Batalkan Pemesanan
                         </button>
                     </form>
                 `;

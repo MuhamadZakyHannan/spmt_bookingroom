@@ -119,4 +119,42 @@ class DisplayController extends Controller {
         ]);
         exit;
     }
+
+    public function lobby() {
+        $bookingModel = $this->model('BookingModel');
+        $todayBookings = $bookingModel->getTodayBookings();
+        $currentTime = date('H:i');
+
+        // Filter HANYA booking confirmed yang MASIH BERLANGSUNG atau AKAN DATANG
+        $activeBookings = array_values(array_filter($todayBookings, function($b) use ($currentTime) {
+            if ($b['status'] !== 'confirmed') {
+                return false;
+            }
+            $end5 = substr($b['end_time'], 0, 5);
+            return $currentTime < $end5;
+        }));
+
+        // Urutkan berdasarkan jam mulai (start_time)
+        usort($activeBookings, function($a, $b) {
+            return strcmp(substr($a['start_time'], 0, 5), substr($b['start_time'], 0, 5));
+        });
+
+        $totalActiveSchedule = count($activeBookings);
+        $activeNowCount = 0;
+
+        foreach ($activeBookings as $b) {
+            $start5 = substr($b['start_time'], 0, 5);
+            $end5 = substr($b['end_time'], 0, 5);
+            if ($currentTime >= $start5 && $currentTime < $end5) {
+                $activeNowCount++;
+            }
+        }
+
+        $this->view('display/lobby', [
+            'activeBookings' => $activeBookings,
+            'totalActiveSchedule' => $totalActiveSchedule,
+            'activeNowCount' => $activeNowCount,
+            'currentTime' => $currentTime
+        ]);
+    }
 }

@@ -17,22 +17,46 @@ class AdminController extends Controller {
 
     private function handleRoomImageUpload($file, $existingImage = 'public/rooms/KalTim.jpeg') {
         if (isset($file) && is_array($file) && ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
-            $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+            // Check size: max 5MB
+            if (($file['size'] ?? 0) > 5242880) {
+                return $existingImage;
+            }
+
+            $allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
             $fileName = $file['name'];
             $fileTmp = $file['tmp_name'];
             $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
 
-            if (in_array($ext, $allowedExts)) {
-                $uploadDir = __DIR__ . '/../../public/rooms/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);
-                }
-                $newFileName = 'room_' . time() . '_' . rand(100, 999) . '.' . $ext;
-                $destination = $uploadDir . $newFileName;
+            if (!in_array($ext, $allowedExts, true)) {
+                return $existingImage;
+            }
 
-                if (move_uploaded_file($fileTmp, $destination)) {
-                    return 'public/rooms/' . $newFileName;
+            // Real MIME type verification
+            $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+            if (function_exists('finfo_open')) {
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $mime = finfo_file($finfo, $fileTmp);
+                finfo_close($finfo);
+                if (!in_array($mime, $allowedMimes, true)) {
+                    return $existingImage;
                 }
+            }
+
+            // Image integrity check
+            $imgInfo = @getimagesize($fileTmp);
+            if ($imgInfo === false) {
+                return $existingImage;
+            }
+
+            $uploadDir = __DIR__ . '/../../public/rooms/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0755, true);
+            }
+            $newFileName = 'room_' . time() . '_' . bin2hex(random_bytes(6)) . '.' . $ext;
+            $destination = $uploadDir . $newFileName;
+
+            if (move_uploaded_file($fileTmp, $destination)) {
+                return 'public/rooms/' . $newFileName;
             }
         }
         return $existingImage;
@@ -44,6 +68,7 @@ class AdminController extends Controller {
         $error = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->validateCsrf('admin_rooms.php');
             $action = $_POST['action'] ?? '';
 
             if ($action === 'add') {
@@ -157,6 +182,7 @@ class AdminController extends Controller {
         $this->requireAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->validateCsrf('admin_bookings.php');
             $action = $_POST['action'] ?? '';
             $booking_id = (int)($_POST['booking_id'] ?? 0);
 
@@ -257,6 +283,7 @@ class AdminController extends Controller {
         $error = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->validateCsrf('admin_users.php');
             $action = $_POST['action'] ?? '';
 
             if ($action === 'add') {
@@ -264,7 +291,8 @@ class AdminController extends Controller {
                 $email = trim($_POST['email'] ?? '');
                 $password = $_POST['password'] ?? '';
                 $department = trim($_POST['department'] ?? '');
-                $role = $_POST['role'] ?? 'employee';
+                $roleInput = trim($_POST['role'] ?? 'user');
+                $role = in_array($roleInput, ['user', 'admin'], true) ? $roleInput : 'user';
 
                 if (empty($name) || empty($email) || empty($password)) {
                     $error = 'Nama, email, dan password wajib diisi!';
@@ -315,6 +343,7 @@ class AdminController extends Controller {
         $error = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->validateCsrf('admin_displays.php');
             $action = $_POST['action'] ?? '';
 
             if ($action === 'create') {

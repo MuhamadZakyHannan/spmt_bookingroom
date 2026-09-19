@@ -3,6 +3,7 @@ require_once __DIR__ . '/../core/Database.php';
 
 class BookingModel {
     private $db;
+    private $lastInsertId = 0;
 
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
@@ -49,7 +50,7 @@ class BookingModel {
         try {
             $stmt = $this->db->prepare("INSERT INTO bookings (user_id, room_id, title, date, start_time, end_time, purpose, activity_type, attendees_count, status, user_name, user_dept) 
                                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            return $stmt->execute([
+            $success = $stmt->execute([
                 $data['user_id'],
                 $data['room_id'],
                 $data['title'],
@@ -63,11 +64,15 @@ class BookingModel {
                 $data['user_name'] ?? null,
                 $data['user_dept'] ?? null
             ]);
+            if ($success) {
+                $this->lastInsertId = (int)$this->db->lastInsertId();
+            }
+            return $success;
         } catch (Exception $e) {
             // Fallback jika database belum ada kolom activity_type
             $stmt = $this->db->prepare("INSERT INTO bookings (user_id, room_id, title, date, start_time, end_time, purpose, attendees_count, status, user_name, user_dept) 
                                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            return $stmt->execute([
+            $success = $stmt->execute([
                 $data['user_id'],
                 $data['room_id'],
                 $data['title'],
@@ -80,7 +85,15 @@ class BookingModel {
                 $data['user_name'] ?? null,
                 $data['user_dept'] ?? null
             ]);
+            if ($success) {
+                $this->lastInsertId = (int)$this->db->lastInsertId();
+            }
+            return $success;
         }
+    }
+
+    public function getLastInsertId() {
+        return $this->lastInsertId;
     }
 
     public function getDivisionMonthlyUsageCount($dept, $date) {
@@ -234,10 +247,10 @@ class BookingModel {
     public function cancel($bookingId, $userId, $isAdmin = false) {
         if (!$this->db) return false;
         if ($isAdmin) {
-            $stmt = $this->db->prepare("DELETE FROM bookings WHERE id = ?");
+            $stmt = $this->db->prepare("UPDATE bookings SET status = 'cancelled' WHERE id = ?");
             return $stmt->execute([$bookingId]);
         } else {
-            $stmt = $this->db->prepare("DELETE FROM bookings WHERE id = ? AND user_id = ?");
+            $stmt = $this->db->prepare("UPDATE bookings SET status = 'cancelled' WHERE id = ? AND user_id = ? AND status IN ('pending', 'confirmed')");
             return $stmt->execute([$bookingId, $userId]);
         }
     }
@@ -276,8 +289,9 @@ class BookingModel {
 
     public function updateStatus($bookingId, $status) {
         if (!$this->db) return false;
-        if ($status === 'cancelled' || $status === 'rejected') {
-            return $this->delete($bookingId);
+        $allowed = ['pending', 'confirmed', 'completed', 'cancelled'];
+        if (!in_array($status, $allowed, true)) {
+            return false;
         }
         $stmt = $this->db->prepare("UPDATE bookings SET status = ? WHERE id = ?");
         return $stmt->execute([$status, $bookingId]);
@@ -707,4 +721,3 @@ class BookingModel {
         ];
     }
 }
-

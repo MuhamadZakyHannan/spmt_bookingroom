@@ -311,6 +311,7 @@
                                         <div class="flex items-center justify-center gap-1">
                                             <!-- Setujui Single -->
                                             <form method="POST" action="admin_bookings.php" class="inline-block" onsubmit="return confirm('Pilih dan setujui alternatif <?php echo $alt['code']; ?>?')">
+                                                <?php echo csrf_field(); ?>
                                                 <input type="hidden" name="action" value="update_status">
                                                 <input type="hidden" name="booking_id" value="<?php echo $b['id']; ?>">
                                                 <input type="hidden" name="status" value="confirmed">
@@ -321,6 +322,7 @@
 
                                             <!-- Tolak Single -->
                                             <form method="POST" action="admin_bookings.php" class="inline-block" onsubmit="return confirm('Tolak dan batalkan pengajuan <?php echo $alt['code']; ?>?')">
+                                                <?php echo csrf_field(); ?>
                                                 <input type="hidden" name="action" value="delete">
                                                 <input type="hidden" name="booking_id" value="<?php echo $b['id']; ?>">
                                                 <button type="submit" class="p-1.5 px-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold rounded-lg transition text-xs cursor-pointer" title="Tolak">
@@ -353,6 +355,7 @@
                     </div>
 
                     <form method="POST" action="admin_bookings.php" onsubmit="return confirm('Terapkan keputusan rekomendasi SAW?\n\n- Alternatif <?php echo $winner['code']; ?> (<?php echo addslashes($winner['booking']['title']); ?>) akan DISETUJUI (Confirmed).\n- Jadwal bentrok lainnya akan DIBATALKAN otomatis.')">
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="action" value="apply_saw_decision">
                         <input type="hidden" name="winner_id" value="<?php echo $winner['booking_id']; ?>">
                         <input type="hidden" name="loser_ids" value="<?php echo implode(',', $loserIds); ?>">
@@ -567,6 +570,7 @@
                                 <?php if ($b['status'] === 'pending'): ?>
                                     <!-- Aksi TERIMA -->
                                     <form method="POST" action="admin_bookings.php" class="inline-block">
+                                        <?php echo csrf_field(); ?>
                                         <input type="hidden" name="action" value="update_status">
                                         <input type="hidden" name="booking_id" value="<?php echo $b['id']; ?>">
                                         <input type="hidden" name="status" value="confirmed">
@@ -577,6 +581,7 @@
 
                                     <!-- Aksi TOLAK -->
                                     <form method="POST" action="admin_bookings.php" class="inline-block" onsubmit="return confirm('Tolak dan hapus pengajuan jadwal ini?')">
+                                        <?php echo csrf_field(); ?>
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="booking_id" value="<?php echo $b['id']; ?>">
                                         <button type="submit" class="p-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold rounded-lg transition text-xs flex items-center gap-1 cursor-pointer" title="Tolak Rapat">
@@ -586,6 +591,7 @@
                                 <?php else: ?>
                                     <!-- Hapus Booking Terkonfirmasi / Selesai -->
                                     <form method="POST" action="admin_bookings.php" class="inline-block" onsubmit="return confirm('Hapus permanen data pemesanan ini?')">
+                                        <?php echo csrf_field(); ?>
                                         <input type="hidden" name="action" value="delete">
                                         <input type="hidden" name="booking_id" value="<?php echo $b['id']; ?>">
                                         <button type="submit" class="p-1.5 px-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition cursor-pointer" title="Hapus Data">
@@ -655,6 +661,7 @@
 </div>
 
 <script>
+    const csrfHiddenField = '<?php echo addslashes(csrf_field()); ?>';
     function switchBookingTab(tab) {
         const tabConflicts = document.getElementById('tabContentConflicts');
         const tabAll = document.getElementById('tabContentAll');
@@ -1022,6 +1029,7 @@
                 actionHtml = `
                     <div class="flex items-center justify-center gap-1.5">
                         <form method="POST" action="admin_bookings.php" class="inline-block">
+                            ${csrfHiddenField}
                             <input type="hidden" name="action" value="update_status">
                             <input type="hidden" name="booking_id" value="${b.id}">
                             <input type="hidden" name="status" value="confirmed">
@@ -1030,6 +1038,7 @@
                             </button>
                         </form>
                         <form method="POST" action="admin_bookings.php" class="inline-block" onsubmit="return confirm('Tolak dan hapus pengajuan jadwal ini?')">
+                            ${csrfHiddenField}
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="booking_id" value="${b.id}">
                             <button type="submit" class="p-1.5 px-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold rounded-lg transition text-xs flex items-center gap-1" title="Tolak Rapat">
@@ -1042,6 +1051,7 @@
                 actionHtml = `
                     <div class="flex items-center justify-center gap-1.5">
                         <form method="POST" action="admin_bookings.php" class="inline-block" onsubmit="return confirm('Hapus permanen data pemesanan ini?')">
+                            ${csrfHiddenField}
                             <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="booking_id" value="${b.id}">
                             <button type="submit" class="p-1.5 px-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition" title="Hapus Data">

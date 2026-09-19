@@ -97,6 +97,7 @@
                                 </span>
                             <?php else: ?>
                                 <form method="POST" action="admin_users.php" class="inline-block">
+                                    <?php echo csrf_field(); ?>
                                     <input type="hidden" name="action" value="update_role">
                                     <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
                                     <select name="role" onchange="this.form.submit()" class="px-2.5 py-1 text-[10px] font-bold rounded-lg border cursor-pointer focus:outline-none transition shadow-sm <?php echo $u['role'] === 'admin' ? 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800' : 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600'; ?>">
@@ -112,6 +113,7 @@
                         <td class="py-3.5 px-4 text-right whitespace-nowrap">
                             <?php if ($u['id'] !== $_SESSION['user_id']): ?>
                                 <form method="POST" action="admin_users.php" class="inline-block" onsubmit="return confirm('Hapus pengguna ini beserta data terkait?')">
+                                    <?php echo csrf_field(); ?>
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
                                     <button type="submit" class="p-1.5 px-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition" title="Hapus Pengguna">
@@ -131,6 +133,7 @@
 
 <script>
     const currentSessionUserId = <?php echo (int)$_SESSION['user_id']; ?>;
+    const csrfHiddenField = '<?php echo addslashes(csrf_field()); ?>';
     const rawUsersList = <?php echo json_encode(array_map(function($u) {
         return [
             'id' => (int)$u['id'],
@@ -321,6 +324,7 @@
             } else {
                 roleHtml = `
                     <form method="POST" action="admin_users.php" class="inline-block">
+                        ${csrfHiddenField}
                         <input type="hidden" name="action" value="update_role">
                         <input type="hidden" name="user_id" value="${u.id}">
                         <select name="role" onchange="this.form.submit()" class="px-2.5 py-1 text-[10px] font-bold rounded-lg border cursor-pointer focus:outline-none transition shadow-sm ${u.role === 'admin' ? 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800' : 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600'}">
@@ -335,6 +339,7 @@
             if (!isSelf) {
                 actionHtml = `
                     <form method="POST" action="admin_users.php" class="inline-block" onsubmit="return confirm('Hapus pengguna ini beserta data terkait?')">
+                        ${csrfHiddenField}
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="user_id" value="${u.id}">
                         <button type="submit" class="p-1.5 px-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition" title="Hapus Pengguna">

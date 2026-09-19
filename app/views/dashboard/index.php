@@ -270,7 +270,7 @@
 
 <!-- Modal Popup Booking Ruangan -->
 <div id="bookingModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
-    <div id="bookingModalCard" class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700/80 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col transform scale-95 transition-transform duration-300">
+    <div id="bookingModalCard" class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700/80 w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col transform scale-95 transition-transform duration-300">
         
         <!-- Modal Header -->
         <div class="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-700/80 bg-gradient-to-r from-sky-50/50 via-white to-sky-50/30 dark:from-slate-800 dark:to-slate-800">
@@ -296,150 +296,27 @@
                 <div id="modalBookingErrorMessage" class="flex-1 leading-relaxed"></div>
             </div>
 
-            <form id="bookingModalForm" method="POST" action="booking.php" onsubmit="handleBookingSubmit(event)" class="space-y-6">
+            <form id="bookingModalForm" method="POST" action="booking.php" onsubmit="handleBookingSubmit(event)" class="space-y-6" data-booking-form>
+                <?php echo csrf_field(); ?>
                 <input type="hidden" name="is_ajax" value="1">
 
-                <!-- User Information (Nama & Divisi) -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">Nama Pemesan / Penanggung Jawab *</label>
-                        <div class="relative flex items-center">
-                            <span class="absolute left-3.5 text-slate-400">
-                                <i class="fas fa-user"></i>
-                            </span>
-                            <input type="text" name="user_name" id="modalUserName" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="Masukkan nama pemesan / PIC..." value="<?php echo htmlspecialchars($_SESSION['user_name'] ?? ''); ?>" required>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">Divisi / Departemen *</label>
-                        <div class="relative flex items-center">
-                            <span class="absolute left-3.5 text-slate-400 pointer-events-none">
-                                <i class="fas fa-sitemap"></i>
-                            </span>
-                            <select name="user_dept" id="modalUserDept" class="w-full pl-10 pr-8 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition cursor-pointer appearance-none" required>
-                                <option value="">-- Pilih Divisi / Departemen --</option>
-                                <?php 
-                                $departments = [
-                                    'SPMT - Pendukung Operasi',
-                                    'SPMT - Teknik & IT',
-                                    'SPMT - Rendal OPS',
-                                    'SPMT - Integrated PNC',
-                                    'SPMT - Operasional',
-                                    'SPMT - Ruang Rapat dan Branch Manager',
-                                    'SPMT - SPJM',
-                                    'Subreg - Keuangan',
-                                    'Subreg - Teknik',
-                                    'Subreg - Integraterd PNC',
-                                    'Subreg - Komersial',
-                                    'Subreg - Arsip'
-                                ];
-                                $cur_dept = $_SESSION['department'] ?? '';
-                                foreach ($departments as $dept): ?>
-                                    <option value="<?php echo htmlspecialchars($dept); ?>" <?php echo ($cur_dept === $dept) ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($dept); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                            <span class="absolute right-3.5 text-slate-400 pointer-events-none text-xs">
-                                <i class="fas fa-chevron-down"></i>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Room Selection -->
-                <div>
-                    <div class="flex items-center justify-between mb-1.5">
-                        <label class="block text-sm font-bold text-slate-800 dark:text-slate-200">Pilih Ruangan Rapat *</label>
-                        <span id="modalRoomCapacityBadge" class="text-xs font-semibold text-brand-600 dark:text-brand-400"></span>
-                    </div>
-                    <select name="room_id" id="modalRoomId" onchange="onModalRoomChange()" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" required>
-                        <option value="">-- Pilih Ruangan --</option>
-                        <?php 
-                        $modal_rooms = !empty($active_rooms) ? $active_rooms : (!empty($rooms) ? $rooms : []);
-                        foreach ($modal_rooms as $r): 
-                            if (($r['status'] ?? '') === 'maintenance') continue;
-                        ?>
-                            <option value="<?php echo $r['id']; ?>" data-capacity="<?php echo $r['capacity']; ?>" data-name="<?php echo htmlspecialchars($r['name']); ?>">
-                                <?php echo htmlspecialchars($r['name']); ?> (Kapasitas: <?php echo $r['capacity']; ?> Orang - <?php echo htmlspecialchars($r['location']); ?>)
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <!-- Tingkat Kepentingan Kegiatan (Kriteria K1 SAW) -->
-                <div>
-                    <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">
-                        Tingkat Kepentingan Kegiatan (Kriteria K1 SAW) *
-                    </label>
-                    <div class="relative flex items-center">
-                        <span class="absolute left-3.5 text-slate-400 pointer-events-none">
-                            <i class="fas fa-layer-group"></i>
-                        </span>
-                        <select name="activity_type" id="modalActivityType" class="w-full pl-10 pr-8 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition cursor-pointer appearance-none" required>
-                            <option value="direksi_eksternal">🌟 Rapat dengan Direksi / Pihak Eksternal (Prioritas Tertinggi - Bobot 5)</option>
-                            <option value="antar_divisi">🔷 Rapat Koordinasi Antar Divisi (Bobot 4)</option>
-                            <option value="internal_divisi" selected>🔹 Rapat Internal Divisi (Bobot 3)</option>
-                            <option value="pelatihan">🔸 Sosialisasi / Pelatihan (Bobot 2)</option>
-                            <option value="rutin">▫️ Kegiatan Rutin / Non-Prioritas (Bobot 1)</option>
-                        </select>
-                        <span class="absolute right-3.5 text-slate-400 pointer-events-none text-xs">
-                            <i class="fas fa-chevron-down"></i>
-                        </span>
-                    </div>
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                        * Kategori ini digunakan oleh Sistem Pendukung Keputusan (Metode SAW) jika terjadi bentrok jadwal pada ruangan dan waktu yang sama.
-                    </p>
-                </div>
-
-                <!-- Meeting Title -->
-                <div>
-                    <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">Judul Meeting / Agenda *</label>
-                    <input type="text" name="title" id="modalTitle" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="Contoh: Evaluasi Strategy Q3" required>
-                </div>
-
-                <!-- Date and Time Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">Tanggal Meeting *</label>
-                        <input type="date" name="date" id="modalDate" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" value="<?php echo date('Y-m-d'); ?>" min="<?php echo date('Y-m-d'); ?>" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">Jam Mulai *</label>
-                        <input type="time" name="start_time" id="modalStartTime" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" value="09:00" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">Jam Selesai *</label>
-                        <input type="time" name="end_time" id="modalEndTime" class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" value="10:00" required>
-                    </div>
-                </div>
-
-                <!-- Attendees Count -->
-                <div>
-                    <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">Estimasi Jumlah Peserta *</label>
-                    <div class="relative flex items-center">
-                        <span class="absolute left-3.5 text-slate-400">
-                            <i class="fas fa-users"></i>
-                        </span>
-                        <input type="number" name="attendees_count" id="modalAttendeesCount" oninput="validateModalCapacity()" class="w-full pl-10 pr-16 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" min="1" max="100" value="1" required>
-                        <span class="absolute right-3.5 text-slate-400 text-xs font-semibold">Orang</span>
-                    </div>
-                    <p id="modalCapacityWarning" class="text-xs text-rose-500 font-semibold mt-1 hidden"></p>
-                </div>
-
-                <!-- Purpose / Notes -->
-                <div>
-                    <label class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">Tujuan / Catatan Tambahan</label>
-                    <textarea name="purpose" id="modalPurpose" rows="3" class="w-full p-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="Jelaskan secara singkat tujuan atau kebutuhan khusus (misal: perlu tambahan mikrofon)..."></textarea>
-                </div>
-
-                <!-- Notice SPK SAW -->
-                <div class="p-3.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60 text-sky-900 dark:text-sky-300 text-xs flex items-start gap-2.5">
-                    <i class="fas fa-info-circle text-sky-600 dark:text-sky-400 text-sm mt-0.5 shrink-0"></i>
-                    <div class="leading-relaxed">
-                        <strong>Integrasi SPK SAW:</strong> Jika jadwal yang Anda pilih beririsan dengan agenda lain, pengajuan tetap akan diterima (status <em>Pending</em>) untuk dianalisis prioritasnya oleh Administrator menggunakan metode SAW.
-                    </div>
-                </div>
+                <?php
+                $bookingFormPrefix = 'modalBooking';
+                $bookingFormRooms = !empty($active_rooms) ? $active_rooms : (!empty($rooms) ? $rooms : []);
+                $bookingFormSelectedRoomId = 0;
+                $bookingFormValues = [
+                    'user_name' => $_SESSION['user_name'] ?? '',
+                    'user_dept' => $_SESSION['department'] ?? '',
+                    'title' => '',
+                    'date' => date('Y-m-d'),
+                    'start_time' => '09:00',
+                    'end_time' => '10:00',
+                    'activity_type' => 'internal_divisi',
+                    'attendees_count' => 1,
+                    'purpose' => ''
+                ];
+                require __DIR__ . '/../booking/_form_fields.php';
+                ?>
 
                 <!-- Modal Footer Actions -->
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
@@ -456,6 +333,7 @@
     </div>
 </div>
 
+<script src="public/js/booking-form.js"></script>
 <script>
     // All rooms in-memory data for instant client-side filtering & re-ranking
     const rawDashboardRooms = <?php echo json_encode(array_map(function ($r) {
@@ -791,17 +669,16 @@
     function openBookingModal(roomId = null) {
         const modal = document.getElementById('bookingModal');
         const modalCard = document.getElementById('bookingModalCard');
-        const roomSelect = document.getElementById('modalRoomId');
+        const form = document.getElementById('bookingModalForm');
+        const roomSelect = form ? form.querySelector('[data-booking-room]') : null;
         const errBox = document.getElementById('modalBookingError');
         
         if (errBox) errBox.classList.add('hidden');
         
         if (roomId && roomSelect) {
             roomSelect.value = roomId;
-            onModalRoomChange();
-        } else {
-            onModalRoomChange();
         }
+        if (form && window.BookingFormUI) window.BookingFormUI.refresh(form);
         
         modal.classList.remove('hidden');
         requestAnimationFrame(() => {
@@ -829,45 +706,6 @@
         }, 300);
     }
 
-    function onModalRoomChange() {
-        const roomSelect = document.getElementById('modalRoomId');
-        const capacityBadge = document.getElementById('modalRoomCapacityBadge');
-        if (!roomSelect) return;
-        
-        const selectedOption = roomSelect.options[roomSelect.selectedIndex];
-        if (selectedOption && selectedOption.dataset.capacity) {
-            capacityBadge.textContent = `Kapasitas Maksimal: ${selectedOption.dataset.capacity} Orang`;
-        } else {
-            capacityBadge.textContent = '';
-        }
-        validateModalCapacity();
-    }
-
-    function validateModalCapacity() {
-        const roomSelect = document.getElementById('modalRoomId');
-        const attendeesInput = document.getElementById('modalAttendeesCount');
-        const warning = document.getElementById('modalCapacityWarning');
-        if (!roomSelect || !attendeesInput || !warning) return true;
-        
-        const selectedOption = roomSelect.options[roomSelect.selectedIndex];
-        if (!selectedOption || !selectedOption.dataset.capacity) {
-            warning.classList.add('hidden');
-            return true;
-        }
-        
-        const cap = parseInt(selectedOption.dataset.capacity, 10);
-        const count = parseInt(attendeesInput.value, 10) || 0;
-        
-        if (count > cap) {
-            warning.textContent = `Peringatan: Jumlah peserta (${count} orang) melebihi kapasitas maksimum ${selectedOption.dataset.name || 'ruangan'} (${cap} orang).`;
-            warning.classList.remove('hidden');
-            return false;
-        } else {
-            warning.classList.add('hidden');
-            return true;
-        }
-    }
-
     async function handleBookingSubmit(e) {
         e.preventDefault();
         const form = e.target;
@@ -877,20 +715,11 @@
         
         errBox.classList.add('hidden');
         
-        // Client-side validations
-        const startTime = form.start_time.value;
-        const endTime = form.end_time.value;
-        if (startTime >= endTime) {
-            errMsg.textContent = 'Waktu selesai harus lebih lambat dari waktu mulai!';
-            errBox.classList.remove('hidden');
-            errBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return;
-        }
-
-        const dateVal = form.date.value;
-        const todayStr = new Date().toISOString().split('T')[0];
-        if (dateVal < todayStr) {
-            errMsg.textContent = 'Tanggal pemesanan tidak boleh di masa lalu!';
+        const validation = window.BookingFormUI
+            ? window.BookingFormUI.validate(form)
+            : { valid: form.checkValidity(), message: 'Mohon periksa kembali form pemesanan.' };
+        if (!validation.valid) {
+            errMsg.textContent = validation.message;
             errBox.classList.remove('hidden');
             errBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;

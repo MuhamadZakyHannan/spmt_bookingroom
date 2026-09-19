@@ -55,8 +55,8 @@ $printDate = date('d F Y, H:i');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan_Pemesanan_Ruangan_Pelindo_<?php echo date('Ymd_His'); ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS (Local Compiled Standalone) -->
+    <link rel="stylesheet" href="public/css/tailwind.min.css">
     <style>
         @page {
             size: A4 landscape;

@@ -80,6 +80,7 @@
         </div>
 
         <form method="POST" action="admin_rooms.php" enctype="multipart/form-data" class="p-6 space-y-4 overflow-y-auto">
+            <?php echo csrf_field(); ?>
             <input type="hidden" name="action" value="add">
 
             <div class="grid grid-cols-2 gap-4">
@@ -173,6 +174,7 @@
         </div>
 
         <form method="POST" action="admin_rooms.php" enctype="multipart/form-data" class="p-6 space-y-4 overflow-y-auto">
+            <?php echo csrf_field(); ?>
             <input type="hidden" name="action" value="edit">
             <input type="hidden" name="room_id" id="editRoomId">
 
@@ -325,6 +327,7 @@
                         <!-- Status -->
                         <td class="py-3.5 px-4 whitespace-nowrap">
                             <form method="POST" action="admin_rooms.php" class="inline-block">
+                                <?php echo csrf_field(); ?>
                                 <input type="hidden" name="action" value="update_status">
                                 <input type="hidden" name="room_id" value="<?php echo $r['id']; ?>">
                                 <select name="status" onchange="this.form.submit()" class="px-2.5 py-1 text-[10px] font-bold rounded-lg border cursor-pointer focus:outline-none transition shadow-sm <?php 
@@ -352,6 +355,7 @@
                                 </button>
                                 
                                 <form method="POST" action="admin_rooms.php" class="inline-block" onsubmit="return confirm('Hapus ruangan ini beserta histori jadwalnya?')">
+                                    <?php echo csrf_field(); ?>
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="room_id" value="<?php echo $r['id']; ?>">
                                     <button type="submit" class="p-1.5 px-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition" title="Hapus Ruangan">
@@ -384,6 +388,7 @@
         ];
     }, $rooms)); ?>;
 
+    const csrfHiddenField = '<?php echo addslashes(csrf_field()); ?>';
     const roomSearchInput = document.getElementById('roomSearchInput');
     const clearRoomSearchBtn = document.getElementById('clearRoomSearchBtn');
     const roomSuggestionsBox = document.getElementById('roomSuggestionsBox');
@@ -636,6 +641,7 @@
                     </td>
                     <td class="py-3.5 px-4 whitespace-nowrap">
                         <form method="POST" action="admin_rooms.php" class="inline-block">
+                            ${csrfHiddenField}
                             <input type="hidden" name="action" value="update_status">
                             <input type="hidden" name="room_id" value="${r.id}">
                             <select name="status" onchange="this.form.submit()" class="px-2.5 py-1 text-[10px] font-bold rounded-lg border cursor-pointer focus:outline-none transition shadow-sm ${statusSelectClass}">
@@ -657,6 +663,7 @@
                             </button>
                             
                             <form method="POST" action="admin_rooms.php" class="inline-block" onsubmit="return confirm('Hapus ruangan ini beserta histori jadwalnya?')">
+                                ${csrfHiddenField}
                                 <input type="hidden" name="action" value="delete">
                                 <input type="hidden" name="room_id" value="${r.id}">
                                 <button type="submit" class="p-1.5 px-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition" title="Hapus Ruangan">

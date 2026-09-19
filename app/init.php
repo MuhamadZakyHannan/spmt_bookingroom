@@ -26,3 +26,6 @@ if (file_exists(__DIR__ . '/models/UserModel.php')) {
 if (file_exists(__DIR__ . '/models/DisplayModel.php')) {
     require_once __DIR__ . '/models/DisplayModel.php';
 }
+if (file_exists(__DIR__ . '/models/NotificationModel.php')) {
+    require_once __DIR__ . '/models/NotificationModel.php';
+}

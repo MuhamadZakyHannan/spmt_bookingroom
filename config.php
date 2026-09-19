@@ -5,14 +5,59 @@
 // Set Zona Waktu Default Indonesia (WIB / Asia/Jakarta)
 date_default_timezone_set('Asia/Jakarta');
 
+// Security Headers
+if (!headers_sent()) {
+    header('X-Frame-Options: SAMEORIGIN');
+    header('X-Content-Type-Options: nosniff');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header('X-XSS-Protection: 1; mode=block');
+}
+
+// Optional .env File Loader
+$envFile = __DIR__ . '/.env';
+if (file_exists($envFile)) {
+    $envLines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($envLines as $envLine) {
+        $envLine = trim($envLine);
+        if ($envLine === '' || strpos($envLine, '#') === 0) continue;
+        if (strpos($envLine, '=') !== false) {
+            list($envKey, $envVal) = explode('=', $envLine, 2);
+            $envKey = trim($envKey);
+            $envVal = trim($envVal, " \t\n\r\0\x0B\"'");
+            if (!array_key_exists($envKey, $_ENV)) {
+                $_ENV[$envKey] = $envVal;
+                putenv("$envKey=$envVal");
+            }
+        }
+    }
+}
+
+// Database Connection Configuration Constants
+if (!defined('DB_HOST')) define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+if (!defined('DB_USER')) define('DB_USER', getenv('DB_USER') ?: 'root');
+if (!defined('DB_PASS')) define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
+if (!defined('DB_NAME')) define('DB_NAME', getenv('DB_NAME') ?: 'meetspace_db');
+
+// Secure Session Initialization
 if (session_status() === PHP_SESSION_NONE) {
+    $isHttps = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || 
+               (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+    ini_set('session.use_strict_mode', '1');
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path' => '/',
+        'domain' => '',
+        'secure' => $isHttps,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
     session_start();
 }
 
-$db_host = "localhost";
-$db_user = "root";
-$db_pass = "";
-$db_name = "meetspace_db";
+$db_host = DB_HOST;
+$db_user = DB_USER;
+$db_pass = DB_PASS;
+$db_name = DB_NAME;
 
 try {
     $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass, [
@@ -107,6 +152,30 @@ function format_date($date_str) {
 function format_time($time_str) {
     if (!$time_str) return '-';
     return date('H:i', strtotime($time_str));
+}
+
+/**
+ * CSRF Protection Helper Functions
+ */
+function csrf_token() {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function csrf_field() {
+    return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') . '">';
+}
+
+function verify_csrf_token($token = null) {
+    if ($token === null) {
+        $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+    }
+    if (empty($_SESSION['csrf_token']) || empty($token)) {
+        return false;
+    }
+    return hash_equals($_SESSION['csrf_token'], $token);
 }
 
 // Autoloader untuk class di folder app/core, app/models, app/controllers

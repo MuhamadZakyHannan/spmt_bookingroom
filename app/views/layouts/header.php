@@ -7,26 +7,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MeetSpace - Sistem Pemesanan Ruang Rapat Perusahaan (MVC)</title>
-    <!-- Tailwind CSS Play CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Tailwind CSS (Local Compiled Standalone) -->
+    <link rel="stylesheet" href="public/css/tailwind.min.css">
     <!-- Dark Mode Immediate Detector Script -->
     <script>
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -96,6 +78,23 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
                     <?php if (is_logged_in()): ?>
                     <div class="flex items-center gap-3">
+                        <?php if (is_admin()): ?>
+                        <button
+                            type="button"
+                            id="adminNotificationBell"
+                            onclick="openAdminNotifications()"
+                            class="relative w-10 h-10 rounded-xl bg-sky-100/80 hover:bg-sky-200/80 text-sky-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-amber-300 transition flex items-center justify-center focus:outline-none border border-sky-200/60 dark:border-transparent"
+                            title="Notifikasi booking baru"
+                            aria-label="Buka notifikasi booking admin"
+                        >
+                            <i id="adminNotificationBellIcon" class="fas fa-bell text-base"></i>
+                            <span
+                                id="adminNotificationBadge"
+                                class="hidden absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full bg-rose-600 text-white text-[10px] leading-5 font-bold text-center shadow ring-2 ring-white dark:ring-slate-900"
+                                aria-live="polite"
+                            >0</span>
+                        </button>
+                        <?php endif; ?>
                         <div class="hidden sm:block text-right">
                             <div class="text-sm font-semibold text-slate-800 dark:text-white leading-tight"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Pengguna'); ?></div>
                             <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center justify-end gap-1 mt-0.5">
@@ -332,4 +331,122 @@ $current_page = basename($_SERVER['PHP_SELF']);
     }
 
     document.addEventListener('DOMContentLoaded', updateToggleUI);
+
+    <?php if (is_logged_in() && is_admin()): ?>
+    const adminNotificationStorageKey = 'adminNotificationUnreadCount_<?php echo (int)$_SESSION['user_id']; ?>';
+    let adminNotificationAudioContext = null;
+
+    function prepareAdminNotificationAudio() {
+        if (adminNotificationAudioContext) return;
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+            adminNotificationAudioContext = new AudioContextClass();
+        }
+    }
+
+    function playAdminNotificationSound() {
+        try {
+            prepareAdminNotificationAudio();
+            if (!adminNotificationAudioContext) return;
+
+            if (adminNotificationAudioContext.state === 'suspended') {
+                adminNotificationAudioContext.resume();
+            }
+
+            const now = adminNotificationAudioContext.currentTime;
+            const oscillator = adminNotificationAudioContext.createOscillator();
+            const gain = adminNotificationAudioContext.createGain();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(880, now);
+            oscillator.frequency.setValueAtTime(1174.66, now + 0.12);
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+
+            oscillator.connect(gain);
+            gain.connect(adminNotificationAudioContext.destination);
+            oscillator.start(now);
+            oscillator.stop(now + 0.34);
+        } catch (error) {
+            // Kebijakan autoplay browser dapat menolak audio sebelum interaksi pengguna.
+        }
+    }
+
+    function renderAdminNotificationCount(count, shouldPlaySound = true) {
+        const badge = document.getElementById('adminNotificationBadge');
+        const bellIcon = document.getElementById('adminNotificationBellIcon');
+        if (!badge || !bellIcon) return;
+
+        const normalizedCount = Math.max(0, Number.parseInt(count, 10) || 0);
+        const previousRaw = sessionStorage.getItem(adminNotificationStorageKey);
+        const previousCount = previousRaw === null ? null : Math.max(0, Number.parseInt(previousRaw, 10) || 0);
+
+        if (normalizedCount > 0) {
+            badge.textContent = normalizedCount > 99 ? '99+' : String(normalizedCount);
+            badge.classList.remove('hidden');
+        } else {
+            badge.textContent = '0';
+            badge.classList.add('hidden');
+        }
+
+        if (shouldPlaySound && previousCount !== null && normalizedCount > previousCount) {
+            playAdminNotificationSound();
+            bellIcon.classList.add('animate-bounce');
+            window.setTimeout(() => bellIcon.classList.remove('animate-bounce'), 1200);
+        }
+
+        sessionStorage.setItem(adminNotificationStorageKey, String(normalizedCount));
+    }
+
+    async function pollAdminNotifications() {
+        try {
+            const response = await fetch('api/admin_notifications.php?t=' + Date.now(), {
+                headers: { 'Accept': 'application/json' },
+                cache: 'no-store'
+            });
+            if (!response.ok) return;
+
+            const data = await response.json();
+            if (data.success) {
+                renderAdminNotificationCount(data.unread_count);
+            }
+        } catch (error) {
+            // Gangguan polling tidak boleh mengganggu halaman utama.
+        }
+    }
+
+    async function openAdminNotifications() {
+        prepareAdminNotificationAudio();
+
+        try {
+            const formData = new FormData();
+            formData.append('action', 'mark_all_read');
+            formData.append('csrf_token', <?php echo json_encode(csrf_token()); ?>);
+
+            const response = await fetch('api/admin_notifications.php', {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' },
+                body: formData
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    renderAdminNotificationCount(0, false);
+                }
+            }
+        } catch (error) {
+            // Admin tetap diarahkan ke daftar booking jika penandaan gagal.
+        }
+
+        window.location.href = 'admin_bookings.php?status=pending';
+    }
+
+    document.addEventListener('pointerdown', prepareAdminNotificationAudio, { once: true });
+    document.addEventListener('DOMContentLoaded', function() {
+        pollAdminNotifications();
+        window.setInterval(pollAdminNotifications, 20000);
+    });
+    <?php endif; ?>
     </script>

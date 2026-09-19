@@ -7,10 +7,10 @@ class Database {
     private $pdo = null;
 
     private function __construct() {
-        $db_host = "localhost";
-        $db_user = "root";
-        $db_pass = "";
-        $db_name = "meetspace_db";
+        $db_host = defined('DB_HOST') ? DB_HOST : (getenv('DB_HOST') ?: 'localhost');
+        $db_user = defined('DB_USER') ? DB_USER : (getenv('DB_USER') ?: 'root');
+        $db_pass = defined('DB_PASS') ? DB_PASS : (getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
+        $db_name = defined('DB_NAME') ? DB_NAME : (getenv('DB_NAME') ?: 'meetspace_db');
 
         try {
             $this->pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass, [

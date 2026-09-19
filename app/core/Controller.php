@@ -58,4 +58,57 @@ class Controller {
             $this->redirect('dashboard.php');
         }
     }
+
+    /**
+     * Check if request is POST
+     */
+    public function isPost() {
+        return ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST';
+    }
+
+    /**
+     * Check if request is AJAX
+     */
+    public function isAjax() {
+        return (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || (isset($_POST['is_ajax']) && $_POST['is_ajax'] === '1')
+            || (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false);
+    }
+
+    /**
+     * CSRF Guard
+     */
+    public function validateCsrf($fallbackRedirect = null) {
+        if ($this->isPost()) {
+            $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
+            if (!verify_csrf_token($token)) {
+                if ($this->isAjax()) {
+                    $this->jsonResponse([
+                        'success' => false,
+                        'error' => 'Sesi keamanan kedaluwarsa atau token CSRF tidak valid. Silakan muat ulang halaman.'
+                    ], 403);
+                } else {
+                    set_flash('danger', 'Permintaan ditolak: Token keamanan (CSRF) tidak valid atau sesi telah berakhir. Silakan ulangi.');
+                    if ($fallbackRedirect) {
+                        $this->redirect($fallbackRedirect);
+                    } else {
+                        $referer = $_SERVER['HTTP_REFERER'] ?? 'dashboard.php';
+                        $this->redirect($referer);
+                    }
+                }
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * JSON Response Helper
+     */
+    public function jsonResponse($data, $statusCode = 200) {
+        http_response_code($statusCode);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($data, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
+        exit;
+    }
 }

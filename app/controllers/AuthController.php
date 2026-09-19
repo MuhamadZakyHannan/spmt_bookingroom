@@ -16,7 +16,9 @@ class AuthController extends Controller {
         $error = '';
         $email = '';
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if ($this->isPost()) {
+            $this->validateCsrf('login.php');
+
             $email = trim($_POST['email'] ?? '');
             $password = trim($_POST['password'] ?? '');
 
@@ -25,6 +27,9 @@ class AuthController extends Controller {
             } else {
                 $user = $this->userModel->findByEmail($email);
                 if ($user && password_verify($password, $user['password'])) {
+                    // Prevent Session Fixation
+                    session_regenerate_id(true);
+
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['user_name'] = $user['name'];
                     $_SESSION['user_email'] = $user['email'];
@@ -53,7 +58,9 @@ class AuthController extends Controller {
         $name = '';
         $email = '';
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if ($this->isPost()) {
+            $this->validateCsrf('register.php');
+
             $name = trim($_POST['name'] ?? '');
             $email = trim($_POST['email'] ?? '');
             $password = trim($_POST['password'] ?? '');
