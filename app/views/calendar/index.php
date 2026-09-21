@@ -219,6 +219,13 @@
         background: #ffe4e6;
         color: #be123c;
     }
+    .calendar-detail-header {
+        padding-bottom: 1.5rem !important;
+        padding-top: 1.75rem !important;
+    }
+    .calendar-detail-icon {
+        margin-top: 0.125rem;
+    }
     .dark .calendar-shell .fc {
         --fc-border-color: #334155;
         --fc-neutral-bg-color: #0f172a;
@@ -392,10 +399,11 @@
 </div>
 
 <div id="eventModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="w-full max-w-xl overflow-hidden rounded-3xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl shadow-slate-950/20">
-        <div class="flex items-start justify-between border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-brand-50 via-white to-sky-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 px-5 py-5 sm:px-6">
+    <div class="relative w-full max-w-xl overflow-hidden rounded-3xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl shadow-slate-950/20">
+        <div id="modalAccent" class="absolute inset-x-0 top-0 z-10 h-1 bg-brand-600"></div>
+        <div class="calendar-detail-header flex items-start justify-between border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-brand-50 via-white to-sky-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 px-5 sm:px-7">
             <div class="flex min-w-0 items-start gap-3.5">
-                <span id="modalColor" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-sm">
+                <span id="modalColor" class="calendar-detail-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-sm ring-4 ring-white/80 dark:ring-slate-800/80">
                     <i class="fas fa-calendar-check"></i>
                 </span>
                 <div class="min-w-0 pt-0.5">
@@ -406,7 +414,7 @@
                     <h3 id="modalTitle" class="break-words text-lg font-bold leading-snug text-slate-900 dark:text-white sm:text-xl"></h3>
                 </div>
             </div>
-            <button id="modalCloseButton" type="button" onclick="closeCalendarEventModal()" class="ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-transparent text-slate-400 hover:border-slate-200 hover:bg-white hover:text-slate-700 dark:hover:border-slate-600 dark:hover:bg-slate-700 dark:hover:text-white transition" aria-label="Tutup detail">
+            <button id="modalCloseButton" type="button" onclick="closeCalendarEventModal()" class="ml-3 mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-transparent text-slate-400 hover:border-slate-200 hover:bg-white hover:text-slate-700 dark:hover:border-slate-600 dark:hover:bg-slate-700 dark:hover:text-white transition" aria-label="Tutup detail">
                 <i class="fas fa-times"></i>
             </button>
         </div>
@@ -594,6 +602,7 @@
                 document.getElementById('modalAttendees').textContent = `${props.attendees} peserta`;
                 document.getElementById('modalPurpose').textContent = props.purpose || 'Tidak ada catatan tambahan.';
                 document.getElementById('modalColor').style.backgroundColor = args.event.backgroundColor;
+                document.getElementById('modalAccent').style.backgroundColor = args.event.backgroundColor;
                 const modalStatus = document.getElementById('modalStatus');
                 modalStatus.dataset.status = statusKey;
                 modalStatus.textContent = statusLabel;
