@@ -12,7 +12,7 @@
 1. Buka XAMPP Control Panel dan jalankan service **Apache** dan **MySQL**.
 2. Buka browser dan akses **phpMyAdmin** di `http://localhost/phpmyadmin/`.
 3. Klik menu **Import** di bagian atas phpMyAdmin.
-4. Pilih file **`database.sql`** yang terdapat dalam folder project `meetspace`.
+4. Pilih file **`C:\xampp\private\Room_Booking_System\database.sql`**. File skema sengaja disimpan di luar `htdocs` agar tidak dapat diunduh melalui Apache.
 5. Klik **Go** / **Kirim** untuk mengimpor database. Script ini secara otomatis membuat database `meetspace_db` beserta tabel dan data awal.
 
 ### Langkah 3: Konfigurasi Database

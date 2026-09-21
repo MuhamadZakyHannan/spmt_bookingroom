@@ -1,0 +1,28 @@
+# MeetSpace root hardening for Apache/XAMPP
+Options -Indexes
+
+# Block files that must never be served directly by the web server.
+<FilesMatch "(?i)(^\.env|\.sql$|^README(?:\..*)?$|^package.*\.json$|^(?:config|configuration)\.(?:php|inc)$|^test_db\.php$)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Prevent access to common local metadata and dependency manifests.
+<FilesMatch "(?i)^(?:composer\.(?:json|lock)|phpunit\.xml(?:\.dist)?|\.gitignore|\.gitattributes)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>
