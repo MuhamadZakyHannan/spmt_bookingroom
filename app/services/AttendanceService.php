@@ -3,10 +3,7 @@ require_once __DIR__ . '/../core/Database.php';
 require_once __DIR__ . '/../core/AttendancePolicy.php';
 require_once __DIR__ . '/../models/NotificationModel.php';
 
-/**
- * Menangani seluruh perubahan status attendance dan batas transaksi database.
- * BookingModel tetap menyediakan API lama sebagai facade untuk kompatibilitas.
- */
+
 class AttendanceService {
     private $db;
     private $notifications;

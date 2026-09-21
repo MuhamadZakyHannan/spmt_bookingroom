@@ -1,9 +1,6 @@
 <?php
 
-/**
- * Satu sumber konfigurasi tampilan untuk aksi attendance.
- * Dipakai oleh HTML awal dan renderer JavaScript agar warna kedua mode konsisten.
- */
+
 class AttendancePresentation {
     private const BASE_BUTTON_CLASS = 'w-full px-4 py-2 border-2 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm';
 
