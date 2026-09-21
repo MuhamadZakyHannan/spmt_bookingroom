@@ -203,6 +203,22 @@
         background: #e8f0fe;
         color: #1967d2;
     }
+    .calendar-detail-status[data-status="scheduled"] {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+    .calendar-detail-status[data-status="ongoing"] {
+        background: #dcfce7;
+        color: #15803d;
+    }
+    .calendar-detail-status[data-status="completed"] {
+        background: #e2e8f0;
+        color: #475569;
+    }
+    .calendar-detail-status[data-status="no-show"] {
+        background: #ffe4e6;
+        color: #be123c;
+    }
     .dark .calendar-shell .fc {
         --fc-border-color: #334155;
         --fc-neutral-bg-color: #0f172a;
@@ -241,6 +257,22 @@
     .dark .calendar-view-button.is-active {
         background: rgba(37, 99, 235, 0.28);
         color: #bfdbfe;
+    }
+    .dark .calendar-detail-status[data-status="scheduled"] {
+        background: rgba(37, 99, 235, 0.25);
+        color: #bfdbfe;
+    }
+    .dark .calendar-detail-status[data-status="ongoing"] {
+        background: rgba(22, 163, 74, 0.22);
+        color: #bbf7d0;
+    }
+    .dark .calendar-detail-status[data-status="completed"] {
+        background: #334155;
+        color: #cbd5e1;
+    }
+    .dark .calendar-detail-status[data-status="no-show"] {
+        background: rgba(225, 29, 72, 0.22);
+        color: #fecdd3;
     }
     @media (max-width: 640px) {
         .calendar-shell .fc-daygrid-day-frame {
@@ -359,40 +391,72 @@
     </div>
 </div>
 
-<div id="eventModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl">
-        <div class="flex items-start justify-between px-6 pb-3 pt-5">
-            <div class="flex min-w-0 items-start gap-3">
-                <span id="modalColor" class="mt-1 h-3 w-3 shrink-0 rounded-sm bg-brand-500"></span>
-                <div class="min-w-0">
-                    <h3 id="modalTitle" class="text-lg font-semibold text-slate-900 dark:text-white"></h3>
-                    <p id="modalDateTime" class="mt-1 text-xs text-slate-500 dark:text-slate-400"></p>
+<div id="eventModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="w-full max-w-xl overflow-hidden rounded-3xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl shadow-slate-950/20">
+        <div class="flex items-start justify-between border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-brand-50 via-white to-sky-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 px-5 py-5 sm:px-6">
+            <div class="flex min-w-0 items-start gap-3.5">
+                <span id="modalColor" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-sm">
+                    <i class="fas fa-calendar-check"></i>
+                </span>
+                <div class="min-w-0 pt-0.5">
+                    <div class="mb-1.5 flex flex-wrap items-center gap-2">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600 dark:text-brand-300">Detail rapat</span>
+                        <span id="modalStatus" data-status="scheduled" class="calendar-detail-status rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide">Terjadwal</span>
+                    </div>
+                    <h3 id="modalTitle" class="break-words text-lg font-bold leading-snug text-slate-900 dark:text-white sm:text-xl"></h3>
                 </div>
             </div>
-            <button type="button" onclick="closeCalendarEventModal()" class="ml-3 h-9 w-9 shrink-0 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-white transition" aria-label="Tutup detail">
+            <button id="modalCloseButton" type="button" onclick="closeCalendarEventModal()" class="ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-transparent text-slate-400 hover:border-slate-200 hover:bg-white hover:text-slate-700 dark:hover:border-slate-600 dark:hover:bg-slate-700 dark:hover:text-white transition" aria-label="Tutup detail">
                 <i class="fas fa-times"></i>
             </button>
         </div>
 
-        <div class="space-y-4 px-6 pb-6 pt-2 text-sm">
-            <div class="flex items-start gap-3">
-                <i class="fas fa-door-open mt-0.5 w-4 text-center text-slate-400"></i>
-                <div>
-                    <div id="modalRoom" class="font-semibold text-slate-800 dark:text-slate-100"></div>
-                    <div class="text-xs text-slate-400">Ruang rapat</div>
+        <div class="space-y-4 p-5 sm:p-6">
+            <div class="flex items-center gap-3 rounded-2xl border border-brand-100 dark:border-brand-900/60 bg-brand-50/60 dark:bg-brand-950/20 p-4">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white dark:bg-slate-800 text-brand-600 dark:text-brand-300 shadow-sm">
+                    <i class="far fa-clock"></i>
+                </span>
+                <div class="min-w-0">
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tanggal dan waktu</div>
+                    <div id="modalDateTime" class="mt-0.5 font-bold text-slate-800 dark:text-slate-100"></div>
                 </div>
             </div>
-            <div class="flex items-start gap-3">
-                <i class="fas fa-user mt-0.5 w-4 text-center text-slate-400"></i>
-                <div>
-                    <div id="modalUser" class="font-semibold text-slate-800 dark:text-slate-100"></div>
-                    <div id="modalAttendees" class="text-xs text-slate-400"></div>
+
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div class="flex items-start gap-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/50 p-4">
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-100 dark:bg-violet-950/70 text-violet-600 dark:text-violet-300">
+                        <i class="fas fa-door-open"></i>
+                    </span>
+                    <div class="min-w-0">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ruang rapat</div>
+                        <div id="modalRoom" class="mt-0.5 break-words text-sm font-bold text-slate-800 dark:text-slate-100"></div>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/50 p-4">
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-300">
+                        <i class="fas fa-user"></i>
+                    </span>
+                    <div class="min-w-0">
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pemesan</div>
+                        <div id="modalUser" class="mt-0.5 break-words text-sm font-bold text-slate-800 dark:text-slate-100"></div>
+                        <div id="modalAttendees" class="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400"></div>
+                    </div>
                 </div>
             </div>
-            <div class="flex items-start gap-3">
-                <i class="fas fa-align-left mt-0.5 w-4 text-center text-slate-400"></i>
-                <div id="modalPurpose" class="whitespace-pre-wrap text-xs leading-relaxed text-slate-600 dark:text-slate-300"></div>
+
+            <div class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/50 p-4">
+                <div class="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    <i class="fas fa-align-left"></i>
+                    Tujuan / catatan
+                </div>
+                <div id="modalPurpose" class="max-h-36 overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-slate-700 dark:text-slate-300"></div>
             </div>
+        </div>
+
+        <div class="flex justify-end border-t border-slate-100 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-900/40 px-5 py-4 sm:px-6">
+            <button type="button" onclick="closeCalendarEventModal()" class="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-brand-500/20 transition hover:bg-brand-700">
+                <i class="fas fa-check"></i> Selesai
+            </button>
         </div>
     </div>
 </div>
@@ -508,6 +572,21 @@
             },
             eventClick: args => {
                 const props = args.event.extendedProps;
+                const attendanceStatus = props.attendance_status || '';
+                let statusKey = 'scheduled';
+                let statusLabel = 'Terjadwal';
+
+                if (attendanceStatus === 'checked_in') {
+                    statusKey = 'ongoing';
+                    statusLabel = 'Berlangsung';
+                } else if (attendanceStatus === 'no_show') {
+                    statusKey = 'no-show';
+                    statusLabel = 'Tidak hadir';
+                } else if (props.status === 'completed' || attendanceStatus === 'checked_out') {
+                    statusKey = 'completed';
+                    statusLabel = 'Selesai';
+                }
+
                 document.getElementById('modalTitle').textContent = props.title;
                 document.getElementById('modalDateTime').textContent = `${props.date_formatted} · ${props.time} WIB`;
                 document.getElementById('modalRoom').textContent = props.room;
@@ -515,10 +594,14 @@
                 document.getElementById('modalAttendees').textContent = `${props.attendees} peserta`;
                 document.getElementById('modalPurpose').textContent = props.purpose || 'Tidak ada catatan tambahan.';
                 document.getElementById('modalColor').style.backgroundColor = args.event.backgroundColor;
+                const modalStatus = document.getElementById('modalStatus');
+                modalStatus.dataset.status = statusKey;
+                modalStatus.textContent = statusLabel;
 
                 const modal = document.getElementById('eventModal');
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
+                document.getElementById('modalCloseButton').focus();
             },
             datesSet: info => {
                 const title = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(info.view.currentStart);
