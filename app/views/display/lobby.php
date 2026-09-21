@@ -221,13 +221,18 @@
                 activeList.forEach((b, idx) => {
                     const start5 = (b.start_time || '').substring(0, 5);
                     const end5 = (b.end_time || '').substring(0, 5);
-                    const isNow = (currentHHMM >= start5 && currentHHMM < end5);
+                    const attendanceStatus = b.attendance_status || 'scheduled';
+                    const isWithinSchedule = (currentHHMM >= start5 && currentHHMM < end5);
+                    const isNow = isWithinSchedule && attendanceStatus === 'checked_in';
+                    const isAwaitingCheckIn = isWithinSchedule && attendanceStatus === 'scheduled';
 
                     if (isNow) activeNowCount++;
 
-                    const rowBg = isNow 
-                        ? 'bg-amber-100/90 border-l-[6px] border-amber-500 shadow-sm' 
-                        : 'bg-white hover:bg-slate-50/90 border-l-[6px] border-slate-200';
+                    const rowBg = isNow
+                        ? 'bg-amber-100/90 border-l-[6px] border-amber-500 shadow-sm'
+                        : (isAwaitingCheckIn
+                            ? 'bg-blue-50/90 border-l-[6px] border-blue-500 shadow-sm'
+                            : 'bg-white hover:bg-slate-50/90 border-l-[6px] border-slate-200');
                     const padIndex = String(idx + 1).padStart(2, '0');
                     const divisiName = b.user_dept || 'Divisi Operasional';
 
@@ -291,6 +296,11 @@
                                     <span class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border-2 border-red-700 bg-red-600 text-white text-[11px] sm:text-xs font-black font-mono tracking-wide uppercase text-center leading-tight shadow-md animate-pulse">
                                         <span class="w-2 h-2 rounded-full bg-white"></span>
                                         SEDANG BERLANGSUNG
+                                    </span>
+                                ` : isAwaitingCheckIn ? `
+                                    <span class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border-2 border-amber-600 bg-amber-500 text-white text-[11px] sm:text-xs font-black font-mono tracking-wide uppercase text-center leading-tight shadow-md animate-pulse">
+                                        <span class="w-2 h-2 rounded-full bg-white"></span>
+                                        MENUNGGU CHECK-IN
                                     </span>
                                 ` : `
                                     <span class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border-2 border-blue-700 bg-blue-600 text-white text-[11px] sm:text-xs font-black font-mono tracking-wide uppercase text-center leading-tight shadow-md">

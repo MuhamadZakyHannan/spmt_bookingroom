@@ -19,7 +19,7 @@ $activeMeetingNow = null;
 foreach ($activeList as $b) {
     $start5 = substr($b['start_time'], 0, 5);
     $end5 = substr($b['end_time'], 0, 5);
-    if ($currentTime >= $start5 && $currentTime < $end5) {
+    if ($currentTime >= $start5 && $currentTime < $end5 && ($b['attendance_status'] ?? null) === 'checked_in') {
         $activeMeetingNow = $b;
         break;
     }
@@ -285,13 +285,16 @@ $totalActiveSesi = count($activeList);
                 activeList.forEach((b, idx) => {
                     const start5 = (b.start_time || '').substring(0, 5);
                     const end5 = (b.end_time || '').substring(0, 5);
-                    const isNow = (currentHHMM >= start5 && currentHHMM < end5);
+                    const attendanceStatus = b.attendance_status || 'scheduled';
+                    const isWithinSchedule = (currentHHMM >= start5 && currentHHMM < end5);
+                    const isNow = isWithinSchedule && attendanceStatus === 'checked_in';
+                    const isAwaitingCheckIn = isWithinSchedule && attendanceStatus === 'scheduled';
 
                     if (isNow) isRoomOccupied = true;
 
-                    const rowBg = isNow ?
-                        'bg-amber-100/90 shadow-2xs' :
-                        'bg-white hover:bg-slate-50/90';
+                    const rowBg = isNow
+                        ? 'bg-amber-100/90 shadow-2xs'
+                        : (isAwaitingCheckIn ? 'bg-blue-50/90 shadow-2xs' : 'bg-white hover:bg-slate-50/90');
                     const padIndex = String(idx + 1).padStart(2, '0');
                     const divisiName = b.user_dept || 'Divisi Operasional';
 
@@ -300,7 +303,7 @@ $totalActiveSesi = count($activeList);
                             <!-- No -->
                             <td class="${padClass} px-4 text-center font-mono font-black ${noSize} align-middle relative">
                                 <!-- Accent bar kiri rapi tanpa menggeser kolom -->
-                                <div class="absolute left-0 top-0 bottom-0 w-2.5 ${isNow ? 'bg-amber-500' : 'bg-transparent'}"></div>
+                                <div class="absolute left-0 top-0 bottom-0 w-2.5 ${isNow ? 'bg-amber-500' : (isAwaitingCheckIn ? 'bg-blue-500' : 'bg-transparent')}"></div>
                                 <div class="flex items-center justify-center gap-2 pl-1">
                                     ${isNow ? `
                                         <span class="relative flex ${dotSize}">
@@ -341,9 +344,9 @@ $totalActiveSesi = count($activeList);
                             <!-- Status -->
                             <td class="${padClass} px-5 sm:px-6 text-right align-middle">
                                 <div class="flex items-center justify-end">
-                                    <span class="inline-flex items-center justify-center gap-2.5 ${statusSize} border-2 ${isNow ? 'border-red-700 bg-red-600 text-white animate-pulse' : 'border-blue-700 bg-blue-600 text-white'} font-black font-mono tracking-wider uppercase text-center leading-tight shadow-md whitespace-nowrap">
+                                    <span class="inline-flex items-center justify-center gap-2.5 ${statusSize} border-2 ${isNow ? 'border-red-700 bg-red-600 text-white animate-pulse' : (isAwaitingCheckIn ? 'border-amber-600 bg-amber-500 text-white animate-pulse' : 'border-blue-700 bg-blue-600 text-white')} font-black font-mono tracking-wider uppercase text-center leading-tight shadow-md whitespace-nowrap">
                                         <span class="w-2.5 h-2.5 rounded-full bg-white shrink-0"></span>
-                                        ${isNow ? 'BERLANGSUNG' : 'TERJADWAL'}
+                                        ${isNow ? 'BERLANGSUNG' : (isAwaitingCheckIn ? 'MENUNGGU CHECK-IN' : 'TERJADWAL')}
                                     </span>
                                 </div>
                             </td>

@@ -440,7 +440,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
             // Admin tetap diarahkan ke daftar booking jika penandaan gagal.
         }
 
-        window.location.href = 'admin_bookings.php?status=pending';
+        window.location.href = 'admin_bookings.php';
     }
 
     document.addEventListener('pointerdown', prepareAdminNotificationAudio, { once: true });

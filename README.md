@@ -53,3 +53,45 @@ Buka browser dan kunjungi:
 5. **View Layer (`app/views/`)**: Seluruh kode UI/HTML terpisah di dalam folder views, menerima data bersih dari Controller tanpa ada query SQL langsung.
 6. **Controller Layer (`app/controllers/`)**: Menangani alur request pengkondisian, sanitasi input, pemanggilan model, dan rendering template view.
 7. **Core Framework (`app/core/`)**: Memiliki Router Engine (`App.php`), Base Controller (`Controller.php`), dan Singleton Database Handler (`Database.php`).
+
+---
+
+## Uji Coba Tahap Awal: Check-in / Check-out
+
+Fitur tahap awal aktif dengan aturan berikut:
+
+- Tombol check-in hanya dapat digunakan oleh akun pemilik booking.
+- Check-in dibuka 15 menit sebelum jadwal dan ditutup 15 menit setelah jadwal mulai.
+- Booking yang belum check-in setelah grace period otomatis menjadi `no_show`.
+- Booking yang sudah check-in otomatis check-out saat jam selesai.
+- Display pintu/lobby membedakan `TERJADWAL`, `MENUNGGU CHECK-IN`, dan `BERLANGSUNG`.
+- Check-in, check-out, dan no-show menghasilkan notifikasi untuk akun admin.
+
+Migrasi database dapat dijalankan berulang dengan aman:
+
+```powershell
+php scripts/run_attendance_migration.php up
+```
+
+Untuk ketepatan transisi tanpa bergantung pada polling display/admin, jadwalkan perintah berikut setiap menit melalui Windows Task Scheduler:
+
+```powershell
+php C:\xampp\htdocs\Room_Booking_System\scripts\process_attendance.php
+```
+
+### Mengembalikan kondisi sebelum uji coba
+
+Snapshot sebelum fitur berada pada commit `96ebda9` di branch `trial/tahap-awal-attendance`. Dari branch ini, rollback dilakukan dengan urutan:
+
+```powershell
+php scripts/run_attendance_migration.php down
+git revert <commit-fitur-tahap-awal>
+```
+
+Migrasi `down` menghapus notifikasi attendance, mengembalikan booking hasil check-out/no-show ke `confirmed`, lalu menghapus kolom attendance. File SQL manual tersedia di `migrations/20260921_attendance_phase_one_down.sql`.
+
+Pengujian regresi fitur:
+
+```powershell
+php tests/run_attendance_tests.php
+```
