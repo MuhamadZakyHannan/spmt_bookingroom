@@ -200,7 +200,7 @@
                         <!-- Actions -->
                         <div class="flex sm:flex-row lg:flex-col gap-2 items-stretch lg:items-end justify-end border-t lg:border-t-0 pt-3 lg:pt-0 shrink-0">
                             <?php if (!empty($attendanceAction['can_check_in'])): ?>
-                                <div style="background-color:#2563eb;color:#ffffff" class="w-full sm:w-56 px-3.5 py-2.5 rounded-xl border-2 border-blue-700 bg-brand-600 text-white text-xs font-bold text-center shadow-md">
+                                <div class="w-full sm:w-56 px-3.5 py-2.5 rounded-xl border-2 border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-900 dark:text-blue-200 text-xs font-bold text-center shadow-sm">
                                     <i class="fas fa-qrcode mr-1"></i> Scan QR pada monitor pintu untuk check-in
                                 </div>
                             <?php elseif (!empty($attendanceAction['can_check_out'])): ?>
@@ -208,7 +208,7 @@
                                     <?php echo csrf_field(); ?>
                                     <input type="hidden" name="action" value="check_out">
                                     <input type="hidden" name="booking_id" value="<?php echo $b['id']; ?>">
-                                    <button type="submit" style="background-color:#2563eb;color:#ffffff" class="w-full px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white border-2 border-blue-700 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-md">
+                                    <button type="submit" style="background-color:#6d28d9;color:#ffffff" class="w-full px-4 py-2 bg-violet-700 hover:bg-violet-800 text-white border-2 border-violet-900 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-md">
                                         <i class="fas fa-sign-out-alt"></i> Check-out
                                     </button>
                                 </form>
@@ -580,7 +580,7 @@
             const attendanceAction = b.attendance_action || {};
             if (attendanceAction.can_check_in) {
                 actionHtml += `
-                    <div style="background-color:#2563eb;color:#ffffff" class="w-full sm:w-56 px-3.5 py-2.5 rounded-xl border-2 border-blue-700 bg-brand-600 text-white text-xs font-bold text-center shadow-md">
+                    <div class="w-full sm:w-56 px-3.5 py-2.5 rounded-xl border-2 border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-900 dark:text-blue-200 text-xs font-bold text-center shadow-sm">
                         <i class="fas fa-qrcode mr-1"></i> Scan QR pada monitor pintu untuk check-in
                     </div>`;
             } else if (attendanceAction.can_check_out) {
@@ -589,7 +589,7 @@
                         ${csrfHiddenField}
                         <input type="hidden" name="action" value="check_out">
                         <input type="hidden" name="booking_id" value="${b.id}">
-                        <button type="submit" style="background-color:#2563eb;color:#ffffff" class="w-full px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white border-2 border-blue-700 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-md">
+                        <button type="submit" style="background-color:#6d28d9;color:#ffffff" class="w-full px-4 py-2 bg-violet-700 hover:bg-violet-800 text-white border-2 border-violet-900 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-md">
                             <i class="fas fa-sign-out-alt"></i> Check-out
                         </button>
                     </form>`;
