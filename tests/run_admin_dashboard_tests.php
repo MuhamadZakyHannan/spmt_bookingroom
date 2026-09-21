@@ -30,42 +30,41 @@ if (!$pdo) {
 
 try {
     $snapshot = (new AdminDashboardService($pdo))->getSnapshot();
-    $summaryKeys = [
-        'pending_requests',
-        'ongoing_meetings',
-        'awaiting_check_in',
-        'no_show_today',
-        'available_rooms',
-        'total_rooms',
-    ];
 
     expectDashboard(
-        empty(array_diff($summaryKeys, array_keys($snapshot['summary'] ?? []))),
-        'Snapshot menyediakan seluruh indikator operasional.'
+        isset($snapshot['pending_count'])
+            && isset($snapshot['pending_requests'])
+            && isset($snapshot['room_displays']),
+        'Snapshot menyediakan data persetujuan dan monitoring display.'
     );
     expectDashboard(
-        is_array($snapshot['pending_requests'] ?? null)
-            && count($snapshot['pending_requests']) <= 6,
-        'Antrean tindakan dibatasi maksimal enam pengajuan.'
-    );
-    expectDashboard(
-        is_array($snapshot['room_monitoring'] ?? null)
-            && count($snapshot['room_monitoring']) === (int)$snapshot['summary']['total_rooms'],
-        'Monitoring memuat satu status untuk setiap ruangan.'
+        is_array($snapshot['pending_requests']) && count($snapshot['pending_requests']) <= 3,
+        'Sidebar membatasi daftar persetujuan maksimal tiga pengajuan.'
     );
 
-    $validRoomStatuses = ['available', 'occupied', 'awaiting_check_in', 'maintenance'];
+    $roomCount = (int)$pdo->query('SELECT COUNT(*) FROM rooms')->fetchColumn();
+    expectDashboard(
+        is_array($snapshot['room_displays']) && count($snapshot['room_displays']) === $roomCount,
+        'Monitoring display memuat satu status untuk setiap ruangan.'
+    );
+
     $validDisplayStatuses = ['online', 'offline', 'unconfigured'];
-    foreach ($snapshot['room_monitoring'] as $room) {
-        expectDashboard(
-            in_array($room['operational_status'], $validRoomStatuses, true),
-            'Status operasional ruangan valid: ' . $room['code']
-        );
+    foreach ($snapshot['room_displays'] as $room) {
         expectDashboard(
             in_array($room['display_status'], $validDisplayStatuses, true),
             'Status display ruangan valid: ' . $room['code']
         );
     }
+
+    $admin_dashboard = $snapshot;
+    ob_start();
+    require __DIR__ . '/../app/views/dashboard/_admin_sidebar.php';
+    $sidebarHtml = ob_get_clean();
+    expectDashboard(
+        str_contains($sidebarHtml, 'Persetujuan Peminjaman')
+            && str_contains($sidebarHtml, 'Monitoring Display'),
+        'Sidebar admin merender kedua panel tambahan.'
+    );
 } catch (Throwable $e) {
     $failed++;
     echo '[FAIL] Snapshot dashboard: ' . $e->getMessage() . "\n";

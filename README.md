@@ -127,7 +127,7 @@ Warna tombol check-in/check-out otomatis mengikuti light mode dan dark mode.
 
 ### Mengelola booking
 
-Dashboard admin menampilkan ringkasan operasional, antrean pengajuan yang perlu diproses, peringatan sistem, serta status penggunaan dan display setiap ruangan. Admin dapat menyetujui atau menolak pengajuan tanpa meninggalkan dashboard; pengajuan yang bentrok diarahkan ke analisis SAW.
+Dashboard admin tetap menggunakan tampilan katalog ruangan. Pada kolom kanan tersedia **Jadwal Hari Ini**, daftar ringkas **Persetujuan Peminjaman**, dan **Monitoring Display**. Admin dapat menyetujui atau menolak pengajuan tanpa meninggalkan dashboard; pengajuan yang bentrok diarahkan ke analisis SAW.
 
 Gunakan menu **Kelola Semua Booking** untuk:
 

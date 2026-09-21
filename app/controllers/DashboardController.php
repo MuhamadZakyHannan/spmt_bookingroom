@@ -23,23 +23,13 @@ class DashboardController extends Controller {
         $capacity_filter = (int)($_GET['min_capacity'] ?? 0);
         $isAdmin = is_admin();
 
-        $total_rooms = 0;
-        $available_rooms = 0;
-        $active_bookings_today = 0;
-        $total_users = 0;
-        $rooms = [];
-        $room_suggestions = [];
-        $today_bookings = [];
-
-        if (!$isAdmin) {
-            $total_rooms = $this->roomModel->getTotalRoomsCount();
-            $available_rooms = $this->roomModel->getAvailableRoomsCount();
-            $active_bookings_today = $this->bookingModel->getTodayActiveBookingsCount();
-            $total_users = $this->userModel->getTotalCount();
-            $rooms = $this->roomModel->getAllRooms($search, $status_filter, $capacity_filter);
-            $room_suggestions = $this->roomModel->getAllRooms();
-            $today_bookings = $this->bookingModel->getTodayBookings();
-        }
+        $total_rooms = $this->roomModel->getTotalRoomsCount();
+        $available_rooms = $this->roomModel->getAvailableRoomsCount();
+        $active_bookings_today = $this->bookingModel->getTodayActiveBookingsCount();
+        $total_users = $this->userModel->getTotalCount();
+        $rooms = $this->roomModel->getAllRooms($search, $status_filter, $capacity_filter);
+        $room_suggestions = $this->roomModel->getAllRooms();
+        $today_bookings = $this->bookingModel->getTodayBookings();
 
         $active_rooms = $this->roomModel->getActiveRooms();
         $admin_dashboard = null;
