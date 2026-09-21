@@ -4,8 +4,8 @@ require_once __DIR__ . '/../core/Database.php';
 class NotificationModel {
     private $db;
 
-    public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
+    public function __construct($db = null) {
+        $this->db = $db ?: Database::getInstance()->getConnection();
     }
 
     /**
@@ -36,6 +36,40 @@ class NotificationModel {
             return $stmt->execute([$bookingId]);
         } catch (Throwable $e) {
             error_log('Gagal membuat notifikasi booking: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Membuat notifikasi attendance untuk semua admin.
+     * Definisi pesan ditempatkan di sini agar service tidak mengetahui format UI.
+     */
+    public function createForAttendanceEvent($bookingId, $type) {
+        $content = [
+            'attendance_check_in' => ['Check-in ruang rapat', ' telah check-in untuk '],
+            'attendance_check_out' => ['Check-out ruang rapat', ' telah check-out dari '],
+            'attendance_no_show' => ['Booking no-show', ' tidak check-in tepat waktu untuk '],
+        ];
+
+        if (!$this->db || $bookingId <= 0 || !isset($content[$type])) return false;
+
+        [$title, $verb] = $content[$type];
+
+        try {
+            $stmt = $this->db->prepare(
+                "INSERT IGNORE INTO notifications
+                    (recipient_user_id, booking_id, type, title, message)
+                 SELECT u.id, b.id, ?, ?,
+                        CONCAT(IFNULL(b.user_name, requester.name), ?, b.title, ' di ', r.name)
+                 FROM bookings b
+                 JOIN users requester ON requester.id = b.user_id
+                 JOIN rooms r ON r.id = b.room_id
+                 CROSS JOIN users u
+                 WHERE b.id = ? AND u.role = 'admin'"
+            );
+            return $stmt->execute([$type, $title, $verb, $bookingId]);
+        } catch (Throwable $e) {
+            error_log('Gagal membuat notifikasi attendance: ' . $e->getMessage());
             return false;
         }
     }

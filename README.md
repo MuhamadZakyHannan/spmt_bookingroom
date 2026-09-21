@@ -67,6 +67,21 @@ Fitur tahap awal aktif dengan aturan berikut:
 - Display pintu/lobby membedakan `TERJADWAL`, `MENUNGGU CHECK-IN`, dan `BERLANGSUNG`.
 - Check-in, check-out, dan no-show menghasilkan notifikasi untuk akun admin.
 
+### Struktur fitur attendance
+
+- `app/core/AttendancePolicy.php`: aturan jendela waktu dan status aksi.
+- `app/services/AttendanceService.php`: transaksi check-in, check-out, no-show, dan auto check-out.
+- `app/models/NotificationModel.php`: pembentukan notifikasi admin.
+- `app/core/AttendancePresentation.php`: label, ikon, dan warna tombol light/dark mode.
+- `BookingModel`: facade kompatibilitas untuk controller dan endpoint yang sudah ada.
+
+Jendela waktu dapat dikembangkan atau diubah melalui `.env` tanpa mengubah kode:
+
+```dotenv
+ATTENDANCE_CHECK_IN_EARLY_MINUTES=15
+ATTENDANCE_GRACE_MINUTES=15
+```
+
 Migrasi database dapat dijalankan berulang dengan aman:
 
 ```powershell

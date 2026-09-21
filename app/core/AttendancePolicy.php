@@ -8,6 +8,18 @@ class AttendancePolicy {
     public const CHECK_IN_EARLY_MINUTES = 15;
     public const GRACE_MINUTES = 15;
 
+    public static function checkInEarlyMinutes(): int {
+        return defined('ATTENDANCE_CHECK_IN_EARLY_MINUTES')
+            ? max(0, (int)ATTENDANCE_CHECK_IN_EARLY_MINUTES)
+            : self::CHECK_IN_EARLY_MINUTES;
+    }
+
+    public static function graceMinutes(): int {
+        return defined('ATTENDANCE_GRACE_MINUTES')
+            ? max(0, (int)ATTENDANCE_GRACE_MINUTES)
+            : self::GRACE_MINUTES;
+    }
+
     public static function getWindow(array $booking): array {
         $timezone = new DateTimeZone(date_default_timezone_get());
         $start = new DateTimeImmutable(
@@ -22,8 +34,8 @@ class AttendancePolicy {
         return [
             'start' => $start,
             'end' => $end,
-            'check_in_opens_at' => $start->modify('-' . self::CHECK_IN_EARLY_MINUTES . ' minutes'),
-            'check_in_deadline_at' => $start->modify('+' . self::GRACE_MINUTES . ' minutes'),
+            'check_in_opens_at' => $start->modify('-' . self::checkInEarlyMinutes() . ' minutes'),
+            'check_in_deadline_at' => $start->modify('+' . self::graceMinutes() . ' minutes'),
         ];
     }
 
@@ -60,7 +72,7 @@ class AttendancePolicy {
         }
 
         if ($now < $window['check_in_opens_at']) {
-            $state['message'] = 'Check-in dibuka 15 menit sebelum jadwal.';
+            $state['message'] = 'Check-in dibuka ' . self::checkInEarlyMinutes() . ' menit sebelum jadwal.';
         } elseif ($now <= $window['check_in_deadline_at']) {
             $state['can_check_in'] = true;
             $state['message'] = 'Check-in tersedia sampai ' . $window['check_in_deadline_at']->format('H:i') . ' WIB.';

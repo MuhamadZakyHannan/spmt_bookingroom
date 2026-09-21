@@ -1,13 +1,16 @@
 <?php
 require_once __DIR__ . '/../core/Database.php';
 require_once __DIR__ . '/../core/AttendancePolicy.php';
+require_once __DIR__ . '/../services/AttendanceService.php';
 
 class BookingModel {
     private $db;
+    private $attendanceService;
     private $lastInsertId = 0;
 
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
+        $this->attendanceService = new AttendanceService($this->db);
     }
 
     public function getTodayActiveBookingsCount() {
@@ -258,188 +261,15 @@ class BookingModel {
      * scripts/process_attendance.php juga dapat dijadwalkan tiap menit.
      */
     public function processAutomaticAttendanceTransitions() {
-        $result = ['no_show' => [], 'checked_out' => []];
-        if (!$this->db) return $result;
-
-        $now = date('Y-m-d H:i:s');
-
-        try {
-            $this->db->beginTransaction();
-
-            $noShowStmt = $this->db->prepare(
-                "SELECT id FROM bookings
-                 WHERE status = 'confirmed'
-                   AND attendance_status = 'scheduled'
-                   AND DATE_ADD(TIMESTAMP(date, start_time), INTERVAL 15 MINUTE) < ?
-                 FOR UPDATE"
-            );
-            $noShowStmt->execute([$now]);
-            $result['no_show'] = array_map('intval', $noShowStmt->fetchAll(PDO::FETCH_COLUMN));
-
-            if (!empty($result['no_show'])) {
-                $placeholders = implode(',', array_fill(0, count($result['no_show']), '?'));
-                $params = array_merge([$now], $result['no_show']);
-                $update = $this->db->prepare(
-                    "UPDATE bookings
-                     SET status = 'completed', attendance_status = 'no_show',
-                         no_show_at = ?, attendance_updated_by = 'system'
-                     WHERE id IN ($placeholders)"
-                );
-                $update->execute($params);
-
-                foreach ($result['no_show'] as $bookingId) {
-                    $this->createAttendanceAdminNotification($bookingId, 'attendance_no_show');
-                }
-            }
-
-            $checkOutStmt = $this->db->prepare(
-                "SELECT id FROM bookings
-                 WHERE status = 'confirmed'
-                   AND attendance_status = 'checked_in'
-                   AND TIMESTAMP(date, end_time) <= ?
-                 FOR UPDATE"
-            );
-            $checkOutStmt->execute([$now]);
-            $result['checked_out'] = array_map('intval', $checkOutStmt->fetchAll(PDO::FETCH_COLUMN));
-
-            if (!empty($result['checked_out'])) {
-                $placeholders = implode(',', array_fill(0, count($result['checked_out']), '?'));
-                $params = array_merge([$now], $result['checked_out']);
-                $update = $this->db->prepare(
-                    "UPDATE bookings
-                     SET status = 'completed', attendance_status = 'checked_out',
-                         check_out_at = ?, attendance_updated_by = 'system'
-                     WHERE id IN ($placeholders)"
-                );
-                $update->execute($params);
-
-                foreach ($result['checked_out'] as $bookingId) {
-                    $this->createAttendanceAdminNotification($bookingId, 'attendance_check_out');
-                }
-            }
-
-            $this->db->commit();
-        } catch (Throwable $e) {
-            if ($this->db->inTransaction()) $this->db->rollBack();
-            error_log('Gagal memproses attendance otomatis: ' . $e->getMessage());
-        }
-
-        return $result;
+        return $this->attendanceService->processAutomaticTransitions();
     }
 
     public function checkIn($bookingId, $userId) {
-        if (!$this->db || $bookingId <= 0 || $userId <= 0) {
-            return ['success' => false, 'message' => 'Data booking tidak valid.'];
-        }
-
-        try {
-            $this->db->beginTransaction();
-            $stmt = $this->db->prepare("SELECT * FROM bookings WHERE id = ? AND user_id = ? FOR UPDATE");
-            $stmt->execute([$bookingId, $userId]);
-            $booking = $stmt->fetch();
-
-            if (!$booking) {
-                throw new DomainException('Booking tidak ditemukan atau bukan milik akun Anda.');
-            }
-
-            $state = AttendancePolicy::getActionState($booking);
-            if (!$state['can_check_in']) {
-                throw new DomainException($state['message'] ?: 'Check-in tidak tersedia untuk booking ini.');
-            }
-
-            $now = date('Y-m-d H:i:s');
-            $update = $this->db->prepare(
-                "UPDATE bookings
-                 SET attendance_status = 'checked_in', check_in_at = ?, attendance_updated_by = 'user'
-                 WHERE id = ? AND user_id = ? AND status = 'confirmed' AND attendance_status = 'scheduled'"
-            );
-            $update->execute([$now, $bookingId, $userId]);
-
-            if ($update->rowCount() !== 1) {
-                throw new RuntimeException('Status booking berubah. Silakan muat ulang halaman.');
-            }
-
-            $this->createAttendanceAdminNotification($bookingId, 'attendance_check_in');
-            $this->db->commit();
-            return ['success' => true, 'message' => 'Check-in berhasil. Ruangan kini ditandai sedang digunakan.'];
-        } catch (DomainException $e) {
-            if ($this->db->inTransaction()) $this->db->rollBack();
-            return ['success' => false, 'message' => $e->getMessage()];
-        } catch (Throwable $e) {
-            if ($this->db->inTransaction()) $this->db->rollBack();
-            error_log('Gagal check-in: ' . $e->getMessage());
-            return ['success' => false, 'message' => 'Check-in gagal diproses.'];
-        }
+        return $this->attendanceService->checkIn($bookingId, $userId);
     }
 
     public function checkOut($bookingId, $userId) {
-        if (!$this->db || $bookingId <= 0 || $userId <= 0) {
-            return ['success' => false, 'message' => 'Data booking tidak valid.'];
-        }
-
-        try {
-            $this->db->beginTransaction();
-            $stmt = $this->db->prepare("SELECT * FROM bookings WHERE id = ? AND user_id = ? FOR UPDATE");
-            $stmt->execute([$bookingId, $userId]);
-            $booking = $stmt->fetch();
-
-            if (!$booking) {
-                throw new DomainException('Booking tidak ditemukan atau bukan milik akun Anda.');
-            }
-
-            $state = AttendancePolicy::getActionState($booking);
-            if (!$state['can_check_out']) {
-                throw new DomainException('Check-out hanya tersedia setelah akun Anda melakukan check-in.');
-            }
-
-            $now = date('Y-m-d H:i:s');
-            $update = $this->db->prepare(
-                "UPDATE bookings
-                 SET status = 'completed', attendance_status = 'checked_out',
-                     check_out_at = ?, attendance_updated_by = 'user'
-                 WHERE id = ? AND user_id = ? AND status = 'confirmed' AND attendance_status = 'checked_in'"
-            );
-            $update->execute([$now, $bookingId, $userId]);
-
-            if ($update->rowCount() !== 1) {
-                throw new RuntimeException('Status booking berubah. Silakan muat ulang halaman.');
-            }
-
-            $this->createAttendanceAdminNotification($bookingId, 'attendance_check_out');
-            $this->db->commit();
-            return ['success' => true, 'message' => 'Check-out berhasil. Ruangan kembali tersedia.'];
-        } catch (DomainException $e) {
-            if ($this->db->inTransaction()) $this->db->rollBack();
-            return ['success' => false, 'message' => $e->getMessage()];
-        } catch (Throwable $e) {
-            if ($this->db->inTransaction()) $this->db->rollBack();
-            error_log('Gagal check-out: ' . $e->getMessage());
-            return ['success' => false, 'message' => 'Check-out gagal diproses.'];
-        }
-    }
-
-    private function createAttendanceAdminNotification($bookingId, $type) {
-        $content = [
-            'attendance_check_in' => ['Check-in ruang rapat', ' telah check-in untuk '],
-            'attendance_check_out' => ['Check-out ruang rapat', ' telah check-out dari '],
-            'attendance_no_show' => ['Booking no-show', ' tidak check-in tepat waktu untuk '],
-        ];
-
-        if (!isset($content[$type])) return false;
-
-        [$title, $verb] = $content[$type];
-        $stmt = $this->db->prepare(
-            "INSERT IGNORE INTO notifications
-                (recipient_user_id, booking_id, type, title, message)
-             SELECT u.id, b.id, ?, ?,
-                    CONCAT(IFNULL(b.user_name, requester.name), ?, b.title, ' di ', r.name)
-             FROM bookings b
-             JOIN users requester ON requester.id = b.user_id
-             JOIN rooms r ON r.id = b.room_id
-             CROSS JOIN users u
-             WHERE b.id = ? AND u.role = 'admin'"
-        );
-        return $stmt->execute([$type, $title, $verb, $bookingId]);
+        return $this->attendanceService->checkOut($bookingId, $userId);
     }
 
     public function cancel($bookingId, $userId, $isAdmin = false) {

@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../app/core/AttendancePolicy.php';
+require_once __DIR__ . '/../app/core/AttendancePresentation.php';
 require_once __DIR__ . '/../app/models/BookingModel.php';
 
 if (PHP_SAPI !== 'cli') {
@@ -33,15 +34,29 @@ $bookingTemplate = [
     'attendance_status' => 'scheduled',
 ];
 
-$tooEarly = AttendancePolicy::getActionState($bookingTemplate, new DateTimeImmutable('2026-09-21 09:44:59', $timezone));
-$atOpen = AttendancePolicy::getActionState($bookingTemplate, new DateTimeImmutable('2026-09-21 09:45:00', $timezone));
-$atDeadline = AttendancePolicy::getActionState($bookingTemplate, new DateTimeImmutable('2026-09-21 10:15:00', $timezone));
-$tooLate = AttendancePolicy::getActionState($bookingTemplate, new DateTimeImmutable('2026-09-21 10:15:01', $timezone));
+$scheduledStart = new DateTimeImmutable('2026-09-21 10:00:00', $timezone);
+$checkInOpen = $scheduledStart->modify('-' . AttendancePolicy::checkInEarlyMinutes() . ' minutes');
+$checkInDeadline = $scheduledStart->modify('+' . AttendancePolicy::graceMinutes() . ' minutes');
+$tooEarly = AttendancePolicy::getActionState($bookingTemplate, $checkInOpen->modify('-1 second'));
+$atOpen = AttendancePolicy::getActionState($bookingTemplate, $checkInOpen);
+$atDeadline = AttendancePolicy::getActionState($bookingTemplate, $checkInDeadline);
+$tooLate = AttendancePolicy::getActionState($bookingTemplate, $checkInDeadline->modify('+1 second'));
 
-expectTrue(!$tooEarly['can_check_in'], 'Check-in belum tersedia sebelum H-15 menit.');
-expectTrue($atOpen['can_check_in'], 'Check-in tersedia tepat H-15 menit.');
-expectTrue($atDeadline['can_check_in'], 'Grace period mencakup tepat H+15 menit.');
+expectTrue(!$tooEarly['can_check_in'], 'Check-in belum tersedia sebelum jendela konfigurasi.');
+expectTrue($atOpen['can_check_in'], 'Check-in tersedia tepat saat jendela dibuka.');
+expectTrue($atDeadline['can_check_in'], 'Grace period mencakup tepat waktu batas akhir.');
 expectTrue(!$tooLate['can_check_in'], 'Check-in ditolak setelah grace period.');
+
+$attendanceUi = AttendancePresentation::actions();
+expectTrue(
+    isset($attendanceUi['check_in'], $attendanceUi['check_out']),
+    'Konfigurasi tampilan menyediakan aksi check-in dan check-out.'
+);
+expectTrue(
+    str_contains($attendanceUi['check_out']['button_class'], 'text-violet-700')
+        && str_contains($attendanceUi['check_out']['button_class'], 'dark:text-white'),
+    'Tombol check-out memiliki warna teks yang terbaca pada light dan dark mode.'
+);
 
 if (!$pdo) {
     fwrite(STDERR, "Database tidak tersedia; pengujian integrasi dilewati.\n");

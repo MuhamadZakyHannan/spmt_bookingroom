@@ -1,4 +1,7 @@
-<?php require_once __DIR__ . '/../layouts/header.php'; ?>
+<?php
+$attendanceUi = AttendancePresentation::actions();
+require_once __DIR__ . '/../layouts/header.php';
+?>
 
 <div class="space-y-6 max-w-7xl mx-auto">
     <!-- Header Section -->
@@ -204,8 +207,9 @@
                                     <?php echo csrf_field(); ?>
                                     <input type="hidden" name="action" value="check_in">
                                     <input type="hidden" name="booking_id" value="<?php echo $b['id']; ?>">
-                                    <button type="submit" class="w-full px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-2 border-emerald-300 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:text-white dark:border-emerald-500 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
-                                        <i class="fas fa-sign-in-alt"></i> Check-in
+                                    <button type="submit" class="<?php echo htmlspecialchars($attendanceUi['check_in']['button_class'], ENT_QUOTES, 'UTF-8'); ?>">
+                                        <i class="<?php echo htmlspecialchars($attendanceUi['check_in']['icon'], ENT_QUOTES, 'UTF-8'); ?>"></i>
+                                        <?php echo htmlspecialchars($attendanceUi['check_in']['label'], ENT_QUOTES, 'UTF-8'); ?>
                                     </button>
                                 </form>
                             <?php elseif (!empty($attendanceAction['can_check_out'])): ?>
@@ -213,8 +217,9 @@
                                     <?php echo csrf_field(); ?>
                                     <input type="hidden" name="action" value="check_out">
                                     <input type="hidden" name="booking_id" value="<?php echo $b['id']; ?>">
-                                    <button type="submit" class="w-full px-4 py-2 bg-violet-50 hover:bg-violet-100 text-violet-700 border-2 border-violet-300 dark:bg-violet-600 dark:hover:bg-violet-700 dark:text-white dark:border-violet-500 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
-                                        <i class="fas fa-sign-out-alt"></i> Check-out
+                                    <button type="submit" class="<?php echo htmlspecialchars($attendanceUi['check_out']['button_class'], ENT_QUOTES, 'UTF-8'); ?>">
+                                        <i class="<?php echo htmlspecialchars($attendanceUi['check_out']['icon'], ENT_QUOTES, 'UTF-8'); ?>"></i>
+                                        <?php echo htmlspecialchars($attendanceUi['check_out']['label'], ENT_QUOTES, 'UTF-8'); ?>
                                     </button>
                                 </form>
                             <?php endif; ?>
@@ -297,6 +302,7 @@
 </div>
 
 <script>
+    const attendanceUi = <?php echo json_encode($attendanceUi, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
     const rawMyBookingsList = <?php echo json_encode(array_map(function($b) {
         $purpose = $b['purpose'] ?: 'Tidak ada catatan agenda tambahan.';
         return [
@@ -589,8 +595,8 @@
                         ${csrfHiddenField}
                         <input type="hidden" name="action" value="check_in">
                         <input type="hidden" name="booking_id" value="${b.id}">
-                        <button type="submit" class="w-full px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-2 border-emerald-300 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:text-white dark:border-emerald-500 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
-                            <i class="fas fa-sign-in-alt"></i> Check-in
+                        <button type="submit" class="${attendanceUi.check_in.button_class}">
+                            <i class="${attendanceUi.check_in.icon}"></i> ${attendanceUi.check_in.label}
                         </button>
                     </form>`;
             } else if (attendanceAction.can_check_out) {
@@ -599,8 +605,8 @@
                         ${csrfHiddenField}
                         <input type="hidden" name="action" value="check_out">
                         <input type="hidden" name="booking_id" value="${b.id}">
-                        <button type="submit" class="w-full px-4 py-2 bg-violet-50 hover:bg-violet-100 text-violet-700 border-2 border-violet-300 dark:bg-violet-600 dark:hover:bg-violet-700 dark:text-white dark:border-violet-500 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
-                            <i class="fas fa-sign-out-alt"></i> Check-out
+                        <button type="submit" class="${attendanceUi.check_out.button_class}">
+                            <i class="${attendanceUi.check_out.icon}"></i> ${attendanceUi.check_out.label}
                         </button>
                     </form>`;
             }
