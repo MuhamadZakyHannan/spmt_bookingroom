@@ -31,7 +31,7 @@ $displayStatusMeta = [
 ?>
 
 <section aria-labelledby="pendingApprovalTitle" class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm p-6">
-    <div class="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
+    <div class="flex items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100 dark:border-slate-700">
         <div class="flex items-center gap-2 min-w-0">
             <i class="fas fa-clipboard-check text-amber-500"></i>
             <h3 id="pendingApprovalTitle" class="font-bold text-slate-900 dark:text-white text-base">Persetujuan Peminjaman</h3>
@@ -47,16 +47,17 @@ $displayStatusMeta = [
             <p class="text-xs text-slate-500 dark:text-slate-400">Tidak ada pengajuan yang menunggu persetujuan.</p>
         </div>
     <?php else: ?>
-        <div class="space-y-3">
+        <div class="space-y-4">
             <?php foreach ($pendingRequests as $request): ?>
-                <article class="rounded-xl border border-slate-200/80 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-3.5">
-                    <div class="flex items-start justify-between gap-2">
+                <article class="rounded-xl border border-slate-200/80 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-4">
+                    <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
                             <h4 class="truncate text-sm font-bold text-slate-800 dark:text-slate-100" title="<?php echo htmlspecialchars($request['title']); ?>">
                                 <?php echo htmlspecialchars($request['title']); ?>
                             </h4>
-                            <p class="mt-1 truncate text-[11px] text-slate-500 dark:text-slate-400">
-                                <i class="fas fa-door-open mr-1 text-brand-500"></i><?php echo htmlspecialchars($request['room_name']); ?>
+                            <p class="mt-2 flex items-center gap-2 truncate text-[11px] text-slate-500 dark:text-slate-400">
+                                <i class="fas fa-door-open w-4 shrink-0 text-center text-brand-500"></i>
+                                <span class="truncate"><?php echo htmlspecialchars($request['room_name']); ?></span>
                             </p>
                         </div>
                         <?php if (!empty($request['has_conflict'])): ?>
@@ -64,15 +65,24 @@ $displayStatusMeta = [
                         <?php endif; ?>
                     </div>
 
-                    <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-slate-500 dark:text-slate-400">
-                        <span><i class="fas fa-calendar-day mr-1"></i><?php echo format_date($request['date']); ?></span>
-                        <span><i class="fas fa-clock mr-1"></i><?php echo format_time($request['start_time']); ?>–<?php echo format_time($request['end_time']); ?></span>
-                        <span class="truncate"><i class="fas fa-user mr-1"></i><?php echo htmlspecialchars($request['user_name']); ?></span>
+                    <div class="mt-4 grid gap-2 rounded-lg border border-slate-200/70 dark:border-slate-700 bg-white/70 dark:bg-slate-800/70 px-3 py-2.5 text-[11px] text-slate-500 dark:text-slate-400">
+                        <span class="flex items-center gap-2 leading-5">
+                            <i class="fas fa-calendar-day w-4 shrink-0 text-center text-slate-400"></i>
+                            <span><?php echo format_date($request['date']); ?></span>
+                        </span>
+                        <span class="flex items-center gap-2 leading-5">
+                            <i class="fas fa-clock w-4 shrink-0 text-center text-slate-400"></i>
+                            <span><?php echo format_time($request['start_time']); ?> - <?php echo format_time($request['end_time']); ?> WIB</span>
+                        </span>
+                        <span class="flex min-w-0 items-center gap-2 leading-5">
+                            <i class="fas fa-user w-4 shrink-0 text-center text-slate-400"></i>
+                            <span class="truncate"><?php echo htmlspecialchars($request['user_name']); ?></span>
+                        </span>
                     </div>
 
-                    <div class="mt-3 flex items-center gap-2 border-t border-slate-200/70 dark:border-slate-700 pt-3">
+                    <div class="mt-4 flex items-center gap-3 border-t border-slate-200/70 dark:border-slate-700 pt-4">
                         <?php if (!empty($request['has_conflict'])): ?>
-                            <a href="admin_bookings.php" class="flex-1 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 py-2 text-center text-[10px] font-bold text-rose-700 dark:text-rose-300 transition hover:bg-rose-100 dark:hover:bg-rose-950/70">
+                            <a href="admin_bookings.php" class="flex-1 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 py-2.5 text-center text-xs font-bold text-rose-700 dark:text-rose-300 transition hover:bg-rose-100 dark:hover:bg-rose-950/70">
                                 <i class="fas fa-code-branch mr-1"></i>Analisis
                             </a>
                         <?php else: ?>
@@ -82,7 +92,7 @@ $displayStatusMeta = [
                                 <input type="hidden" name="booking_id" value="<?php echo (int)$request['id']; ?>">
                                 <input type="hidden" name="status" value="confirmed">
                                 <input type="hidden" name="return_to" value="dashboard.php">
-                                <button type="submit" class="w-full rounded-lg bg-emerald-600 py-2 text-[10px] font-bold text-white transition hover:bg-emerald-700">
+                                <button type="submit" class="w-full rounded-lg bg-emerald-600 py-2.5 text-xs font-bold text-white transition hover:bg-emerald-700">
                                     <i class="fas fa-check mr-1"></i>Setujui
                                 </button>
                             </form>
@@ -93,7 +103,7 @@ $displayStatusMeta = [
                             <input type="hidden" name="booking_id" value="<?php echo (int)$request['id']; ?>">
                             <input type="hidden" name="status" value="cancelled">
                             <input type="hidden" name="return_to" value="dashboard.php">
-                            <button type="submit" class="w-full rounded-lg border border-slate-200 dark:border-slate-600 py-2 text-[10px] font-bold text-slate-600 dark:text-slate-300 transition hover:border-rose-300 hover:text-rose-600">
+                            <button type="submit" class="w-full rounded-lg border border-slate-200 dark:border-slate-600 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-300 transition hover:border-rose-300 hover:text-rose-600">
                                 <i class="fas fa-times mr-1"></i>Tolak
                             </button>
                         </form>
@@ -103,7 +113,7 @@ $displayStatusMeta = [
         </div>
     <?php endif; ?>
 
-    <a href="admin_bookings.php?status=pending" class="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 py-2 text-xs font-bold text-amber-700 dark:text-amber-300 transition hover:bg-amber-100 dark:hover:bg-amber-950/70">
+    <a href="admin_bookings.php?status=pending" class="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 py-2.5 text-xs font-bold text-amber-700 dark:text-amber-300 transition hover:bg-amber-100 dark:hover:bg-amber-950/70">
         <i class="fas fa-list-check"></i> Lihat Semua Pengajuan
     </a>
 </section>
