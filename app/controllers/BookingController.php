@@ -154,8 +154,7 @@ class BookingController extends Controller {
 
             if ($booking_id > 0) {
                 if ($action === 'check_in') {
-                    $result = $this->bookingModel->checkIn($booking_id, (int)$_SESSION['user_id']);
-                    set_flash($result['success'] ? 'success' : 'danger', $result['message']);
+                    set_flash('warning', 'Check-in tahap lanjutan hanya dapat dilakukan dengan memindai QR pada monitor pintu ruangan.');
                 } elseif ($action === 'check_out') {
                     $result = $this->bookingModel->checkOut($booking_id, (int)$_SESSION['user_id']);
                     set_flash($result['success'] ? 'success' : 'danger', $result['message']);

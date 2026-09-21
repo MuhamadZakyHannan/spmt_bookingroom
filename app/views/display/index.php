@@ -118,10 +118,10 @@ $totalActiveSesi = count($activeList);
     </div>
 
     <!-- MODERN DIGITAL SIGNAGE CONTAINER -->
-    <div id="monitorFrame" class="relative mx-auto max-w-[1720px] 2xl:max-w-[1850px] w-full flex-1 min-h-0 flex flex-col justify-between">
+    <div id="monitorFrame" class="relative mx-auto max-w-[1720px] 2xl:max-w-[1850px] w-full flex-1 min-h-0 flex flex-col lg:flex-row justify-between gap-4">
 
         <!-- Main Display Surface -->
-        <div class="relative rounded-2xl sm:rounded-3xl bg-white p-4 sm:p-6 lg:p-7 shadow-md border border-slate-200/90 overflow-hidden text-slate-800 flex-1 min-h-0 flex flex-col justify-between gap-3 sm:gap-4">
+        <div class="relative rounded-2xl sm:rounded-3xl bg-white p-4 sm:p-6 lg:p-7 shadow-md border border-slate-200/90 overflow-hidden text-slate-800 flex-1 min-w-0 min-h-0 flex flex-col justify-between gap-3 sm:gap-4">
 
             <!-- INNER SCREEN CONTAINER -->
             <div class="relative z-10 flex-1 min-h-0 flex flex-col justify-between gap-3 sm:gap-4">
@@ -194,22 +194,24 @@ $totalActiveSesi = count($activeList);
 
             </div>
         </div>
-    </div>
-
     <!-- QR check-in hanya tampil pada display bertoken yang terdaftar. -->
-    <aside id="qrCheckinCard" class="hidden fixed right-5 bottom-5 z-40 w-64 rounded-2xl bg-white border-2 border-blue-600 shadow-2xl p-4 text-center">
+    <aside id="qrCheckinCard" class="<?php echo empty($qrDisplayToken) ? 'hidden' : 'flex'; ?> w-full lg:w-72 shrink-0 rounded-2xl bg-white border-2 border-blue-600 shadow-xl p-4 text-center flex-col items-center justify-center self-stretch">
         <div class="flex items-center justify-center gap-2 text-blue-800 font-black text-sm uppercase tracking-wide">
             <i class="fas fa-qrcode"></i>
             Scan untuk Check-in
         </div>
-        <div id="qrCheckinCode" class="mt-3 bg-white p-2 rounded-xl border border-slate-200 flex items-center justify-center min-h-48"></div>
-        <div id="qrCheckinAgenda" class="mt-2 text-xs font-bold text-slate-800 line-clamp-2"></div>
-        <div class="mt-1 text-[11px] text-slate-500">Masuk dengan akun pemilik booking</div>
-        <div class="mt-2 inline-flex items-center gap-1 rounded-lg bg-amber-100 text-amber-900 px-2.5 py-1 text-[11px] font-bold">
+        <div id="qrCheckinCode" class="hidden mt-3 bg-white p-2 rounded-xl border border-slate-200 items-center justify-center min-h-48 w-full"></div>
+        <div id="qrCheckinStatus" class="mt-4 w-full p-4 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold leading-relaxed">
+            QR muncul mulai 15 menit sebelum jadwal hingga 15 menit setelah jadwal dimulai.
+        </div>
+        <div id="qrCheckinAgenda" class="hidden mt-2 text-xs font-bold text-slate-800 line-clamp-2"></div>
+        <div class="mt-2 text-[11px] text-slate-500">Masuk dengan akun pemilik booking</div>
+        <div id="qrCheckinTimer" class="hidden mt-2 items-center gap-1 rounded-lg bg-amber-100 text-amber-900 px-2.5 py-1 text-[11px] font-bold">
             <i class="fas fa-clock"></i>
             Berlaku <span id="qrCheckinCountdown">0</span> detik
         </div>
     </aside>
+    </div>
 
     <!-- Initial Data for Zero-Lag Immediate Display -->
     <script>
@@ -420,9 +422,52 @@ $totalActiveSesi = count($activeList);
 
         let qrExpiresAtMs = 0;
 
-        function hideCheckinQr() {
+        function getQrIdleMessage() {
+            const now = new Date();
+            const currentHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            const checkedIn = (currentRoomSchedule || []).find(b => {
+                const start5 = (b.start_time || '').substring(0, 5);
+                const end5 = (b.end_time || '').substring(0, 5);
+                return b.attendance_status === 'checked_in' && currentHHMM >= start5 && currentHHMM < end5;
+            });
+            if (checkedIn) {
+                return {
+                    message: `Check-in sudah tercatat untuk ${checkedIn.title}. QR tidak diperlukan lagi.`,
+                    success: true
+                };
+            }
+            return {
+                message: 'QR muncul mulai 15 menit sebelum jadwal hingga 15 menit setelah jadwal dimulai.',
+                success: false
+            };
+        }
+
+        function showQrIdleState(customMessage = '') {
             const card = document.getElementById('qrCheckinCard');
-            if (card) card.classList.add('hidden');
+            if (!card) return;
+            if (!QR_DISPLAY_TOKEN) {
+                card.classList.add('hidden');
+                return;
+            }
+
+            const idle = getQrIdleMessage();
+            const status = document.getElementById('qrCheckinStatus');
+            const code = document.getElementById('qrCheckinCode');
+            const agenda = document.getElementById('qrCheckinAgenda');
+            const timer = document.getElementById('qrCheckinTimer');
+
+            card.classList.remove('hidden');
+            card.classList.add('flex');
+            code.classList.add('hidden');
+            code.classList.remove('flex');
+            agenda.classList.add('hidden');
+            timer.classList.add('hidden');
+            timer.classList.remove('inline-flex');
+            status.classList.remove('hidden');
+            status.textContent = customMessage || idle.message;
+            status.className = idle.success
+                ? 'mt-4 w-full p-4 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-900 text-xs font-bold leading-relaxed'
+                : 'mt-4 w-full p-4 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold leading-relaxed';
             qrExpiresAtMs = 0;
         }
 
@@ -431,12 +476,12 @@ $totalActiveSesi = count($activeList);
             if (!countdown || !qrExpiresAtMs) return;
             const seconds = Math.max(0, Math.ceil((qrExpiresAtMs - Date.now()) / 1000));
             countdown.textContent = String(seconds);
-            if (seconds <= 0) hideCheckinQr();
+            if (seconds <= 0) showQrIdleState('QR sedang diperbarui…');
         }
 
         function renderCheckinQr(data) {
             if (typeof qrcode !== 'function' || !data.checkin_url) {
-                hideCheckinQr();
+                showQrIdleState('QR gagal dibuat. Monitor akan mencoba kembali.');
                 return;
             }
 
@@ -445,16 +490,29 @@ $totalActiveSesi = count($activeList);
             qr.addData(absoluteUrl);
             qr.make();
 
-            document.getElementById('qrCheckinCode').innerHTML = qr.createSvgTag(4, 0);
-            document.getElementById('qrCheckinAgenda').textContent = data.booking?.title || 'Booking ruang rapat';
+            const card = document.getElementById('qrCheckinCard');
+            const code = document.getElementById('qrCheckinCode');
+            const status = document.getElementById('qrCheckinStatus');
+            const agenda = document.getElementById('qrCheckinAgenda');
+            const timer = document.getElementById('qrCheckinTimer');
+
+            code.innerHTML = qr.createSvgTag(4, 0);
+            code.classList.remove('hidden');
+            code.classList.add('flex');
+            status.classList.add('hidden');
+            agenda.textContent = data.booking?.title || 'Booking ruang rapat';
+            agenda.classList.remove('hidden');
+            timer.classList.remove('hidden');
+            timer.classList.add('inline-flex');
             qrExpiresAtMs = Date.now() + (Number(data.expires_in) || 45) * 1000;
-            document.getElementById('qrCheckinCard').classList.remove('hidden');
+            card.classList.remove('hidden');
+            card.classList.add('flex');
             updateQrCountdown();
         }
 
         async function fetchCheckinQr() {
             if (!QR_DISPLAY_TOKEN) {
-                hideCheckinQr();
+                document.getElementById('qrCheckinCard')?.classList.add('hidden');
                 return;
             }
 
@@ -468,7 +526,7 @@ $totalActiveSesi = count($activeList);
                 if (data && data.success) {
                     renderCheckinQr(data);
                 } else {
-                    hideCheckinQr();
+                    showQrIdleState();
                 }
             } catch (error) {
                 // QR lama akan menghilang sendiri saat masa berlakunya habis.
