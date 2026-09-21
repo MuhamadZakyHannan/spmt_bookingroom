@@ -127,6 +127,8 @@ Warna tombol check-in/check-out otomatis mengikuti light mode dan dark mode.
 
 ### Mengelola booking
 
+Dashboard admin menampilkan ringkasan operasional, antrean pengajuan yang perlu diproses, peringatan sistem, serta status penggunaan dan display setiap ruangan. Admin dapat menyetujui atau menolak pengajuan tanpa meninggalkan dashboard; pengajuan yang bentrok diarahkan ke analisis SAW.
+
 Gunakan menu **Kelola Semua Booking** untuk:
 
 - menyetujui atau menolak pengajuan;
@@ -215,6 +217,7 @@ Pastikan MySQL aktif dan database uji dapat diakses, lalu jalankan:
 
 ```powershell
 php tests/run_attendance_tests.php
+php tests/run_admin_dashboard_tests.php
 ```
 
 Pengujian membuat data sementara dan membersihkannya kembali setelah selesai.

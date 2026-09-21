@@ -185,6 +185,9 @@ class AdminController extends Controller {
             $this->validateCsrf('admin_bookings.php');
             $action = $_POST['action'] ?? '';
             $booking_id = (int)($_POST['booking_id'] ?? 0);
+            $returnTo = ($_POST['return_to'] ?? '') === 'dashboard.php'
+                ? 'dashboard.php'
+                : 'admin_bookings.php';
 
             if ($action === 'apply_saw_decision') {
                 $winner_id = (int)($_POST['winner_id'] ?? 0);
@@ -211,7 +214,7 @@ class AdminController extends Controller {
                     set_flash('success', 'Data pemesanan berhasil dihapus.');
                 }
             }
-            $this->redirect('admin_bookings.php');
+            $this->redirect($returnTo);
         }
 
         $search = trim($_GET['search'] ?? '');

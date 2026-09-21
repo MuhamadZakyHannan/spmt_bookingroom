@@ -4,9 +4,13 @@
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
     <div>
         <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Dashboard Ruangan
+            <?php echo is_admin() ? 'Dashboard Operasional' : 'Dashboard Ruangan'; ?>
         </h1>
-        <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Kelola dan pesan ruang rapat perusahaan dengan cepat dan mudah.</p>
+        <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
+            <?php echo is_admin()
+                ? 'Pantau permintaan booking, penggunaan ruangan, dan kondisi display dalam satu halaman.'
+                : 'Kelola dan pesan ruang rapat perusahaan dengan cepat dan mudah.'; ?>
+        </p>
     </div>
     <div class="flex flex-wrap items-center gap-2">
         <?php if (is_admin()): ?>
@@ -23,6 +27,9 @@
     </div>
 </div>
 
+<?php if (is_admin()): ?>
+    <?php require __DIR__ . '/_admin_monitoring.php'; ?>
+<?php else: ?>
 <!-- Statistics Cards Grid -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700/80 shadow-sm flex items-center justify-between">
@@ -267,6 +274,7 @@
         </div>
     </div>
 </div>
+<?php endif; ?>
 
 <!-- Modal Popup Booking Ruangan -->
 <div id="bookingModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
@@ -642,22 +650,24 @@
 
     // Event Listeners
     document.addEventListener('DOMContentLoaded', () => {
-        roomSearchInput.addEventListener('input', () => {
-            const q = roomSearchInput.value.trim();
-            updateRoomSuggestions(q);
-            applyLiveRoomFilter();
-        });
+        if (roomSearchInput) {
+            roomSearchInput.addEventListener('input', () => {
+                const q = roomSearchInput.value.trim();
+                updateRoomSuggestions(q);
+                applyLiveRoomFilter();
+            });
 
-        roomSearchInput.addEventListener('focus', () => {
-            const q = roomSearchInput.value.trim();
-            if (q) updateRoomSuggestions(q);
-        });
+            roomSearchInput.addEventListener('focus', () => {
+                const q = roomSearchInput.value.trim();
+                if (q) updateRoomSuggestions(q);
+            });
+        }
 
-        roomStatusFilter.addEventListener('change', applyLiveRoomFilter);
-        roomCapacityFilter.addEventListener('change', applyLiveRoomFilter);
+        if (roomStatusFilter) roomStatusFilter.addEventListener('change', applyLiveRoomFilter);
+        if (roomCapacityFilter) roomCapacityFilter.addEventListener('change', applyLiveRoomFilter);
 
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('#roomSearchContainer')) {
+            if (roomSuggestionsBox && !e.target.closest('#roomSearchContainer')) {
                 roomSuggestionsBox.classList.add('hidden');
             }
         });
