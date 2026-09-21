@@ -204,7 +204,7 @@
                                     <?php echo csrf_field(); ?>
                                     <input type="hidden" name="action" value="check_in">
                                     <input type="hidden" name="booking_id" value="<?php echo $b['id']; ?>">
-                                    <button type="submit" class="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                                    <button type="submit" class="w-full px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-2 border-emerald-300 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:text-white dark:border-emerald-500 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
                                         <i class="fas fa-sign-in-alt"></i> Check-in
                                     </button>
                                 </form>
@@ -213,7 +213,7 @@
                                     <?php echo csrf_field(); ?>
                                     <input type="hidden" name="action" value="check_out">
                                     <input type="hidden" name="booking_id" value="<?php echo $b['id']; ?>">
-                                    <button type="submit" class="w-full px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                                    <button type="submit" class="w-full px-4 py-2 bg-violet-50 hover:bg-violet-100 text-violet-700 border-2 border-violet-300 dark:bg-violet-600 dark:hover:bg-violet-700 dark:text-white dark:border-violet-500 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
                                         <i class="fas fa-sign-out-alt"></i> Check-out
                                     </button>
                                 </form>
@@ -589,7 +589,7 @@
                         ${csrfHiddenField}
                         <input type="hidden" name="action" value="check_in">
                         <input type="hidden" name="booking_id" value="${b.id}">
-                        <button type="submit" class="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                        <button type="submit" class="w-full px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-2 border-emerald-300 dark:bg-emerald-600 dark:hover:bg-emerald-700 dark:text-white dark:border-emerald-500 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
                             <i class="fas fa-sign-in-alt"></i> Check-in
                         </button>
                     </form>`;
@@ -599,7 +599,7 @@
                         ${csrfHiddenField}
                         <input type="hidden" name="action" value="check_out">
                         <input type="hidden" name="booking_id" value="${b.id}">
-                        <button type="submit" class="w-full px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                        <button type="submit" class="w-full px-4 py-2 bg-violet-50 hover:bg-violet-100 text-violet-700 border-2 border-violet-300 dark:bg-violet-600 dark:hover:bg-violet-700 dark:text-white dark:border-violet-500 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
                             <i class="fas fa-sign-out-alt"></i> Check-out
                         </button>
                     </form>`;
