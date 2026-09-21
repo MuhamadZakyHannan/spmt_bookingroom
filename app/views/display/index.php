@@ -92,13 +92,21 @@ $totalActiveSesi = count($activeList);
             <!-- Room Quick Selector (Hanya di luar fullscreen) -->
             <form method="GET" action="display.php" class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200">
                 <span class="text-xs text-slate-500 font-medium">Pilih Ruangan:</span>
-                <select name="room" onchange="this.form.submit()" class="bg-white border border-slate-300 text-blue-700 text-xs font-bold rounded px-2 py-0.5 focus:outline-none cursor-pointer">
-                    <?php foreach ($allRooms as $r): ?>
-                        <option value="<?php echo $r['id']; ?>" <?php echo $r['id'] == $room['id'] ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($r['name']); ?>
+                <?php if (!empty($allDisplays)): ?>
+                <select name="token" onchange="this.form.submit()" class="bg-white border border-slate-300 text-blue-700 text-xs font-bold rounded px-2 py-0.5 focus:outline-none cursor-pointer">
+                    <?php foreach ($allDisplays as $registeredDisplay): ?>
+                        <option value="<?php echo htmlspecialchars($registeredDisplay['display_token'], ENT_QUOTES, 'UTF-8'); ?>" <?php echo (int)$registeredDisplay['room_id'] === (int)$room['id'] ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($registeredDisplay['room_name']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
+                <?php else: ?>
+                <select name="room" onchange="this.form.submit()" class="bg-white border border-slate-300 text-blue-700 text-xs font-bold rounded px-2 py-0.5 focus:outline-none cursor-pointer">
+                    <?php foreach ($allRooms as $r): ?>
+                        <option value="<?php echo $r['id']; ?>" <?php echo $r['id'] == $room['id'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($r['name']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <?php endif; ?>
             </form>
 
             <a href="display_lobby.php" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition flex items-center gap-1.5 border border-slate-200">

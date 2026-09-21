@@ -63,6 +63,12 @@ class DisplayController extends Controller {
             $room = $this->roomModel->getById($roomId);
         }
 
+        // Setiap ruangan yang memiliki perangkat display terdaftar boleh
+        // menampilkan panel QR, termasuk ketika dipilih dari quick selector.
+        if ($display && empty($qrDisplayToken)) {
+            $qrDisplayToken = $display['display_token'];
+        }
+
         if (!$room) {
             echo "<div style='font-family: sans-serif; padding: 40px; text-align: center; color: #64748b;'>";
             echo "<h2>Ruangan Tidak Ditemukan</h2>";
