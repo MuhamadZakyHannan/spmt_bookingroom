@@ -28,13 +28,11 @@ class DisplayController extends Controller {
 
         $display = null;
         $room = null;
-        $qrDisplayToken = '';
 
         if (!empty($token)) {
             $display = $this->displayModel->getByToken($token);
             if ($display) {
                 $roomId = $display['room_id'];
-                $qrDisplayToken = $display['display_token'];
                 $this->displayModel->touchLastActive($display['id']);
             }
         }
@@ -83,7 +81,6 @@ class DisplayController extends Controller {
             'allDisplays' => $allDisplays,
             'allRooms' => $allRooms,
             'currentToken' => $display ? $display['display_token'] : '',
-            'qrDisplayToken' => $qrDisplayToken,
             'currentRoomId' => $roomId
         ]);
     }

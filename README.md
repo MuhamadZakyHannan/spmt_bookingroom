@@ -95,39 +95,3 @@ Pengujian regresi fitur:
 ```powershell
 php tests/run_attendance_tests.php
 ```
-
-## Uji Coba Tahap Lanjutan: QR Check-in
-
-QR check-in tampil pada monitor pintu hanya jika display dibuka menggunakan token perangkat yang terdaftar, misalnya:
-
-```text
-http://localhost/Room_Booking_System/display.php?token=DISP-KBT-01
-```
-
-Alur keamanannya:
-
-- QR hanya diterbitkan saat booking berada dalam jendela check-in tahap awal.
-- Token acak terikat pada booking, ruangan, dan display yang menerbitkannya.
-- Token berlaku 45 detik, disimpan sebagai hash, dan hanya dapat dipakai satu kali.
-- Pemindai wajib login menggunakan akun pemilik booking.
-- Token lain untuk booking yang sama dinonaktifkan setelah check-in berhasil.
-- Display yang dibuka tanpa token perangkat tetap menampilkan jadwal, tetapi tidak memperoleh QR.
-
-Migrasi tahap QR:
-
-```powershell
-php scripts/run_qr_migration.php up
-```
-
-Untuk membatalkan tahap QR tanpa menghapus fitur attendance tahap awal, jalankan migrasi `down` sebelum me-revert commit tahap lanjutan:
-
-```powershell
-php scripts/run_qr_migration.php down
-git revert <commit-fitur-qr>
-```
-
-Pengujian tahap QR:
-
-```powershell
-php tests/run_qr_checkin_tests.php
-```

@@ -36,12 +36,7 @@ class AuthController extends Controller {
                     $_SESSION['user_avatar'] = $user['avatar'];
                     $_SESSION['role'] = $user['role'];
 
-                    $redirect = $_SESSION['login_redirect'] ?? 'dashboard.php';
-                    unset($_SESSION['login_redirect']);
-                    if (!preg_match('/^qr_checkin\.php\?token=[A-Za-z0-9_%\-]{40,100}$/', $redirect)) {
-                        $redirect = 'dashboard.php';
-                    }
-                    $this->redirect($redirect);
+                    $this->redirect('dashboard.php');
                 } else {
                     $error = 'Email atau password yang Anda masukkan salah!';
                 }

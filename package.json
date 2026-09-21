@@ -8,8 +8,5 @@
   },
   "devDependencies": {
     "tailwindcss": "^3.4.17"
-  },
-  "dependencies": {
-    "qrcode-generator": "^1.4.4"
   }
 }

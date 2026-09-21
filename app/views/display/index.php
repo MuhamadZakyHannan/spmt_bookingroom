@@ -196,21 +196,6 @@ $totalActiveSesi = count($activeList);
         </div>
     </div>
 
-    <!-- QR check-in hanya tampil pada display bertoken yang terdaftar. -->
-    <aside id="qrCheckinCard" class="hidden fixed right-5 bottom-5 z-40 w-64 rounded-2xl bg-white border-2 border-blue-600 shadow-2xl p-4 text-center">
-        <div class="flex items-center justify-center gap-2 text-blue-800 font-black text-sm uppercase tracking-wide">
-            <i class="fas fa-qrcode"></i>
-            Scan untuk Check-in
-        </div>
-        <div id="qrCheckinCode" class="mt-3 bg-white p-2 rounded-xl border border-slate-200 flex items-center justify-center min-h-48"></div>
-        <div id="qrCheckinAgenda" class="mt-2 text-xs font-bold text-slate-800 line-clamp-2"></div>
-        <div class="mt-1 text-[11px] text-slate-500">Masuk dengan akun pemilik booking</div>
-        <div class="mt-2 inline-flex items-center gap-1 rounded-lg bg-amber-100 text-amber-900 px-2.5 py-1 text-[11px] font-bold">
-            <i class="fas fa-clock"></i>
-            Berlaku <span id="qrCheckinCountdown">0</span> detik
-        </div>
-    </aside>
-
     <!-- Initial Data for Zero-Lag Immediate Display -->
     <script>
         const CURRENT_ROOM_ID = <?php echo (int)$room['id']; ?>;
@@ -218,11 +203,8 @@ $totalActiveSesi = count($activeList);
         const CURRENT_ROOM_FLOOR = <?php echo json_encode($room['floor'] ?? 'Lantai 1'); ?>;
         const CURRENT_ROOM_CAPACITY = <?php echo (int)($room['capacity'] ?? 10); ?>;
         const CURRENT_TOKEN = <?php echo json_encode($currentToken ?? ''); ?>;
-        const QR_DISPLAY_TOKEN = <?php echo json_encode($qrDisplayToken ?? ''); ?>;
         let currentRoomSchedule = <?php echo json_encode($activeList); ?>;
     </script>
-
-    <script src="public/js/vendor/qrcode-generator.js"></script>
 
     <!-- Seamless In-Place DOM Update Script (No Fullscreen Exit / No Page Reloads) -->
     <script>
@@ -418,74 +400,12 @@ $totalActiveSesi = count($activeList);
             }
         }
 
-        let qrExpiresAtMs = 0;
-
-        function hideCheckinQr() {
-            const card = document.getElementById('qrCheckinCard');
-            if (card) card.classList.add('hidden');
-            qrExpiresAtMs = 0;
-        }
-
-        function updateQrCountdown() {
-            const countdown = document.getElementById('qrCheckinCountdown');
-            if (!countdown || !qrExpiresAtMs) return;
-            const seconds = Math.max(0, Math.ceil((qrExpiresAtMs - Date.now()) / 1000));
-            countdown.textContent = String(seconds);
-            if (seconds <= 0) hideCheckinQr();
-        }
-
-        function renderCheckinQr(data) {
-            if (typeof qrcode !== 'function' || !data.checkin_url) {
-                hideCheckinQr();
-                return;
-            }
-
-            const absoluteUrl = new URL(data.checkin_url, window.location.href).href;
-            const qr = qrcode(0, 'M');
-            qr.addData(absoluteUrl);
-            qr.make();
-
-            document.getElementById('qrCheckinCode').innerHTML = qr.createSvgTag(4, 0);
-            document.getElementById('qrCheckinAgenda').textContent = data.booking?.title || 'Booking ruang rapat';
-            qrExpiresAtMs = Date.now() + (Number(data.expires_in) || 45) * 1000;
-            document.getElementById('qrCheckinCard').classList.remove('hidden');
-            updateQrCountdown();
-        }
-
-        async function fetchCheckinQr() {
-            if (!QR_DISPLAY_TOKEN) {
-                hideCheckinQr();
-                return;
-            }
-
-            try {
-                const response = await fetch(`api/display_checkin_qr.php?token=${encodeURIComponent(QR_DISPLAY_TOKEN)}&t=${Date.now()}`, {
-                    headers: { 'Accept': 'application/json' },
-                    cache: 'no-store'
-                });
-                if (!response.ok) return;
-                const data = await response.json();
-                if (data && data.success) {
-                    renderCheckinQr(data);
-                } else {
-                    hideCheckinQr();
-                }
-            } catch (error) {
-                // QR lama akan menghilang sendiri saat masa berlakunya habis.
-            }
-        }
-
         // Jalankan render setiap detik untuk jam & status
         setInterval(renderRoomSchedule, 1000);
         renderRoomSchedule();
 
         // Polling background data diam-diam setiap 5 detik tanpa merusak Fullscreen
         setInterval(fetchRoomDataSilently, 5000);
-
-        // QR berputar lebih cepat dari TTL 45 detik.
-        fetchCheckinQr();
-        setInterval(fetchCheckinQr, 15000);
-        setInterval(updateQrCountdown, 1000);
 
         function toggleFullScreen() {
             if (!document.fullscreenElement) {

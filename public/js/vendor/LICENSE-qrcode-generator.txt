@@ -1,5 +1,0 @@
-QR Code Generator for JavaScript
-Copyright (c) 2009 Kazuhiko Arase
-
-Licensed under the MIT License.
-Source: https://github.com/kazuhikoarase/qrcode-generator
