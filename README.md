@@ -101,6 +101,15 @@ Gunakan password yang panjang dan mengandung kombinasi huruf besar, huruf kecil,
 
 Jika jadwal bertabrakan, pengajuan tetap dicatat sebagai pending agar administrator dapat menentukan prioritas.
 
+### Menggunakan kalender
+
+Menu **Kalender Jadwal** menyediakan dua tampilan tanpa mode mingguan:
+
+- **Bulan** untuk melihat jadwal dalam grid kalender;
+- **Agenda** untuk melihat daftar jadwal pada bulan aktif.
+
+Gunakan tombol **Hari ini**, panah sebelumnya/berikutnya, pencarian agenda, dan filter ruangan untuk mempersempit jadwal. Klik sebuah agenda untuk membuka detail. Klik tanggal hari ini atau tanggal mendatang yang masih kosong untuk membuka form booking dengan tanggal tersebut terisi otomatis.
+
 ### Check-in dan check-out
 
 Check-in dilakukan melalui menu **Booking Saya** menggunakan akun pemilik booking. Sistem tidak menggunakan QR Code.

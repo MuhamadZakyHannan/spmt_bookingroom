@@ -20,7 +20,11 @@ class BookingController extends Controller {
         $user_name = $_SESSION['user_name'] ?? '';
         $user_dept = $_SESSION['department'] ?? '';
         $title = '';
-        $date = date('Y-m-d');
+        $requestedDate = trim($_GET['date'] ?? '');
+        $date = preg_match('/^\d{4}-\d{2}-\d{2}$/', $requestedDate)
+            && strtotime($requestedDate) >= strtotime(date('Y-m-d'))
+            ? $requestedDate
+            : date('Y-m-d');
         $start_time = '09:00';
         $end_time = '10:00';
         $purpose = '';

@@ -19,37 +19,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
     </script>
     <!-- Font Awesome 6 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-    <!-- FullCalendar 6 -->
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-    <style>
-        .fc-event {
-            cursor: pointer;
-            border: none !important;
-            border-radius: 6px;
-            padding: 3px 6px;
-        }
-        .dark .fc {
-            --fc-page-bg-color: #1e293b;
-            --fc-neutral-bg-color: #334155;
-            --fc-list-event-hover-bg-color: #334155;
-            --fc-theme-standard-border-color: #334155;
-            --fc-border-color: #334155;
-            color: #f1f5f9;
-        }
-        .dark .fc-theme-standard td, .dark .fc-theme-standard th {
-            border-color: #334155 !important;
-        }
-        .dark .fc-col-header-cell, .dark .fc-daygrid-day-number {
-            color: #cbd5e1;
-        }
-        .dark .fc-button-primary {
-            background-color: #2563eb !important;
-            border-color: #1d4ed8 !important;
-        }
-        .dark .fc-toolbar-title {
-            color: #f8fafc !important;
-        }
-    </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans min-h-screen flex flex-col antialiased transition-colors duration-200">
 

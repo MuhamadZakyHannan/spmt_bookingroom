@@ -335,12 +335,12 @@ class BookingModel {
 
     public function getCalendarEvents($roomId = 0) {
         if (!$this->db) return [];
-        // HANYA JADWAL YANG SAH / TELAH DISETUJUI ADMIN (CONFIRMED)
+        // Tampilkan jadwal yang telah disetujui, termasuk rapat yang sudah selesai.
         $sql = "SELECT b.*, r.name as room_name, IFNULL(b.user_name, u.name) as user_name, IFNULL(b.user_dept, 'Internal') as user_dept 
                 FROM bookings b 
                 JOIN rooms r ON b.room_id = r.id 
                 JOIN users u ON b.user_id = u.id 
-                WHERE b.status = 'confirmed'";
+                WHERE b.status IN ('confirmed', 'completed')";
         $params = [];
 
         if ($roomId > 0) {

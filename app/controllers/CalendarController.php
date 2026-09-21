@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../core/Controller.php';
+require_once __DIR__ . '/../core/CalendarPresentation.php';
 
 class CalendarController extends Controller {
     private $roomModel;
@@ -14,7 +15,7 @@ class CalendarController extends Controller {
         $this->requireAuth();
 
         $room_filter = (int)($_GET['room_id'] ?? 0);
-        $rooms = $this->roomModel->getAllRooms();
+        $rooms = CalendarPresentation::decorateRooms($this->roomModel->getAllRooms());
 
         $this->view('calendar/index', [
             'rooms' => $rooms,
@@ -38,9 +39,7 @@ class CalendarController extends Controller {
             $start = $b['date'] . 'T' . $b['start_time'];
             $end = $b['date'] . 'T' . $b['end_time'];
 
-            $color = '#3b82f6'; // Confirmed blue
-            if ($b['status'] === 'pending') $color = '#f59e0b'; // Amber
-            if ($b['status'] === 'completed') $color = '#10b981'; // Green
+            $color = CalendarPresentation::roomColor((int)$b['room_id']);
 
             $events[] = [
                 'id' => $b['id'],
@@ -49,13 +48,16 @@ class CalendarController extends Controller {
                 'end' => $end,
                 'backgroundColor' => $color,
                 'borderColor' => $color,
+                'textColor' => '#ffffff',
                 'extendedProps' => [
+                    'room_id' => (int)$b['room_id'],
                     'room' => $b['room_name'],
                     'user' => $b['user_name'],
                     'title' => $b['title'],
                     'purpose' => $b['purpose'],
                     'attendees' => $b['attendees_count'],
                     'status' => $b['status'],
+                    'attendance_status' => $b['attendance_status'] ?? null,
                     'time' => format_time($b['start_time']) . ' - ' . format_time($b['end_time']),
                     'date_formatted' => format_date($b['date'])
                 ]
