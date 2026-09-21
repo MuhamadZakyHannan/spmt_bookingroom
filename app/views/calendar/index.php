@@ -101,9 +101,14 @@
         margin-left: 5px;
     }
     .calendar-shell .fc-more-popover {
+        background: #ffffff;
+        border: 1px solid #dbe2ea;
+        border-radius: 0.75rem;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22);
         max-width: calc(100vw - 2rem);
+        overflow: hidden;
         width: 420px;
-        z-index: 30;
+        z-index: 60;
     }
     .calendar-shell .fc-more-popover .fc-popover-header {
         align-items: center;
@@ -116,6 +121,7 @@
         padding: 0.625rem 0.75rem;
     }
     .calendar-shell .fc-more-popover .fc-popover-body {
+        background: #ffffff;
         max-height: min(420px, 60vh);
         overflow-x: hidden;
         overflow-y: auto;
@@ -210,6 +216,11 @@
     }
     .dark .calendar-shell .fc-more-popover .fc-popover-header {
         border-bottom-color: #334155;
+    }
+    .dark .calendar-shell .fc-more-popover,
+    .dark .calendar-shell .fc-more-popover .fc-popover-body {
+        background: #1e293b;
+        border-color: #475569;
     }
     .dark .calendar-shell .fc-col-header-cell-cushion,
     .dark .calendar-shell .fc-daygrid-day-number,
