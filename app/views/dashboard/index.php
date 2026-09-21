@@ -3,9 +3,7 @@
 <!-- Welcome Banner -->
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
     <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Dashboard Ruangan
-        </h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Dashboard Ruangan</h1>
         <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Kelola dan pesan ruang rapat perusahaan dengan cepat dan mudah.</p>
     </div>
     <div class="flex flex-wrap items-center gap-2">
@@ -265,6 +263,10 @@
                 </a>
             </div>
         </div>
+
+        <?php if (is_admin()): ?>
+            <?php require __DIR__ . '/_admin_sidebar.php'; ?>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -642,22 +644,24 @@
 
     // Event Listeners
     document.addEventListener('DOMContentLoaded', () => {
-        roomSearchInput.addEventListener('input', () => {
-            const q = roomSearchInput.value.trim();
-            updateRoomSuggestions(q);
-            applyLiveRoomFilter();
-        });
+        if (roomSearchInput) {
+            roomSearchInput.addEventListener('input', () => {
+                const q = roomSearchInput.value.trim();
+                updateRoomSuggestions(q);
+                applyLiveRoomFilter();
+            });
 
-        roomSearchInput.addEventListener('focus', () => {
-            const q = roomSearchInput.value.trim();
-            if (q) updateRoomSuggestions(q);
-        });
+            roomSearchInput.addEventListener('focus', () => {
+                const q = roomSearchInput.value.trim();
+                if (q) updateRoomSuggestions(q);
+            });
+        }
 
-        roomStatusFilter.addEventListener('change', applyLiveRoomFilter);
-        roomCapacityFilter.addEventListener('change', applyLiveRoomFilter);
+        if (roomStatusFilter) roomStatusFilter.addEventListener('change', applyLiveRoomFilter);
+        if (roomCapacityFilter) roomCapacityFilter.addEventListener('change', applyLiveRoomFilter);
 
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('#roomSearchContainer')) {
+            if (roomSuggestionsBox && !e.target.closest('#roomSearchContainer')) {
                 roomSuggestionsBox.classList.add('hidden');
             }
         });

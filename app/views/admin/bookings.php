@@ -407,6 +407,7 @@
             <option value="">-- Semua Status --</option>
             <option value="pending" <?php echo $status_filter === 'pending' ? 'selected' : ''; ?>>⏳ Menunggu Persetujuan (Prioritas)</option>
             <option value="confirmed" <?php echo $status_filter === 'confirmed' ? 'selected' : ''; ?>>✓ Disetujui (Aktif)</option>
+            <option value="completed" <?php echo $status_filter === 'completed' ? 'selected' : ''; ?>>✓ Selesai / No-show</option>
             <option value="cancelled" <?php echo $status_filter === 'cancelled' ? 'selected' : ''; ?>>✕ Dibatalkan / Ditolak</option>
         </select>
     </div>
@@ -545,10 +546,23 @@
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700 animate-pulse shadow-sm">
                                     <i class="fas fa-hourglass-half text-amber-600"></i> Menunggu
                                 </span>
+                            <?php elseif ($b['status'] === 'completed'): ?>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                                    <i class="fas fa-check-double text-blue-600"></i> Selesai
+                                </span>
                             <?php else: ?>
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800">
                                     <i class="fas fa-times-circle text-rose-600"></i> Ditolak / Batal
                                 </span>
+                            <?php endif; ?>
+                            <?php if (($b['attendance_status'] ?? null) === 'scheduled'): ?>
+                                <div class="mt-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400"><i class="fas fa-user-clock"></i> Menunggu check-in</div>
+                            <?php elseif (($b['attendance_status'] ?? null) === 'checked_in'): ?>
+                                <div class="mt-1 text-[10px] font-bold text-violet-700 dark:text-violet-300"><i class="fas fa-sign-in-alt"></i> Sudah check-in</div>
+                            <?php elseif (($b['attendance_status'] ?? null) === 'checked_out'): ?>
+                                <div class="mt-1 text-[10px] font-bold text-blue-700 dark:text-blue-300"><i class="fas fa-sign-out-alt"></i> Sudah check-out</div>
+                            <?php elseif (($b['attendance_status'] ?? null) === 'no_show'): ?>
+                                <div class="mt-1 text-[10px] font-bold text-rose-700 dark:text-rose-300"><i class="fas fa-user-times"></i> No-show</div>
                             <?php endif; ?>
                         </td>
 
@@ -723,6 +737,7 @@
             'end_time' => substr($b['end_time'], 0, 5),
             'attendees_count' => (int)$b['attendees_count'],
             'status' => $b['status'],
+            'attendance_status' => $b['attendance_status'] ?? null,
             'activity_type_label' => $actLabel,
             'is_conflict' => isset($conflict_booking_ids[$b['id']])
         ];
@@ -1016,12 +1031,28 @@
                         <i class="fas fa-hourglass-half text-amber-600"></i> Menunggu
                     </span>
                 `;
+            } else if (b.status === 'completed') {
+                statusHtml = `
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
+                        <i class="fas fa-check-double text-blue-600"></i> Selesai
+                    </span>
+                `;
             } else {
                 statusHtml = `
                     <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800">
                         <i class="fas fa-times-circle text-rose-600"></i> Ditolak
                     </span>
                 `;
+            }
+
+            if (b.attendance_status === 'scheduled') {
+                statusHtml += `<div class="mt-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400"><i class="fas fa-user-clock"></i> Menunggu check-in</div>`;
+            } else if (b.attendance_status === 'checked_in') {
+                statusHtml += `<div class="mt-1 text-[10px] font-bold text-violet-700 dark:text-violet-300"><i class="fas fa-sign-in-alt"></i> Sudah check-in</div>`;
+            } else if (b.attendance_status === 'checked_out') {
+                statusHtml += `<div class="mt-1 text-[10px] font-bold text-blue-700 dark:text-blue-300"><i class="fas fa-sign-out-alt"></i> Sudah check-out</div>`;
+            } else if (b.attendance_status === 'no_show') {
+                statusHtml += `<div class="mt-1 text-[10px] font-bold text-rose-700 dark:text-rose-300"><i class="fas fa-user-times"></i> No-show</div>`;
             }
 
             let actionHtml = '';

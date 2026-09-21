@@ -20,7 +20,11 @@ class BookingController extends Controller {
         $user_name = $_SESSION['user_name'] ?? '';
         $user_dept = $_SESSION['department'] ?? '';
         $title = '';
-        $date = date('Y-m-d');
+        $requestedDate = trim($_GET['date'] ?? '');
+        $date = preg_match('/^\d{4}-\d{2}-\d{2}$/', $requestedDate)
+            && strtotime($requestedDate) >= strtotime(date('Y-m-d'))
+            ? $requestedDate
+            : date('Y-m-d');
         $start_time = '09:00';
         $end_time = '10:00';
         $purpose = '';
@@ -145,21 +149,36 @@ class BookingController extends Controller {
 
     public function myBookings() {
         $this->requireAuth();
+        $this->bookingModel->processAutomaticAttendanceTransitions();
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'cancel') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $this->validateCsrf('my_bookings.php');
+            $action = $_POST['action'];
             $booking_id = (int)($_POST['booking_id'] ?? 0);
+
             if ($booking_id > 0) {
-                if ($this->bookingModel->cancel($booking_id, $_SESSION['user_id'], is_admin())) {
-                    set_flash('success', 'Pemesanan telah berhasil dibatalkan.');
-                } else {
-                    set_flash('danger', 'Gagal membatalkan pemesanan.');
+                if ($action === 'check_in') {
+                    $result = $this->bookingModel->checkIn($booking_id, (int)$_SESSION['user_id']);
+                    set_flash($result['success'] ? 'success' : 'danger', $result['message']);
+                } elseif ($action === 'check_out') {
+                    $result = $this->bookingModel->checkOut($booking_id, (int)$_SESSION['user_id']);
+                    set_flash($result['success'] ? 'success' : 'danger', $result['message']);
+                } elseif ($action === 'cancel') {
+                    if ($this->bookingModel->cancel($booking_id, $_SESSION['user_id'], false)) {
+                        set_flash('success', 'Pemesanan telah berhasil dibatalkan.');
+                    } else {
+                        set_flash('danger', 'Booking yang sudah check-in tidak dapat dibatalkan. Lakukan check-out terlebih dahulu.');
+                    }
                 }
             }
             $this->redirect('my_bookings.php');
         }
 
         $my_bookings = $this->bookingModel->getByUserId($_SESSION['user_id']);
+        foreach ($my_bookings as &$booking) {
+            $booking['attendance_action'] = $this->bookingModel->getAttendanceActionState($booking);
+        }
+        unset($booking);
 
         $this->view('booking/my_bookings', [
             'my_bookings' => $my_bookings
