@@ -200,15 +200,20 @@
                         <!-- Actions -->
                         <div class="flex sm:flex-row lg:flex-col gap-2 items-stretch lg:items-end justify-end border-t lg:border-t-0 pt-3 lg:pt-0 shrink-0">
                             <?php if (!empty($attendanceAction['can_check_in'])): ?>
-                                <div class="w-full sm:w-56 px-3.5 py-2.5 rounded-xl border-2 border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-900 dark:text-blue-200 text-xs font-bold text-center shadow-sm">
-                                    <i class="fas fa-qrcode mr-1"></i> Scan QR pada monitor pintu untuk check-in
-                                </div>
+                                <form method="POST" action="my_bookings.php" class="w-full sm:w-auto">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="action" value="check_in">
+                                    <input type="hidden" name="booking_id" value="<?php echo $b['id']; ?>">
+                                    <button type="submit" class="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                                        <i class="fas fa-sign-in-alt"></i> Check-in
+                                    </button>
+                                </form>
                             <?php elseif (!empty($attendanceAction['can_check_out'])): ?>
                                 <form method="POST" action="my_bookings.php" class="w-full sm:w-auto" onsubmit="return confirm('Akhiri penggunaan ruangan sekarang?')">
                                     <?php echo csrf_field(); ?>
                                     <input type="hidden" name="action" value="check_out">
                                     <input type="hidden" name="booking_id" value="<?php echo $b['id']; ?>">
-                                    <button type="submit" style="background-color:#6d28d9;color:#ffffff" class="w-full px-4 py-2 bg-violet-700 hover:bg-violet-800 text-white border-2 border-violet-900 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-md">
+                                    <button type="submit" class="w-full px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
                                         <i class="fas fa-sign-out-alt"></i> Check-out
                                     </button>
                                 </form>
@@ -580,16 +585,21 @@
             const attendanceAction = b.attendance_action || {};
             if (attendanceAction.can_check_in) {
                 actionHtml += `
-                    <div class="w-full sm:w-56 px-3.5 py-2.5 rounded-xl border-2 border-blue-600 bg-blue-50 dark:bg-blue-950/50 text-blue-900 dark:text-blue-200 text-xs font-bold text-center shadow-sm">
-                        <i class="fas fa-qrcode mr-1"></i> Scan QR pada monitor pintu untuk check-in
-                    </div>`;
+                    <form method="POST" action="my_bookings.php" class="w-full sm:w-auto">
+                        ${csrfHiddenField}
+                        <input type="hidden" name="action" value="check_in">
+                        <input type="hidden" name="booking_id" value="${b.id}">
+                        <button type="submit" class="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                            <i class="fas fa-sign-in-alt"></i> Check-in
+                        </button>
+                    </form>`;
             } else if (attendanceAction.can_check_out) {
                 actionHtml += `
                     <form method="POST" action="my_bookings.php" class="w-full sm:w-auto" onsubmit="return confirm('Akhiri penggunaan ruangan sekarang?')">
                         ${csrfHiddenField}
                         <input type="hidden" name="action" value="check_out">
                         <input type="hidden" name="booking_id" value="${b.id}">
-                        <button type="submit" style="background-color:#6d28d9;color:#ffffff" class="w-full px-4 py-2 bg-violet-700 hover:bg-violet-800 text-white border-2 border-violet-900 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-md">
+                        <button type="submit" class="w-full px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
                             <i class="fas fa-sign-out-alt"></i> Check-out
                         </button>
                     </form>`;

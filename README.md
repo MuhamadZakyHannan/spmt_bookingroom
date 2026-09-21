@@ -110,10 +110,8 @@ Alur keamanannya:
 - Token acak terikat pada booking, ruangan, dan display yang menerbitkannya.
 - Token berlaku 45 detik, disimpan sebagai hash, dan hanya dapat dipakai satu kali.
 - Pemindai wajib login menggunakan akun pemilik booking.
-- Setelah tahap QR aktif, check-in manual pada halaman Booking Saya dinonaktifkan; check-in wajib melalui QR monitor pintu.
 - Token lain untuk booking yang sama dinonaktifkan setelah check-in berhasil.
 - Display yang dibuka tanpa token perangkat tetap menampilkan jadwal, tetapi tidak memperoleh QR.
-- Panel QR/status berada permanen di sisi kanan monitor. Saat booking sudah check-in, panel menampilkan konfirmasi dan QR tidak ditampilkan lagi.
 
 Migrasi tahap QR:
 
