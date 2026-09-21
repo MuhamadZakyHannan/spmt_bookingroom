@@ -71,6 +71,8 @@
         display: flex;
         gap: 0.3rem;
         min-width: 0;
+        overflow: hidden;
+        width: 100%;
     }
     .calendar-event-time {
         flex: 0 0 auto;
@@ -80,15 +82,87 @@
     .calendar-event-title {
         font-size: 0.6875rem;
         font-weight: 700;
+        min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+    .calendar-event-details {
+        min-width: 0;
+        overflow: hidden;
+    }
+    .calendar-event-room {
+        display: none;
     }
     .calendar-shell .fc-daygrid-more-link {
         color: #1a73e8;
         font-size: 0.6875rem;
         font-weight: 700;
         margin-left: 5px;
+    }
+    .calendar-shell .fc-more-popover {
+        max-width: calc(100vw - 2rem);
+        width: 420px;
+        z-index: 30;
+    }
+    .calendar-shell .fc-more-popover .fc-popover-header {
+        align-items: center;
+        background: #f8fafc;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        font-size: 0.75rem;
+        font-weight: 800;
+        min-height: 2.75rem;
+        padding: 0.625rem 0.75rem;
+    }
+    .calendar-shell .fc-more-popover .fc-popover-body {
+        max-height: min(420px, 60vh);
+        overflow-x: hidden;
+        overflow-y: auto;
+        padding: 0.5rem;
+    }
+    .calendar-shell .fc-more-popover .fc-daygrid-event-harness {
+        margin-bottom: 0.35rem;
+        position: relative !important;
+    }
+    .calendar-shell .fc-more-popover .fc-daygrid-event {
+        display: block;
+        margin: 0;
+        min-width: 0;
+        overflow: hidden;
+        padding: 0.45rem 0.55rem;
+        width: 100%;
+    }
+    .calendar-shell .fc-more-popover .calendar-event-content {
+        align-items: start;
+        display: grid;
+        gap: 0.5rem;
+        grid-template-columns: 3rem minmax(0, 1fr);
+        white-space: normal;
+    }
+    .calendar-shell .fc-more-popover .calendar-event-time {
+        display: block;
+        font-size: 0.6875rem;
+        line-height: 1.15rem;
+    }
+    .calendar-shell .fc-more-popover .calendar-event-title {
+        display: block;
+        font-size: 0.75rem;
+        line-height: 1.15rem;
+        overflow-wrap: anywhere;
+        text-overflow: clip;
+        white-space: normal;
+    }
+    .calendar-shell .fc-more-popover .calendar-event-room,
+    .calendar-shell .fc-list .calendar-event-room {
+        display: block;
+        font-size: 0.625rem;
+        font-weight: 600;
+        line-height: 1rem;
+        opacity: 0.82;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     .calendar-shell .fc-list {
         border: 0;
@@ -130,8 +204,12 @@
         color: #e2e8f0;
     }
     .dark .calendar-shell .fc-col-header-cell,
-    .dark .calendar-shell .fc-list-day-cushion {
+    .dark .calendar-shell .fc-list-day-cushion,
+    .dark .calendar-shell .fc-more-popover .fc-popover-header {
         background: #0f172a;
+    }
+    .dark .calendar-shell .fc-more-popover .fc-popover-header {
+        border-bottom-color: #334155;
     }
     .dark .calendar-shell .fc-col-header-cell-cushion,
     .dark .calendar-shell .fc-daygrid-day-number,
@@ -165,6 +243,9 @@
         }
         .calendar-event-time {
             display: none;
+        }
+        .calendar-shell .fc-more-popover {
+            width: calc(100vw - 2rem);
         }
     }
 </style>
@@ -384,12 +465,21 @@
                 time.className = 'calendar-event-time';
                 time.textContent = args.timeText;
 
+                const details = document.createElement('span');
+                details.className = 'calendar-event-details';
+
                 const title = document.createElement('span');
                 title.className = 'calendar-event-title';
-                title.textContent = args.event.title;
+                title.textContent = args.event.extendedProps.title || args.event.title;
+
+                const room = document.createElement('span');
+                room.className = 'calendar-event-room';
+                room.textContent = args.event.extendedProps.room || '';
 
                 if (args.timeText) wrapper.appendChild(time);
-                wrapper.appendChild(title);
+                details.appendChild(title);
+                details.appendChild(room);
+                wrapper.appendChild(details);
                 return { domNodes: [wrapper] };
             },
             eventDidMount: args => {
