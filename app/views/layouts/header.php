@@ -19,7 +19,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
     <!-- Header Navbar -->
     <nav class="bg-gradient-to-r from-white via-sky-50 to-blue-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 text-slate-800 dark:text-white shadow-sm sticky top-0 z-40 border-b border-sky-200/80 dark:border-slate-700/80 transition-colors backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div class="w-full px-3 sm:px-4 lg:px-6">
             <div class="flex items-center justify-between h-16">
                 <!-- Brand & Sidebar Toggle (Navigasi terpusat di Sidebar) -->
                 <div class="flex min-w-0 items-center gap-2 sm:gap-4">
@@ -35,9 +35,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
                 <!-- Right Actions -->
                 <div class="flex shrink-0 items-center gap-2 sm:gap-3">
-                    <button onclick="toggleTheme()" class="p-2 rounded-xl bg-sky-100/80 hover:bg-sky-200/80 text-slate-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white transition flex items-center gap-2 text-xs font-semibold focus:outline-none border border-sky-200/60 dark:border-transparent" title="Beralih Mode Terang / Gelap">
+                    <button onclick="toggleTheme()" class="theme-toggle-button flex h-10 w-10 items-center justify-center rounded-xl border border-sky-200/60 bg-sky-100/80 text-slate-700 transition hover:bg-sky-200/80 focus:outline-none dark:border-transparent dark:bg-white/10 dark:text-white dark:hover:bg-white/20" title="Aktifkan mode gelap" aria-label="Aktifkan mode gelap">
                         <i class="theme-toggle-icon fas fa-moon text-sky-700 dark:text-amber-300"></i>
-                        <span class="hidden lg:inline theme-toggle-text">Mode Gelap</span>
                     </button>
 
                     <?php if (is_logged_in()): ?>

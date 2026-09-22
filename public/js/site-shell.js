@@ -50,6 +50,11 @@
         document.querySelectorAll('.theme-toggle-text').forEach(text => {
             text.textContent = dark ? 'Mode Terang' : 'Mode Gelap';
         });
+        document.querySelectorAll('.theme-toggle-button').forEach(button => {
+            const label = dark ? 'Aktifkan mode terang' : 'Aktifkan mode gelap';
+            button.setAttribute('aria-label', label);
+            button.setAttribute('title', label);
+        });
     };
 
     window.toggleTheme = function toggleTheme() {

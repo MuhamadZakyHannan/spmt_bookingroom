@@ -36,6 +36,12 @@ expectPresentation(
     str_contains($utilities, 'Object.freeze({ escapeHtml, highlightText })'),
     'Utility escaping dan highlight tersedia dari satu sumber bersama.'
 );
+expectPresentation(
+    str_contains($header, 'class="w-full px-3 sm:px-4 lg:px-6"')
+        && str_contains($header, 'theme-toggle-button flex h-10 w-10')
+        && str_contains($shell, "button.setAttribute('aria-label', label)"),
+    'Navbar menggunakan lebar penuh dan kontrol tema berupa ikon aksesibel.'
+);
 
 $sharedUtilityViews = [
     'app/views/admin/bookings.php',
@@ -54,4 +60,4 @@ foreach ($sharedUtilityViews as $view) {
 }
 expectPresentation($allUseSharedUtilities, 'View interaktif menggunakan utility presentasi bersama.');
 
-echo PHP_EOL . 'Hasil: 5 lulus, 0 gagal.' . PHP_EOL;
+echo PHP_EOL . 'Hasil: 6 lulus, 0 gagal.' . PHP_EOL;
