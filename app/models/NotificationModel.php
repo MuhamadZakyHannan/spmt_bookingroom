@@ -1,12 +1,7 @@
 <?php
-require_once __DIR__ . '/../core/Database.php';
+require_once __DIR__ . '/../core/BaseModel.php';
 
-class NotificationModel {
-    private $db;
-
-    public function __construct($db = null) {
-        $this->db = $db ?: Database::getInstance()->getConnection();
-    }
+class NotificationModel extends BaseModel {
 
     /**
      * Membuat satu notifikasi untuk setiap akun admin ketika booking baru pending.

@@ -1,16 +1,9 @@
 <?php
-require_once __DIR__ . '/../core/Database.php';
+require_once __DIR__ . '/../core/BaseModel.php';
 
-class BookingDocumentModel
+class BookingDocumentModel extends BaseModel
 {
     public const TYPE_SUPPORTING_DOCUMENT = 'supporting_document';
-
-    private $db;
-
-    public function __construct($connection = null)
-    {
-        $this->db = $connection ?: Database::getInstance()->getConnection();
-    }
 
     public function getForBooking(int $bookingId, string $documentType = self::TYPE_SUPPORTING_DOCUMENT)
     {

@@ -1,12 +1,11 @@
 <?php
-require_once __DIR__ . '/../core/Database.php';
+require_once __DIR__ . '/../core/BaseModel.php';
 
-class BookingModel {
-    private $db;
+class BookingModel extends BaseModel {
     private $lastInsertId = 0;
 
-    public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
+    public function __construct(?PDO $connection = null) {
+        parent::__construct($connection);
         if ($this->db) {
             (new BookingLifecycleService($this->db))->expirePendingBookings();
         }

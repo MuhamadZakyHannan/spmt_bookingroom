@@ -82,6 +82,8 @@ Panduan pembatasan Apache, MySQL, session, dan Windows Firewall tersedia di
 [`docs/LOCAL_NETWORK_SECURITY.md`](docs/LOCAL_NETWORK_SECURITY.md). Struktur,
 migrasi, serta hak akses database dijelaskan di
 [`docs/DATABASE.md`](docs/DATABASE.md).
+Rencana perapian kode jangka panjang dicatat di
+[`docs/REFACTORING_ROADMAP.md`](docs/REFACTORING_ROADMAP.md).
 
 ### 4. Buka aplikasi
 
@@ -246,6 +248,7 @@ php tests/run_user_account_tests.php
 php tests/run_booking_expiration_tests.php
 php tests/run_security_hardening_tests.php
 php tests/run_database_configuration_tests.php
+php tests/run_model_architecture_tests.php
 ```
 
 Pengujian membuat data sementara dan membersihkannya kembali setelah selesai.

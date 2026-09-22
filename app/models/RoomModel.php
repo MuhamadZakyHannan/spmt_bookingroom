@@ -1,12 +1,7 @@
 <?php
-require_once __DIR__ . '/../core/Database.php';
+require_once __DIR__ . '/../core/BaseModel.php';
 
-class RoomModel {
-    private $db;
-
-    public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
-    }
+class RoomModel extends BaseModel {
 
     public function getAllRooms($search = '', $status = '', $minCapacity = 0) {
         if (!$this->db) return [];
