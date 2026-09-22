@@ -5,7 +5,7 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <div class="flex items-center gap-2 mb-1">
-                <?php if (($_SESSION['role'] ?? '') !== 'admin'): ?>
+                <?php if (!is_admin()): ?>
                     <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
                         <i class="fas fa-bookmark me-1"></i> PORTAL USER
                     </span>

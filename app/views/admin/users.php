@@ -43,6 +43,7 @@
     <div class="w-full sm:w-48">
         <select id="userRoleFilter" name="role" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer">
             <option value="">-- Semua Role --</option>
+            <option value="super_admin">SUPER ADMIN</option>
             <option value="admin">ADMIN</option>
             <option value="user">USER</option>
         </select>
@@ -92,11 +93,9 @@
                             <?php echo htmlspecialchars($u['email']); ?>
                         </td>
                         <td class="py-3.5 px-4 whitespace-nowrap">
-                            <?php if ($u['id'] === $_SESSION['user_id']): ?>
-                                <span class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 uppercase">
-                                    ADMIN
-                                </span>
-                            <?php else: ?>
+                            <?php if ($u['role'] === 'super_admin'): ?>
+                                <span class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 border border-violet-200 dark:border-violet-800 uppercase">SUPER ADMIN</span>
+                            <?php elseif (is_super_admin() && (int)$u['id'] !== (int)$_SESSION['user_id']): ?>
                                 <form method="POST" action="admin_users.php" class="inline-block">
                                     <?php echo csrf_field(); ?>
                                     <input type="hidden" name="action" value="update_role">
@@ -106,13 +105,17 @@
                                         <option value="admin" <?php echo $u['role'] === 'admin' ? 'selected' : ''; ?>>ADMIN</option>
                                     </select>
                                 </form>
+                            <?php elseif ($u['role'] === 'admin'): ?>
+                                <span class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 uppercase">ADMIN</span>
+                            <?php else: ?>
+                                <span class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 uppercase">USER</span>
                             <?php endif; ?>
                         </td>
                         <td class="py-3.5 px-4 whitespace-nowrap text-slate-400">
                             <?php echo format_date($u['created_at']); ?>
                         </td>
                         <td class="py-3.5 px-4 text-right whitespace-nowrap">
-                            <?php if ($u['id'] !== $_SESSION['user_id']): ?>
+                            <?php if (is_super_admin() && (int)$u['id'] !== (int)$_SESSION['user_id'] && $u['role'] !== 'super_admin'): ?>
                                 <form method="POST" action="admin_users.php" class="inline-block" onsubmit="return confirm('Hapus pengguna ini beserta data terkait?')">
                                     <?php echo csrf_field(); ?>
                                     <input type="hidden" name="action" value="delete">
@@ -134,6 +137,7 @@
 
 <script>
     const currentSessionUserId = <?php echo (int)$_SESSION['user_id']; ?>;
+    const currentSessionIsSuperAdmin = <?php echo is_super_admin() ? 'true' : 'false'; ?>;
     const csrfHiddenField = '<?php echo addslashes(csrf_field()); ?>';
     const rawUsersList = <?php echo json_encode(array_map(function($u) {
         return [
@@ -323,13 +327,13 @@
             const isSelf = (u.id === currentSessionUserId);
 
             let roleHtml = '';
-            if (isSelf) {
+            if (u.role === 'super_admin') {
                 roleHtml = `
-                    <span class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 uppercase">
-                        ADMIN
+                    <span class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 border border-violet-200 dark:border-violet-800 uppercase">
+                        SUPER ADMIN
                     </span>
                 `;
-            } else {
+            } else if (currentSessionIsSuperAdmin && !isSelf) {
                 roleHtml = `
                     <form method="POST" action="admin_users.php" class="inline-block">
                         ${csrfHiddenField}
@@ -341,10 +345,14 @@
                         </select>
                     </form>
                 `;
+            } else if (u.role === 'admin') {
+                roleHtml = `<span class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 uppercase">ADMIN</span>`;
+            } else {
+                roleHtml = `<span class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 uppercase">USER</span>`;
             }
 
             let actionHtml = '';
-            if (!isSelf) {
+            if (currentSessionIsSuperAdmin && !isSelf && u.role !== 'super_admin') {
                 actionHtml = `
                     <form method="POST" action="admin_users.php" class="inline-block" onsubmit="return confirm('Hapus pengguna ini beserta data terkait?')">
                         ${csrfHiddenField}

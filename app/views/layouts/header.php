@@ -67,7 +67,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         <div class="hidden sm:block text-right">
                             <div class="text-sm font-semibold text-slate-800 dark:text-white leading-tight"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Pengguna'); ?></div>
                             <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center justify-end gap-1 mt-0.5">
-                                <?php if (is_admin()): ?>
+                                <?php if (is_super_admin()): ?>
+                                    <span class="bg-violet-600 text-white font-bold text-[10px] px-1.5 py-0.5 rounded">SUPER ADMIN</span>
+                                <?php elseif (is_admin()): ?>
                                     <span class="bg-amber-400 text-amber-950 font-bold text-[10px] px-1.5 py-0.5 rounded">ADMIN</span>
                                 <?php else: ?>
                                     <span class="bg-sky-600 text-white font-bold text-[10px] px-1.5 py-0.5 rounded">USER</span>

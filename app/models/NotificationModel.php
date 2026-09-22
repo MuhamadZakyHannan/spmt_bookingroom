@@ -31,7 +31,7 @@ class NotificationModel {
                  CROSS JOIN users u
                  WHERE b.id = ?
                    AND b.status = 'pending'
-                   AND u.role = 'admin'"
+                   AND u.role IN ('admin', 'super_admin')"
             );
             return $stmt->execute([$bookingId]);
         } catch (Throwable $e) {
@@ -62,7 +62,7 @@ class NotificationModel {
                  JOIN users requester ON requester.id = b.user_id
                  JOIN rooms r ON r.id = b.room_id
                  CROSS JOIN users u
-                 WHERE b.id = ? AND u.role = 'admin'"
+                 WHERE b.id = ? AND u.role IN ('admin', 'super_admin')"
             );
             return $stmt->execute([$type, $title, $verb, $bookingId]);
         } catch (Throwable $e) {

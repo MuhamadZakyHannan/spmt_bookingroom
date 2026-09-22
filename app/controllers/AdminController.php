@@ -295,7 +295,9 @@ class AdminController extends Controller {
                 $password = $_POST['password'] ?? '';
                 $department = trim($_POST['department'] ?? '');
                 $roleInput = trim($_POST['role'] ?? 'user');
-                $role = in_array($roleInput, ['user', 'admin'], true) ? $roleInput : 'user';
+                $role = is_super_admin() && in_array($roleInput, ['user', 'admin'], true)
+                    ? $roleInput
+                    : 'user';
 
                 if (empty($name) || empty($email) || empty($password)) {
                     $error = 'Nama, email, dan password wajib diisi!';
@@ -315,18 +317,30 @@ class AdminController extends Controller {
             } else if ($action === 'update_role') {
                 $user_id = (int)($_POST['user_id'] ?? 0);
                 $role = trim($_POST['role'] ?? 'user');
-                if ($user_id > 0 && $user_id !== $_SESSION['user_id'] && in_array($role, ['user', 'admin'])) {
+                $targetUser = $user_id > 0 ? $this->userModel->getById($user_id) : false;
+
+                if (!is_super_admin()) {
+                    set_flash('danger', 'Hanya Super Admin yang dapat mengubah role pengguna.');
+                } else if (!$targetUser || $user_id === (int)$_SESSION['user_id']) {
+                    set_flash('danger', 'Role akun tersebut tidak dapat diubah.');
+                } else if (($targetUser['role'] ?? '') === 'super_admin') {
+                    set_flash('danger', 'Role Super Admin dilindungi dan tidak dapat diubah dari halaman ini.');
+                } else if (in_array($role, ['user', 'admin'], true)) {
                     $this->userModel->updateRole($user_id, $role);
                     set_flash('success', 'Role pengguna berhasil diperbarui.');
                 }
                 $this->redirect('admin_users.php');
             } else if ($action === 'delete') {
                 $user_id = (int)($_POST['user_id'] ?? 0);
-                if ($user_id > 0 && $user_id !== $_SESSION['user_id']) {
+                $targetUser = $user_id > 0 ? $this->userModel->getById($user_id) : false;
+
+                if (!is_super_admin()) {
+                    set_flash('danger', 'Hanya Super Admin yang dapat menghapus akun pengguna.');
+                } else if ($targetUser && $user_id !== (int)$_SESSION['user_id'] && ($targetUser['role'] ?? '') !== 'super_admin') {
                     $this->userModel->delete($user_id);
                     set_flash('success', 'Pengguna berhasil dihapus.');
                 } else {
-                    $error = 'Tidak dapat menghapus akun Anda sendiri!';
+                    set_flash('danger', 'Akun Super Admin atau akun yang sedang digunakan tidak dapat dihapus.');
                 }
                 $this->redirect('admin_users.php');
             }

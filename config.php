@@ -69,13 +69,41 @@ try {
     $pdo = null; // Will trigger setup warning in UI if database is not created yet
 }
 
+// Sinkronkan identitas dan role dari database pada setiap request web.
+// Perubahan role atau penghapusan akun berlaku segera tanpa menunggu logout.
+if (PHP_SAPI !== 'cli' && $pdo && isset($_SESSION['user_id'])) {
+    try {
+        $sessionUserStatement = $pdo->prepare(
+            'SELECT id, name, email, department, avatar, role FROM users WHERE id = ? LIMIT 1'
+        );
+        $sessionUserStatement->execute([(int) $_SESSION['user_id']]);
+        $sessionUser = $sessionUserStatement->fetch(PDO::FETCH_ASSOC);
+
+        if ($sessionUser) {
+            $_SESSION['user_name'] = $sessionUser['name'];
+            $_SESSION['user_email'] = $sessionUser['email'];
+            $_SESSION['department'] = $sessionUser['department'] ?? '';
+            $_SESSION['user_avatar'] = $sessionUser['avatar'];
+            $_SESSION['role'] = $sessionUser['role'];
+        } else {
+            session_unset();
+        }
+    } catch (Throwable $exception) {
+        error_log('Gagal menyinkronkan sesi pengguna: ' . $exception->getMessage());
+    }
+}
+
 // Helper Functions
 function is_logged_in() {
     return isset($_SESSION['user_id']);
 }
 
 function is_admin() {
-    return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
+    return isset($_SESSION['role']) && in_array($_SESSION['role'], ['admin', 'super_admin'], true);
+}
+
+function is_super_admin() {
+    return isset($_SESSION['role']) && $_SESSION['role'] === 'super_admin';
 }
 
 function require_login() {

@@ -45,7 +45,7 @@ class UserModel {
             $name = $nameOrData;
         }
 
-        $role = in_array($role, ['user', 'admin'], true) ? $role : 'user';
+        $role = in_array($role, ['user', 'admin', 'super_admin'], true) ? $role : 'user';
 
         $hash = password_hash($password, PASSWORD_DEFAULT);
         $avatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80';
@@ -66,6 +66,7 @@ class UserModel {
 
     public function updateRole($userId, $role) {
         if (!$this->db) return false;
+        if (!in_array($role, ['user', 'admin', 'super_admin'], true)) return false;
         $stmt = $this->db->prepare("UPDATE users SET role = ? WHERE id = ?");
         return $stmt->execute([$role, $userId]);
     }

@@ -139,6 +139,8 @@ Foto bawaan yang tersedia:
 
 Menu **Kelola Pengguna** digunakan untuk mencari pengguna, mengubah role `user`/`admin`, dan menghapus akun. Administrator tidak dapat menghapus akun yang sedang dipakai sendiri.
 
+Role `super_admin` dikhususkan untuk pengelola teknis sistem. Super admin memiliki seluruh akses administrator dan menjadi satu-satunya role yang dapat mengubah role atau menghapus akun lain. Akun super admin tidak dapat diubah atau dihapus dari halaman pengelolaan pengguna.
+
 ### Mengelola monitor display
 
 1. Buka **Kelola Monitor Display**.
@@ -191,6 +193,7 @@ Pastikan MySQL aktif dan database uji dapat diakses, lalu jalankan:
 php tests/run_schedule_status_tests.php
 php tests/run_admin_dashboard_tests.php
 php tests/run_room_availability_tests.php
+php tests/run_role_hierarchy_tests.php
 ```
 
 Pengujian membuat data sementara dan membersihkannya kembali setelah selesai.
