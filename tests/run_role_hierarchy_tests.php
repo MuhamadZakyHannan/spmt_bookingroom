@@ -43,7 +43,8 @@ $notificationSource = file_get_contents(__DIR__ . '/../app/models/NotificationMo
 expectRole(strpos($notificationSource, "IN ('admin', 'super_admin')") !== false, 'Super Admin ikut menerima notifikasi administrator.');
 
 $userAdminSource = file_get_contents(__DIR__ . '/../app/controllers/AdminController.php');
+expectRole(strpos($userAdminSource, 'Hanya Super Admin yang dapat mengedit akun pengguna.') !== false, 'Pengeditan akun dibatasi untuk Super Admin.');
 expectRole(strpos($userAdminSource, 'Hanya Super Admin yang dapat mengubah role pengguna.') !== false, 'Perubahan role dibatasi untuk Super Admin.');
 expectRole(strpos($userAdminSource, 'Hanya Super Admin yang dapat menghapus akun pengguna.') !== false, 'Penghapusan akun dibatasi untuk Super Admin.');
 
-echo PHP_EOL . 'Hasil: 9 lulus, 0 gagal.' . PHP_EOL;
+echo PHP_EOL . 'Hasil: 10 lulus, 0 gagal.' . PHP_EOL;

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../core/Controller.php';
+require_once __DIR__ . '/../core/PasswordPolicy.php';
 
 class AuthController extends Controller {
     private $userModel;
@@ -71,8 +72,8 @@ class AuthController extends Controller {
                 $error = 'Harap isi semua kolom bertanda bintang (*)!';
             } else if ($password !== $confirm_password) {
                 $error = 'Konfirmasi password tidak cocok!';
-            } else if (strlen($password) < 6) {
-                $error = 'Password minimal harus 6 karakter!';
+            } else if ($passwordError = PasswordPolicy::validationError($password)) {
+                $error = $passwordError;
             } else {
                 $existing = $this->userModel->findByEmail($email);
                 if ($existing) {

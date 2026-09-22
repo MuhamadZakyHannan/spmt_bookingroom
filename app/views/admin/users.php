@@ -115,6 +115,11 @@
                             <?php echo format_date($u['created_at']); ?>
                         </td>
                         <td class="py-3.5 px-4 text-right whitespace-nowrap">
+                            <?php if (is_super_admin()): ?>
+                                <button type="button" onclick="openEditUserModal(<?php echo (int)$u['id']; ?>)" class="p-1.5 px-2 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40 rounded-lg transition" title="Edit Akun">
+                                    <i class="fas fa-pen-to-square"></i>
+                                </button>
+                            <?php endif; ?>
                             <?php if (is_super_admin() && (int)$u['id'] !== (int)$_SESSION['user_id'] && $u['role'] !== 'super_admin'): ?>
                                 <form method="POST" action="admin_users.php" class="inline-block" onsubmit="return confirm('Hapus pengguna ini beserta data terkait?')">
                                     <?php echo csrf_field(); ?>
@@ -124,7 +129,7 @@
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </form>
-                            <?php else: ?>
+                            <?php elseif (!is_super_admin()): ?>
                                 <span class="text-slate-400 text-[11px] italic">-</span>
                             <?php endif; ?>
                         </td>
@@ -134,6 +139,72 @@
         </table>
     </div>
 </div>
+
+<?php if (is_super_admin()): ?>
+<div id="editUserModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="editUserModalTitle">
+    <div class="w-full max-w-xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800">
+        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+            <div class="flex items-center gap-3">
+                <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300"><i class="fas fa-user-pen"></i></span>
+                <div>
+                    <h2 id="editUserModalTitle" class="text-lg font-bold text-slate-900 dark:text-white">Edit Akun</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Perbarui identitas, divisi, role, atau password pengguna.</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeEditUserModal()" class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-white" aria-label="Tutup modal"><i class="fas fa-times"></i></button>
+        </div>
+
+        <form method="POST" action="admin_users.php" class="space-y-4 p-5" id="editUserForm">
+            <?php echo csrf_field(); ?>
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="user_id" id="editUserId">
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                    <label for="editUserName" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">Nama Lengkap</label>
+                    <input type="text" name="name" id="editUserName" maxlength="100" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                </div>
+                <div>
+                    <label for="editUserEmail" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">Email</label>
+                    <input type="email" name="email" id="editUserEmail" maxlength="100" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                </div>
+            </div>
+
+            <div>
+                <label for="editUserDepartment" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">Divisi</label>
+                <select name="department" id="editUserDepartment" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                    <option value="">Pilih divisi</option>
+                    <?php foreach ($departments as $department): ?>
+                        <option value="<?php echo htmlspecialchars($department, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($department); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                    <label for="editUserRole" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">Role</label>
+                    <select name="role" id="editUserRole" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                        <option value="user">USER</option>
+                        <option value="admin">ADMIN</option>
+                        <option value="super_admin" disabled>SUPER ADMIN</option>
+                    </select>
+                    <p id="editUserRoleHint" class="mt-1.5 text-[10px] text-slate-500 dark:text-slate-400"></p>
+                </div>
+                <div>
+                    <label for="editUserPassword" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">Password Baru <span class="font-normal text-slate-400">(opsional)</span></label>
+                    <input type="password" name="password" id="editUserPassword" minlength="10" autocomplete="new-password" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white" placeholder="Kosongkan jika tidak diubah">
+                    <p class="mt-1.5 text-[10px] text-slate-500 dark:text-slate-400">Minimal 10 karakter: huruf besar, kecil, angka, dan simbol.</p>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 border-t border-slate-200 pt-4 dark:border-slate-700">
+                <button type="button" onclick="closeEditUserModal()" class="rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600">Batal</button>
+                <button type="submit" class="rounded-xl bg-brand-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-brand-500/20 hover:bg-brand-700"><i class="fas fa-save mr-1.5"></i>Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+<?php endif; ?>
 
 <script>
     const currentSessionUserId = <?php echo (int)$_SESSION['user_id']; ?>;
@@ -149,7 +220,7 @@
             'avatar' => $u['avatar'] ?: 'https://via.placeholder.com/40',
             'created_at' => format_date($u['created_at'])
         ];
-    }, $users)); ?>;
+    }, $users), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT); ?>;
 
     const userSearchInput = document.getElementById('userSearchInput');
     const clearUserSearchBtn = document.getElementById('clearUserSearchBtn');
@@ -157,11 +228,48 @@
     const userRoleFilter = document.getElementById('userRoleFilter');
     const userDataCount = document.getElementById('userDataCount');
     const usersTableBody = document.getElementById('usersTableBody');
+    const editUserModal = document.getElementById('editUserModal');
+    const editUserId = document.getElementById('editUserId');
+    const editUserName = document.getElementById('editUserName');
+    const editUserEmail = document.getElementById('editUserEmail');
+    const editUserDepartment = document.getElementById('editUserDepartment');
+    const editUserRole = document.getElementById('editUserRole');
+    const editUserPassword = document.getElementById('editUserPassword');
+    const editUserRoleHint = document.getElementById('editUserRoleHint');
 
     function escapeHtml(text) {
         if (!text) return '';
         const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
         return text.toString().replace(/[&<>"']/g, m => map[m]);
+    }
+
+    function openEditUserModal(userId) {
+        if (!currentSessionIsSuperAdmin || !editUserModal) return;
+        const user = rawUsersList.find(item => item.id === Number(userId));
+        if (!user) return;
+
+        editUserId.value = user.id;
+        editUserName.value = user.name || '';
+        editUserEmail.value = user.email || '';
+        editUserDepartment.value = user.department || '';
+        editUserRole.value = user.role;
+        editUserRole.disabled = user.role === 'super_admin';
+        editUserRoleHint.textContent = user.role === 'super_admin'
+            ? 'Role Super Admin dilindungi dan tidak dapat diturunkan.'
+            : 'Perubahan role berlaku pada request berikutnya.';
+        editUserPassword.value = '';
+
+        editUserModal.classList.remove('hidden');
+        editUserModal.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+        window.setTimeout(() => editUserName.focus(), 0);
+    }
+
+    function closeEditUserModal() {
+        if (!editUserModal) return;
+        editUserModal.classList.add('hidden');
+        editUserModal.classList.remove('flex');
+        document.body.classList.remove('overflow-hidden');
     }
 
     function highlightText(text, query) {
@@ -351,9 +459,16 @@
                 roleHtml = `<span class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 uppercase">USER</span>`;
             }
 
-            let actionHtml = '';
-            if (currentSessionIsSuperAdmin && !isSelf && u.role !== 'super_admin') {
+            let actionHtml = '<span class="text-slate-400 text-[11px] italic">-</span>';
+            if (currentSessionIsSuperAdmin) {
                 actionHtml = `
+                    <button type="button" onclick="openEditUserModal(${u.id})" class="p-1.5 px-2 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40 rounded-lg transition" title="Edit Akun">
+                        <i class="fas fa-pen-to-square"></i>
+                    </button>
+                `;
+            }
+            if (currentSessionIsSuperAdmin && !isSelf && u.role !== 'super_admin') {
+                actionHtml += `
                     <form method="POST" action="admin_users.php" class="inline-block" onsubmit="return confirm('Hapus pengguna ini beserta data terkait?')">
                         ${csrfHiddenField}
                         <input type="hidden" name="action" value="delete">
@@ -363,8 +478,6 @@
                         </button>
                     </form>
                 `;
-            } else {
-                actionHtml = `<span class="text-slate-400 text-[11px] italic">-</span>`;
             }
 
             html += `
@@ -413,6 +526,15 @@
         document.addEventListener('click', (e) => {
             if (!e.target.closest('#userSearchContainer')) {
                 userSuggestionsBox.classList.add('hidden');
+            }
+            if (editUserModal && e.target === editUserModal) {
+                closeEditUserModal();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && editUserModal && !editUserModal.classList.contains('hidden')) {
+                closeEditUserModal();
             }
         });
     });

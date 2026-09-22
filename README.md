@@ -74,7 +74,7 @@ Ganti password demo sebelum aplikasi digunakan di lingkungan produksi.
 ### Membuat akun dan masuk
 
 1. Pilih **Daftar** untuk membuat akun baru.
-2. Isi nama, email, password minimal 6 karakter, dan konfirmasi password.
+2. Isi nama, email, password minimal 10 karakter yang memuat huruf besar, huruf kecil, angka, dan simbol, lalu isi konfirmasi password.
 3. Masuk melalui halaman **Login**.
 
 Gunakan password yang panjang dan mengandung kombinasi huruf besar, huruf kecil, angka, serta simbol unik.
@@ -137,7 +137,7 @@ Foto bawaan yang tersedia:
 
 ### Mengelola pengguna
 
-Menu **Kelola Pengguna** digunakan untuk mencari pengguna, mengubah role `user`/`admin`, dan menghapus akun. Administrator tidak dapat menghapus akun yang sedang dipakai sendiri.
+Menu **Kelola Pengguna** digunakan untuk mencari dan melihat akun. Super Admin memperoleh tombol **Edit** untuk memperbarui nama, email, divisi, role, dan password opsional. Email harus unik; password baru minimal 10 karakter dan mengandung huruf besar, huruf kecil, angka, serta simbol.
 
 Role `super_admin` dikhususkan untuk pengelola teknis sistem. Super admin memiliki seluruh akses administrator dan menjadi satu-satunya role yang dapat mengubah role atau menghapus akun lain. Akun super admin tidak dapat diubah atau dihapus dari halaman pengelolaan pengguna.
 
@@ -194,6 +194,7 @@ php tests/run_schedule_status_tests.php
 php tests/run_admin_dashboard_tests.php
 php tests/run_room_availability_tests.php
 php tests/run_role_hierarchy_tests.php
+php tests/run_user_account_tests.php
 ```
 
 Pengujian membuat data sementara dan membersihkannya kembali setelah selesai.

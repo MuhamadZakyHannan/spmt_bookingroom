@@ -1,6 +1,8 @@
 <?php
 require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../core/SawService.php';
+require_once __DIR__ . '/../core/Organization.php';
+require_once __DIR__ . '/../core/PasswordPolicy.php';
 
 class AdminController extends Controller {
     private $roomModel;
@@ -291,7 +293,7 @@ class AdminController extends Controller {
 
             if ($action === 'add') {
                 $name = trim($_POST['name'] ?? '');
-                $email = trim($_POST['email'] ?? '');
+                $email = strtolower(trim($_POST['email'] ?? ''));
                 $password = $_POST['password'] ?? '';
                 $department = trim($_POST['department'] ?? '');
                 $roleInput = trim($_POST['role'] ?? 'user');
@@ -299,8 +301,16 @@ class AdminController extends Controller {
                     ? $roleInput
                     : 'user';
 
-                if (empty($name) || empty($email) || empty($password)) {
-                    $error = 'Nama, email, dan password wajib diisi!';
+                $passwordError = PasswordPolicy::validationError($password);
+
+                if (empty($name) || empty($email) || empty($password) || empty($department)) {
+                    $error = 'Nama, email, divisi, dan password wajib diisi!';
+                } else if (strlen($name) > 100 || strlen($email) > 100 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $error = 'Nama atau alamat email tidak valid!';
+                } else if (!Organization::isValidDepartment($department)) {
+                    $error = 'Divisi yang dipilih tidak valid!';
+                } else if ($passwordError) {
+                    $error = $passwordError;
                 } else if ($this->userModel->getByEmail($email)) {
                     $error = 'Email sudah terdaftar!';
                 } else {
@@ -314,6 +324,47 @@ class AdminController extends Controller {
                     set_flash('success', 'Pengguna baru berhasil ditambahkan.');
                     $this->redirect('admin_users.php');
                 }
+            } else if ($action === 'edit') {
+                $user_id = (int)($_POST['user_id'] ?? 0);
+                $targetUser = $user_id > 0 ? $this->userModel->getById($user_id) : false;
+                $name = trim($_POST['name'] ?? '');
+                $email = strtolower(trim($_POST['email'] ?? ''));
+                $department = trim($_POST['department'] ?? '');
+                $password = (string)($_POST['password'] ?? '');
+                $requestedRole = trim($_POST['role'] ?? 'user');
+                $passwordError = $password !== '' ? PasswordPolicy::validationError($password) : null;
+
+                if (!is_super_admin()) {
+                    set_flash('danger', 'Hanya Super Admin yang dapat mengedit akun pengguna.');
+                } else if (!$targetUser) {
+                    set_flash('danger', 'Akun yang akan diedit tidak ditemukan.');
+                } else if ($name === '' || $email === '' || $department === '') {
+                    set_flash('danger', 'Nama, email, dan divisi wajib diisi.');
+                } else if (strlen($name) > 100 || strlen($email) > 100 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    set_flash('danger', 'Nama atau alamat email tidak valid.');
+                } else if (!Organization::isValidDepartment($department)) {
+                    set_flash('danger', 'Divisi yang dipilih tidak valid.');
+                } else if ($passwordError) {
+                    set_flash('danger', $passwordError);
+                } else if ($this->userModel->emailExistsForOtherUser($email, $user_id)) {
+                    set_flash('danger', 'Email sudah digunakan oleh akun lain.');
+                } else {
+                    $role = ($targetUser['role'] ?? '') === 'super_admin'
+                        ? 'super_admin'
+                        : (in_array($requestedRole, ['user', 'admin'], true) ? $requestedRole : 'user');
+
+                    $updated = $this->userModel->updateAccount($user_id, [
+                        'name' => $name,
+                        'email' => $email,
+                        'department' => $department,
+                        'role' => $role,
+                        'password' => $password,
+                    ]);
+                    set_flash($updated ? 'success' : 'danger', $updated
+                        ? 'Data akun berhasil diperbarui.'
+                        : 'Data akun gagal diperbarui.');
+                }
+                $this->redirect('admin_users.php');
             } else if ($action === 'update_role') {
                 $user_id = (int)($_POST['user_id'] ?? 0);
                 $role = trim($_POST['role'] ?? 'user');
@@ -350,6 +401,7 @@ class AdminController extends Controller {
 
         $this->view('admin/users', [
             'users' => $users,
+            'departments' => Organization::DEPARTMENTS,
             'error' => $error
         ]);
     }

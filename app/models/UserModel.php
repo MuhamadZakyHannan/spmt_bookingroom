@@ -30,6 +30,13 @@ class UserModel {
         return $this->findById($id);
     }
 
+    public function emailExistsForOtherUser($email, $userId) {
+        if (!$this->db) return false;
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM users WHERE email = ? AND id != ?");
+        $stmt->execute([$email, $userId]);
+        return (int)$stmt->fetchColumn() > 0;
+    }
+
     public function create($nameOrData, $email = '', $password = '', $role = 'user') {
         if (!$this->db) return false;
 
@@ -69,6 +76,37 @@ class UserModel {
         if (!in_array($role, ['user', 'admin', 'super_admin'], true)) return false;
         $stmt = $this->db->prepare("UPDATE users SET role = ? WHERE id = ?");
         return $stmt->execute([$role, $userId]);
+    }
+
+    public function updateAccount($userId, array $data) {
+        if (!$this->db) return false;
+
+        $role = in_array($data['role'] ?? '', ['user', 'admin', 'super_admin'], true)
+            ? $data['role']
+            : 'user';
+        $department = trim((string)($data['department'] ?? '')) ?: null;
+        $password = (string)($data['password'] ?? '');
+
+        if ($password !== '') {
+            $stmt = $this->db->prepare(
+                "UPDATE users
+                 SET name = ?, email = ?, department = ?, role = ?, password = ?
+                 WHERE id = ?"
+            );
+            return $stmt->execute([
+                $data['name'],
+                $data['email'],
+                $department,
+                $role,
+                password_hash($password, PASSWORD_DEFAULT),
+                $userId,
+            ]);
+        }
+
+        $stmt = $this->db->prepare(
+            "UPDATE users SET name = ?, email = ?, department = ?, role = ? WHERE id = ?"
+        );
+        return $stmt->execute([$data['name'], $data['email'], $department, $role, $userId]);
     }
 
     public function delete($userId) {

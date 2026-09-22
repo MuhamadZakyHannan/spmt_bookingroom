@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../../core/Organization.php';
+
 $bookingFormPrefix = $bookingFormPrefix ?? 'booking';
 $bookingFormRooms = $bookingFormRooms ?? [];
 $bookingFormSelectedRoomId = (int)($bookingFormSelectedRoomId ?? 0);
@@ -14,20 +16,7 @@ $bookingFormValues = array_merge([
     'purpose' => ''
 ], $bookingFormValues ?? []);
 
-$bookingFormDepartments = [
-    'SPMT - Pendukung Operasi',
-    'SPMT - Teknik & IT',
-    'SPMT - Rendal OPS',
-    'SPMT - Integrated PNC',
-    'SPMT - Operasional',
-    'SPMT - Ruang Rapat dan Branch Manager',
-    'SPMT - SPJM',
-    'Subreg - Keuangan',
-    'Subreg - Teknik',
-    'Subreg - Integraterd PNC',
-    'Subreg - Komersial',
-    'Subreg - Arsip'
-];
+$bookingFormDepartments = Organization::DEPARTMENTS;
 
 $bookingFormActivityTypes = $activity_types ?? SawService::ACTIVITY_TYPES;
 $bookingFormStartTime = substr((string)$bookingFormValues['start_time'], 0, 5);
