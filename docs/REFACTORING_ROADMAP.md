@@ -21,6 +21,7 @@ perilaku aplikasi serta melewati seluruh regression test sebelum dilanjutkan.
    `ApiResponse`.
 6. **Finalisasi** — hapus kompatibilitas yang tidak lagi digunakan, lengkapi
    dokumentasi arsitektur, lalu jalankan pemeriksaan regresi dan keamanan.
+   Status: selesai.
 
 ## Aturan pengerjaan
 

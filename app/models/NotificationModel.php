@@ -64,37 +64,6 @@ class NotificationModel extends BaseModel {
         }
     }
 
-    /**
-     * Membuat notifikasi attendance untuk semua admin.
-     * Definisi pesan ditempatkan di sini agar service tidak mengetahui format UI.
-     */
-    public function createForAttendanceEvent($bookingId, $type) {
-        $content = [
-        ];
-
-        if (!$this->db || $bookingId <= 0 || !isset($content[$type])) return false;
-
-        [$title, $verb] = $content[$type];
-
-        try {
-            $stmt = $this->db->prepare(
-                "INSERT IGNORE INTO notifications
-                    (recipient_user_id, booking_id, type, title, message)
-                 SELECT u.id, b.id, ?, ?,
-                        CONCAT(IFNULL(b.user_name, requester.name), ?, b.title, ' di ', r.name)
-                 FROM bookings b
-                 JOIN users requester ON requester.id = b.user_id
-                 JOIN rooms r ON r.id = b.room_id
-                 CROSS JOIN users u
-                 WHERE b.id = ? AND u.role IN ('admin', 'super_admin')"
-            );
-            return $stmt->execute([$type, $title, $verb, $bookingId]);
-        } catch (Throwable $e) {
-            error_log('Gagal membuat notifikasi attendance: ' . $e->getMessage());
-            return false;
-        }
-    }
-
     public function getUnreadCount($recipientUserId) {
         if (!$this->db || $recipientUserId <= 0) return 0;
 

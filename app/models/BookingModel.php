@@ -114,11 +114,6 @@ class BookingModel extends BaseModel
             : [];
     }
 
-    public function getAllBookingsAdmin($search = '', $status = '')
-    {
-        return $this->getAllBookings($search, $status);
-    }
-
     public function updateStatus($bookingId, $status)
     {
         return $this->db

@@ -10,16 +10,8 @@ class UserModel extends BaseModel {
         return $stmt->fetch();
     }
 
-    public function findByEmail($email) {
-        return $this->findByUsername($email);
-    }
-
     public function getByUsername($username) {
         return $this->findByUsername($username);
-    }
-
-    public function getByEmail($email) {
-        return $this->findByUsername($email);
     }
 
     public function findById($id) {
@@ -38,10 +30,6 @@ class UserModel extends BaseModel {
         $stmt = $this->db->prepare("SELECT COUNT(*) FROM users WHERE username = ? AND id != ?");
         $stmt->execute([$username, $userId]);
         return (int)$stmt->fetchColumn() > 0;
-    }
-
-    public function emailExistsForOtherUser($email, $userId) {
-        return $this->usernameExistsForOtherUser($email, $userId);
     }
 
     public function create($nameOrData, $email = '', $password = '', $role = 'user') {

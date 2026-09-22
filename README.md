@@ -84,6 +84,8 @@ migrasi, serta hak akses database dijelaskan di
 [`docs/DATABASE.md`](docs/DATABASE.md).
 Rencana perapian kode jangka panjang dicatat di
 [`docs/REFACTORING_ROADMAP.md`](docs/REFACTORING_ROADMAP.md).
+Arsitektur dan aturan pengembangan tersedia di
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ### 4. Buka aplikasi
 
@@ -252,6 +254,7 @@ php tests/run_model_architecture_tests.php
 php tests/run_booking_domain_refactor_tests.php
 php tests/run_presentation_architecture_tests.php
 php tests/run_api_architecture_tests.php
+php tests/run_final_architecture_tests.php
 ```
 
 Pengujian membuat data sementara dan membersihkannya kembali setelah selesai.
