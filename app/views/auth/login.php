@@ -69,10 +69,16 @@
             </button>
         </form>
 
-        <div class="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
-            Belum punya akun?
-            <a href="register.php" class="font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 hover:underline ml-1">Daftar Akun Baru</a>
-        </div>
+        <?php if (APP_ALLOW_REGISTRATION): ?>
+            <div class="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
+                Belum punya akun?
+                <a href="register.php" class="font-bold text-brand-600 dark:text-brand-400 hover:text-brand-700 hover:underline ml-1">Daftar Akun Baru</a>
+            </div>
+        <?php else: ?>
+            <p class="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
+                Pembuatan akun dikelola oleh Administrator.
+            </p>
+        <?php endif; ?>
     </div>
 </div>
 

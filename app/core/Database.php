@@ -19,6 +19,7 @@ class Database {
                 PDO::ATTR_EMULATE_PREPARES => false,
             ]);
         } catch (PDOException $e) {
+            error_log('Koneksi Database singleton gagal: ' . $e->getMessage());
             $this->pdo = null;
         }
     }

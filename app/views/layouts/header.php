@@ -94,7 +94,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     <?php else: ?>
                     <div class="flex gap-2">
                         <a href="login.php" class="px-4 py-2 rounded-lg text-sm font-medium bg-sky-100/80 hover:bg-sky-200 text-sky-900 dark:bg-white/10 dark:text-white transition">Masuk</a>
-                        <a href="register.php" class="px-4 py-2 rounded-lg text-sm font-bold bg-sky-600 hover:bg-sky-700 text-white shadow transition">Daftar</a>
+                        <?php if (APP_ALLOW_REGISTRATION): ?>
+                            <a href="register.php" class="px-4 py-2 rounded-lg text-sm font-bold bg-sky-600 hover:bg-sky-700 text-white shadow transition">Daftar</a>
+                        <?php endif; ?>
                     </div>
                     <?php endif; ?>
                 </div>

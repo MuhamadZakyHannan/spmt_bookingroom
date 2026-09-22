@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/bootstrap.php';
 require_once __DIR__ . '/../config.php';
 
 function expectRole(bool $condition, string $message): void

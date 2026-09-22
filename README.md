@@ -46,7 +46,15 @@ php scripts/apply_migrations.php
 ```
 
 Runner mencatat migrasi yang sudah dijalankan sehingga aman dipanggil kembali.
-5. Pastikan database bernama `meetspace_db`, atau sesuaikan `DB_NAME` pada `.env`.
+5. Setelah migrasi selesai, buat akun database khusus aplikasi melalui phpMyAdmin. Ganti password contoh sebelum menjalankan SQL:
+
+```sql
+CREATE USER IF NOT EXISTS 'meetspace_app'@'localhost' IDENTIFIED BY 'ganti-password-kuat';
+GRANT SELECT, INSERT, UPDATE, DELETE ON meetspace_db.* TO 'meetspace_app'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+6. Pastikan database bernama `meetspace_db`, atau sesuaikan `DB_NAME` pada `.env`.
 
 Skema utama sengaja disimpan di luar `htdocs` agar tidak dapat diunduh melalui web server.
 
@@ -55,14 +63,20 @@ Skema utama sengaja disimpan di luar `htdocs` agar tidak dapat diunduh melalui w
 Salin `.env.example` menjadi `.env`, kemudian sesuaikan nilainya:
 
 ```dotenv
+APP_ENV="local_lan"
+APP_DEBUG="false"
+APP_ALLOW_REGISTRATION="false"
 DB_HOST="localhost"
-DB_USER="root"
-DB_PASS=""
+DB_USER="meetspace_app"
+DB_PASS="ganti-password-kuat"
 DB_NAME="meetspace_db"
 BOOKING_DOCUMENT_STORAGE="C:/xampp/private/Room_Booking_System/booking-documents"
 ```
 
 File `.env` tidak disimpan ke Git.
+
+Panduan pembatasan Apache, MySQL, session, dan Windows Firewall tersedia di
+[`docs/LOCAL_NETWORK_SECURITY.md`](docs/LOCAL_NETWORK_SECURITY.md).
 
 ### 4. Buka aplikasi
 
@@ -83,9 +97,9 @@ Ganti password demo sebelum aplikasi digunakan di lingkungan produksi.
 
 ### Membuat akun dan masuk
 
-1. Pilih **Daftar** untuk membuat akun baru.
-2. Isi nama, username, password minimal 8 karakter yang memuat huruf besar, huruf kecil, angka, dan simbol, lalu isi konfirmasi password.
-3. Masuk melalui halaman **Login**.
+1. Hubungi Administrator untuk pembuatan akun. Pendaftaran mandiri dinonaktifkan secara default pada server LAN.
+2. Administrator membuat akun melalui menu **Kelola Pengguna** menggunakan password awal minimal 8 karakter yang memuat huruf besar, huruf kecil, angka, dan simbol.
+3. Masuk melalui halaman **Login**, kemudian ganti password awal melalui Administrator jika diperlukan.
 
 Gunakan password yang panjang dan mengandung kombinasi huruf besar, huruf kecil, angka, serta simbol unik.
 
@@ -230,6 +244,7 @@ php tests/run_calendar_ui_tests.php
 php tests/run_role_hierarchy_tests.php
 php tests/run_user_account_tests.php
 php tests/run_booking_expiration_tests.php
+php tests/run_security_hardening_tests.php
 ```
 
 Pengujian membuat data sementara dan membersihkannya kembali setelah selesai.

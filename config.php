@@ -5,14 +5,6 @@
 // Set Zona Waktu Default Indonesia (WIB / Asia/Jakarta)
 date_default_timezone_set('Asia/Jakarta');
 
-// Security Headers
-if (!headers_sent()) {
-    header('X-Frame-Options: SAMEORIGIN');
-    header('X-Content-Type-Options: nosniff');
-    header('Referrer-Policy: strict-origin-when-cross-origin');
-    header('X-XSS-Protection: 1; mode=block');
-}
-
 // Optional .env File Loader
 $envFile = __DIR__ . '/.env';
 if (file_exists($envFile)) {
@@ -24,12 +16,54 @@ if (file_exists($envFile)) {
             list($envKey, $envVal) = explode('=', $envLine, 2);
             $envKey = trim($envKey);
             $envVal = trim($envVal, " \t\n\r\0\x0B\"'");
-            if (!array_key_exists($envKey, $_ENV)) {
+            if (getenv($envKey) === false && !array_key_exists($envKey, $_ENV)) {
                 $_ENV[$envKey] = $envVal;
                 putenv("$envKey=$envVal");
             }
         }
     }
+}
+
+/**
+ * Membaca environment variable boolean secara konsisten.
+ */
+function env_bool(string $key, bool $default = false): bool
+{
+    $value = getenv($key);
+    if ($value === false || trim((string) $value) === '') return $default;
+    return filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ?? $default;
+}
+
+if (!defined('APP_ENV')) define('APP_ENV', getenv('APP_ENV') ?: 'local_lan');
+if (!defined('APP_DEBUG')) define('APP_DEBUG', env_bool('APP_DEBUG', false));
+if (!defined('APP_ALLOW_REGISTRATION')) define('APP_ALLOW_REGISTRATION', env_bool('APP_ALLOW_REGISTRATION', false));
+if (!defined('SESSION_IDLE_TIMEOUT')) define('SESSION_IDLE_TIMEOUT', max(900, (int) (getenv('SESSION_IDLE_TIMEOUT') ?: 7200)));
+if (!defined('SESSION_COOKIE_PATH')) define('SESSION_COOKIE_PATH', getenv('SESSION_COOKIE_PATH') ?: '/Room_Booking_System/');
+if (!defined('TRUST_PROXY_HEADERS')) define('TRUST_PROXY_HEADERS', env_bool('TRUST_PROXY_HEADERS', false));
+if (!defined('APP_LOG_PATH')) {
+    $defaultLogPath = dirname(__DIR__, 2)
+        . DIRECTORY_SEPARATOR . 'private'
+        . DIRECTORY_SEPARATOR . 'Room_Booking_System'
+        . DIRECTORY_SEPARATOR . 'logs'
+        . DIRECTORY_SEPARATOR . 'application.log';
+    define('APP_LOG_PATH', getenv('APP_LOG_PATH') ?: $defaultLogPath);
+}
+
+error_reporting(E_ALL);
+ini_set('display_errors', APP_DEBUG ? '1' : '0');
+ini_set('display_startup_errors', APP_DEBUG ? '1' : '0');
+ini_set('log_errors', '1');
+$logDirectory = dirname(APP_LOG_PATH);
+if ((is_dir($logDirectory) || @mkdir($logDirectory, 0700, true)) && is_writable($logDirectory)) {
+    ini_set('error_log', APP_LOG_PATH);
+}
+
+// Security headers compatible with the local Tailwind/FullCalendar interface.
+if (!headers_sent()) {
+    header_remove('X-Powered-By');
+    header('X-Frame-Options: SAMEORIGIN');
+    header('Referrer-Policy: strict-origin-when-cross-origin');
+    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' data: https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'");
 }
 
 // Database Connection Configuration Constants
@@ -47,18 +81,33 @@ if (!defined('BOOKING_DOCUMENT_STORAGE')) {
 
 // Secure Session Initialization
 if (PHP_SAPI !== 'cli' && session_status() === PHP_SESSION_NONE) {
-    $isHttps = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || 
-               (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+    $isHttps = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
+    if (TRUST_PROXY_HEADERS && isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+        $isHttps = strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https';
+    }
     ini_set('session.use_strict_mode', '1');
+    ini_set('session.use_only_cookies', '1');
+    session_name('MEETSPACESESSID');
     session_set_cookie_params([
         'lifetime' => 0,
-        'path' => '/',
+        'path' => SESSION_COOKIE_PATH,
         'domain' => '',
         'secure' => $isHttps,
         'httponly' => true,
         'samesite' => 'Lax'
     ]);
     session_start();
+
+    $lastActivity = (int) ($_SESSION['last_activity_at'] ?? 0);
+    if (isset($_SESSION['user_id']) && $lastActivity > 0 && (time() - $lastActivity) > SESSION_IDLE_TIMEOUT) {
+        session_unset();
+        session_regenerate_id(true);
+        $_SESSION['flash'] = [
+            'type' => 'warning',
+            'message' => 'Sesi berakhir karena tidak ada aktivitas. Silakan masuk kembali.',
+        ];
+    }
+    $_SESSION['last_activity_at'] = time();
 }
 
 $db_host = DB_HOST;
@@ -73,6 +122,7 @@ try {
         PDO::ATTR_EMULATE_PREPARES => false,
     ]);
 } catch (PDOException $e) {
+    error_log('Koneksi database aplikasi gagal: ' . $e->getMessage());
     $pdo = null; // Will trigger setup warning in UI if database is not created yet
 }
 
@@ -102,19 +152,23 @@ if (PHP_SAPI !== 'cli' && $pdo && isset($_SESSION['user_id'])) {
 }
 
 // Helper Functions
-function is_logged_in() {
+function is_logged_in()
+{
     return isset($_SESSION['user_id']);
 }
 
-function is_admin() {
+function is_admin()
+{
     return isset($_SESSION['role']) && in_array($_SESSION['role'], ['admin', 'super_admin'], true);
 }
 
-function is_super_admin() {
+function is_super_admin()
+{
     return isset($_SESSION['role']) && $_SESSION['role'] === 'super_admin';
 }
 
-function require_login() {
+function require_login()
+{
     if (!is_logged_in()) {
         set_flash('danger', 'Silakan login terlebih dahulu untuk mengakses halaman ini.');
         header('Location: login.php');
@@ -122,7 +176,8 @@ function require_login() {
     }
 }
 
-function require_admin() {
+function require_admin()
+{
     require_login();
     if (!is_admin()) {
         set_flash('danger', 'Akses ditolak. Anda memerlukan hak akses Administrator.');
@@ -131,14 +186,16 @@ function require_admin() {
     }
 }
 
-function set_flash($type, $message) {
+function set_flash($type, $message)
+{
     $_SESSION['flash'] = [
         'type' => $type, // 'success', 'danger', 'warning', 'info'
         'message' => $message
     ];
 }
 
-function display_flash() {
+function display_flash()
+{
     if (isset($_SESSION['flash'])) {
         $type = $_SESSION['flash']['type'];
         $msg = $_SESSION['flash']['message'];
@@ -172,12 +229,23 @@ function display_flash() {
     }
 }
 
-function format_date($date_str) {
+function format_date($date_str)
+{
     if (!$date_str) return '-';
     $time = strtotime($date_str);
     $months = [
-        1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        1 => 'Januari',
+        'Februari',
+        'Maret',
+        'April',
+        'Mei',
+        'Juni',
+        'Juli',
+        'Agustus',
+        'September',
+        'Oktober',
+        'November',
+        'Desember'
     ];
     $day = date('d', $time);
     $month = $months[(int)date('m', $time)];
@@ -185,17 +253,20 @@ function format_date($date_str) {
     return "$day $month $year";
 }
 
-function format_time($time_str) {
+function format_time($time_str)
+{
     if (!$time_str) return '-';
     return date('H:i', strtotime($time_str));
 }
 
-function is_booking_expired(array $booking): bool {
+function is_booking_expired(array $booking): bool
+{
     return ($booking['status'] ?? '') === 'cancelled'
         && ($booking['status_reason'] ?? '') === BookingLifecycleService::REASON_EXPIRED;
 }
 
-function booking_status_label(array $booking): string {
+function booking_status_label(array $booking): string
+{
     if (is_booking_expired($booking)) return 'Kedaluwarsa';
     return match ($booking['status'] ?? '') {
         'pending' => 'Menunggu Persetujuan',
@@ -210,7 +281,8 @@ function booking_status_label(array $booking): string {
  * Menghasilkan versi aset dari waktu modifikasi file agar browser tidak
  * memakai CSS atau JavaScript lama setelah aplikasi diperbarui.
  */
-function asset_version($relative_path) {
+function asset_version($relative_path)
+{
     $relative_path = ltrim(str_replace('\\', '/', (string) $relative_path), '/');
     if ($relative_path === '' || strpos($relative_path, '..') !== false) {
         return '1';
@@ -225,18 +297,21 @@ function asset_version($relative_path) {
 /**
  * CSRF Protection Helper Functions
  */
-function csrf_token() {
+function csrf_token()
+{
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }
     return $_SESSION['csrf_token'];
 }
 
-function csrf_field() {
+function csrf_field()
+{
     return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') . '">';
 }
 
-function verify_csrf_token($token = null) {
+function verify_csrf_token($token = null)
+{
     if ($token === null) {
         $token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
     }
@@ -261,4 +336,3 @@ spl_autoload_register(function ($class) {
         }
     }
 });
-?>

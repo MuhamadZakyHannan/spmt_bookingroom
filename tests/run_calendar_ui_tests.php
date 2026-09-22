@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/bootstrap.php';
 function expectCalendarUi(bool $condition, string $message): void
 {
     if (!$condition) {
