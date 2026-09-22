@@ -46,9 +46,6 @@ class NotificationModel {
      */
     public function createForAttendanceEvent($bookingId, $type) {
         $content = [
-            'attendance_check_in' => ['Check-in ruang rapat', ' telah check-in untuk '],
-            'attendance_check_out' => ['Check-out ruang rapat', ' telah check-out dari '],
-            'attendance_no_show' => ['Booking no-show', ' tidak check-in tepat waktu untuk '],
         ];
 
         if (!$this->db || $bookingId <= 0 || !isset($content[$type])) return false;

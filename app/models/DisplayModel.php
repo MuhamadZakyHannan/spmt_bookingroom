@@ -82,9 +82,6 @@ class DisplayModel {
     public function getRoomLiveStatus($roomId, $targetTime = null) {
         if (!$this->db) return null;
 
-        require_once __DIR__ . '/BookingModel.php';
-        (new BookingModel())->processAutomaticAttendanceTransitions();
-
         // Ambil data ruangan
         $stmtRoom = $this->db->prepare("SELECT * FROM rooms WHERE id = ?");
         $stmtRoom->execute([$roomId]);
@@ -115,11 +112,7 @@ class DisplayModel {
             $end5 = substr($b['end_time'], 0, 5);
             $current5 = date('H:i', $currentTimestamp);
 
-            $isCheckedIn = ($b['attendance_status'] ?? null) === 'checked_in';
-            $isAwaitingCheckIn = ($b['attendance_status'] ?? null) === 'scheduled'
-                && $current5 >= $start5
-                && $current5 < $end5;
-            $isCurrent = ($current5 >= $start5 && $current5 < $end5 && $isCheckedIn);
+            $isCurrent = ($current5 >= $start5 && $current5 < $end5);
             $isPast = ($current5 >= $end5);
             $isUpcoming = ($current5 < $start5);
 
@@ -129,7 +122,6 @@ class DisplayModel {
             $item['is_current'] = $isCurrent;
             $item['is_past'] = $isPast;
             $item['is_upcoming'] = $isUpcoming;
-            $item['is_awaiting_check_in'] = $isAwaitingCheckIn;
 
             // HANYA MASUKKAN YANG MASIH BERLANGSUNG ATAU AKAN DATANG (Selesai dihilangkan)
             if (!$isPast) {

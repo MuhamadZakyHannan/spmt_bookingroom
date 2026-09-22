@@ -555,15 +555,6 @@
                                     <i class="fas fa-times-circle text-rose-600"></i> Ditolak / Batal
                                 </span>
                             <?php endif; ?>
-                            <?php if (($b['attendance_status'] ?? null) === 'scheduled'): ?>
-                                <div class="mt-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400"><i class="fas fa-user-clock"></i> Menunggu check-in</div>
-                            <?php elseif (($b['attendance_status'] ?? null) === 'checked_in'): ?>
-                                <div class="mt-1 text-[10px] font-bold text-violet-700 dark:text-violet-300"><i class="fas fa-sign-in-alt"></i> Sudah check-in</div>
-                            <?php elseif (($b['attendance_status'] ?? null) === 'checked_out'): ?>
-                                <div class="mt-1 text-[10px] font-bold text-blue-700 dark:text-blue-300"><i class="fas fa-sign-out-alt"></i> Sudah check-out</div>
-                            <?php elseif (($b['attendance_status'] ?? null) === 'no_show'): ?>
-                                <div class="mt-1 text-[10px] font-bold text-rose-700 dark:text-rose-300"><i class="fas fa-user-times"></i> No-show</div>
-                            <?php endif; ?>
                         </td>
 
                         <!-- 6. Detail -->
@@ -737,7 +728,6 @@
             'end_time' => substr($b['end_time'], 0, 5),
             'attendees_count' => (int)$b['attendees_count'],
             'status' => $b['status'],
-            'attendance_status' => $b['attendance_status'] ?? null,
             'activity_type_label' => $actLabel,
             'is_conflict' => isset($conflict_booking_ids[$b['id']])
         ];
@@ -1043,16 +1033,6 @@
                         <i class="fas fa-times-circle text-rose-600"></i> Ditolak
                     </span>
                 `;
-            }
-
-            if (b.attendance_status === 'scheduled') {
-                statusHtml += `<div class="mt-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400"><i class="fas fa-user-clock"></i> Menunggu check-in</div>`;
-            } else if (b.attendance_status === 'checked_in') {
-                statusHtml += `<div class="mt-1 text-[10px] font-bold text-violet-700 dark:text-violet-300"><i class="fas fa-sign-in-alt"></i> Sudah check-in</div>`;
-            } else if (b.attendance_status === 'checked_out') {
-                statusHtml += `<div class="mt-1 text-[10px] font-bold text-blue-700 dark:text-blue-300"><i class="fas fa-sign-out-alt"></i> Sudah check-out</div>`;
-            } else if (b.attendance_status === 'no_show') {
-                statusHtml += `<div class="mt-1 text-[10px] font-bold text-rose-700 dark:text-rose-300"><i class="fas fa-user-times"></i> No-show</div>`;
             }
 
             let actionHtml = '';

@@ -98,9 +98,9 @@
                                 <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Jadwal Aktif</div>
                                 <div id="totalActiveCountEl" class="font-bold text-sm sm:text-base text-slate-900"><?php echo $totalActiveSchedule; ?> Sesi</div>
                             </div>
-                            <div id="berlangsungBox" class="px-3.5 py-1.5 rounded-xl bg-amber-50 border border-amber-300 text-right shadow-xs <?php echo $activeNowCount > 0 ? '' : 'hidden'; ?>">
-                                <div class="text-[10px] font-bold uppercase tracking-wider text-amber-700">Berlangsung</div>
-                                <div id="berlangsungCountEl" class="font-extrabold text-sm sm:text-base text-amber-900 animate-pulse"><?php echo $activeNowCount; ?> Sesi</div>
+                            <div id="berlangsungBox" class="px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-300 text-right shadow-xs <?php echo $activeNowCount > 0 ? '' : 'hidden'; ?>">
+                                <div class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Berlangsung</div>
+                                <div id="berlangsungCountEl" class="font-extrabold text-sm sm:text-base text-emerald-900 animate-pulse"><?php echo $activeNowCount; ?> Sesi</div>
                             </div>
                         </div>
 
@@ -221,18 +221,14 @@
                 activeList.forEach((b, idx) => {
                     const start5 = (b.start_time || '').substring(0, 5);
                     const end5 = (b.end_time || '').substring(0, 5);
-                    const attendanceStatus = b.attendance_status || 'scheduled';
                     const isWithinSchedule = (currentHHMM >= start5 && currentHHMM < end5);
-                    const isNow = isWithinSchedule && attendanceStatus === 'checked_in';
-                    const isAwaitingCheckIn = isWithinSchedule && attendanceStatus === 'scheduled';
+                    const isNow = isWithinSchedule;
 
                     if (isNow) activeNowCount++;
 
                     const rowBg = isNow
-                        ? 'bg-amber-100/90 border-l-[6px] border-amber-500 shadow-sm'
-                        : (isAwaitingCheckIn
-                            ? 'bg-blue-50/90 border-l-[6px] border-blue-500 shadow-sm'
-                            : 'bg-white hover:bg-slate-50/90 border-l-[6px] border-slate-200');
+                        ? 'bg-emerald-100/90 border-l-[6px] border-emerald-500 shadow-sm'
+                        : 'bg-white hover:bg-slate-50/90 border-l-[6px] border-slate-200';
                     const padIndex = String(idx + 1).padStart(2, '0');
                     const divisiName = b.user_dept || 'Divisi Operasional';
 
@@ -243,36 +239,36 @@
                                 <div class="flex items-center justify-center gap-2">
                                     ${isNow ? `
                                         <span class="relative flex h-3 w-3">
-                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                            <span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                                         </span>
                                     ` : `
                                         <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
                                     `}
-                                    <span class="${isNow ? 'text-amber-950 font-black' : 'text-slate-500'}">${padIndex}</span>
+                                    <span class="${isNow ? 'text-emerald-950 font-black' : 'text-slate-500'}">${padIndex}</span>
                                 </div>
                             </td>
 
                             <!-- Ruangan & Lokasi -->
                             <td class="py-4 px-3.5 text-left align-middle overflow-hidden">
-                                <div class="font-bold text-xs sm:text-sm lg:text-base whitespace-normal break-words leading-tight ${isNow ? 'text-amber-950 font-black' : 'text-slate-900'}">
+                                <div class="font-bold text-xs sm:text-sm lg:text-base whitespace-normal break-words leading-tight ${isNow ? 'text-emerald-950 font-black' : 'text-slate-900'}">
                                     ${escapeHtml(b.room_name || 'Ruang Rapat')}
                                 </div>
-                                <div class="text-[11px] whitespace-normal break-words leading-tight mt-0.5 font-medium ${isNow ? 'text-amber-800/90 font-semibold' : 'text-slate-500'}">
+                                <div class="text-[11px] whitespace-normal break-words leading-tight mt-0.5 font-medium ${isNow ? 'text-emerald-800/90 font-semibold' : 'text-slate-500'}">
                                     ${escapeHtml(b.room_floor || 'Gedung Utama')} • Kap. ${escapeHtml(b.attendees_count || '10')} orang
                                 </div>
                             </td>
 
                             <!-- Agenda Pertemuan (Judul Saja) -->
                             <td class="py-4 px-3.5 text-left align-middle overflow-hidden">
-                                <div class="text-xs sm:text-sm lg:text-base whitespace-normal break-words leading-tight ${isNow ? 'text-amber-950 font-black' : 'text-slate-900 font-bold'}" title="${escapeHtml(b.title)}">
+                                <div class="text-xs sm:text-sm lg:text-base whitespace-normal break-words leading-tight ${isNow ? 'text-emerald-950 font-black' : 'text-slate-900 font-bold'}" title="${escapeHtml(b.title)}">
                                     ${escapeHtml(b.title)}
                                 </div>
                             </td>
 
                             <!-- Divisi Saja -->
                             <td class="py-4 px-3.5 text-left align-middle overflow-hidden">
-                                <div class="text-xs sm:text-sm whitespace-normal break-words leading-tight ${isNow ? 'text-amber-900 font-extrabold' : 'text-blue-700 font-bold'}">
+                                <div class="text-xs sm:text-sm whitespace-normal break-words leading-tight ${isNow ? 'text-emerald-900 font-extrabold' : 'text-blue-700 font-bold'}">
                                     ${escapeHtml(divisiName)}
                                 </div>
                             </td>
@@ -280,7 +276,7 @@
                             <!-- Waktu -->
                             <td class="py-4 px-3.5 text-center align-middle">
                                 ${isNow ? `
-                                    <span class="font-mono text-xs sm:text-sm px-3 py-1.5 rounded-lg border-2 border-amber-400 bg-amber-200 text-amber-950 font-black whitespace-nowrap inline-block shadow-xs">
+                                    <span class="font-mono text-xs sm:text-sm px-3 py-1.5 rounded-lg border-2 border-emerald-400 bg-emerald-200 text-emerald-950 font-black whitespace-nowrap inline-block shadow-xs">
                                         ${start5} - ${end5}
                                     </span>
                                 ` : `
@@ -293,14 +289,9 @@
                             <!-- Status -->
                             <td class="py-4 px-3.5 text-right align-middle">
                                 ${isNow ? `
-                                    <span class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border-2 border-red-700 bg-red-600 text-white text-[11px] sm:text-xs font-black font-mono tracking-wide uppercase text-center leading-tight shadow-md animate-pulse">
+                                    <span class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border-2 border-emerald-700 bg-emerald-600 text-white text-[11px] sm:text-xs font-black font-mono tracking-wide uppercase text-center leading-tight shadow-md animate-pulse">
                                         <span class="w-2 h-2 rounded-full bg-white"></span>
                                         SEDANG BERLANGSUNG
-                                    </span>
-                                ` : isAwaitingCheckIn ? `
-                                    <span class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border-2 border-amber-600 bg-amber-500 text-white text-[11px] sm:text-xs font-black font-mono tracking-wide uppercase text-center leading-tight shadow-md animate-pulse">
-                                        <span class="w-2 h-2 rounded-full bg-white"></span>
-                                        MENUNGGU CHECK-IN
                                     </span>
                                 ` : `
                                     <span class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border-2 border-blue-700 bg-blue-600 text-white text-[11px] sm:text-xs font-black font-mono tracking-wide uppercase text-center leading-tight shadow-md">

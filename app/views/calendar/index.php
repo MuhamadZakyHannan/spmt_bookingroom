@@ -580,17 +580,14 @@
             },
             eventClick: args => {
                 const props = args.event.extendedProps;
-                const attendanceStatus = props.attendance_status || '';
                 let statusKey = 'scheduled';
                 let statusLabel = 'Terjadwal';
+                const now = new Date();
 
-                if (attendanceStatus === 'checked_in') {
+                if (args.event.start <= now && args.event.end > now && props.status === 'confirmed') {
                     statusKey = 'ongoing';
                     statusLabel = 'Berlangsung';
-                } else if (attendanceStatus === 'no_show') {
-                    statusKey = 'no-show';
-                    statusLabel = 'Tidak hadir';
-                } else if (props.status === 'completed' || attendanceStatus === 'checked_out') {
+                } else if (props.status === 'completed' || args.event.end <= now) {
                     statusKey = 'completed';
                     statusLabel = 'Selesai';
                 }

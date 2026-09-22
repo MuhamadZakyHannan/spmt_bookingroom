@@ -145,7 +145,7 @@ class DisplayController extends Controller {
         foreach ($activeBookings as $b) {
             $start5 = substr($b['start_time'], 0, 5);
             $end5 = substr($b['end_time'], 0, 5);
-            if ($currentTime >= $start5 && $currentTime < $end5 && ($b['attendance_status'] ?? null) === 'checked_in') {
+            if ($currentTime >= $start5 && $currentTime < $end5) {
                 $activeNowCount++;
             }
         }

@@ -149,36 +149,23 @@ class BookingController extends Controller {
 
     public function myBookings() {
         $this->requireAuth();
-        $this->bookingModel->processAutomaticAttendanceTransitions();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $this->validateCsrf('my_bookings.php');
             $action = $_POST['action'];
             $booking_id = (int)($_POST['booking_id'] ?? 0);
 
-            if ($booking_id > 0) {
-                if ($action === 'check_in') {
-                    $result = $this->bookingModel->checkIn($booking_id, (int)$_SESSION['user_id']);
-                    set_flash($result['success'] ? 'success' : 'danger', $result['message']);
-                } elseif ($action === 'check_out') {
-                    $result = $this->bookingModel->checkOut($booking_id, (int)$_SESSION['user_id']);
-                    set_flash($result['success'] ? 'success' : 'danger', $result['message']);
-                } elseif ($action === 'cancel') {
-                    if ($this->bookingModel->cancel($booking_id, $_SESSION['user_id'], false)) {
-                        set_flash('success', 'Pemesanan telah berhasil dibatalkan.');
-                    } else {
-                        set_flash('danger', 'Booking yang sudah check-in tidak dapat dibatalkan. Lakukan check-out terlebih dahulu.');
-                    }
+            if ($booking_id > 0 && $action === 'cancel') {
+                if ($this->bookingModel->cancel($booking_id, $_SESSION['user_id'], false)) {
+                    set_flash('success', 'Pemesanan telah berhasil dibatalkan.');
+                } else {
+                    set_flash('danger', 'Pemesanan tidak dapat dibatalkan atau bukan milik akun Anda.');
                 }
             }
             $this->redirect('my_bookings.php');
         }
 
         $my_bookings = $this->bookingModel->getByUserId($_SESSION['user_id']);
-        foreach ($my_bookings as &$booking) {
-            $booking['attendance_action'] = $this->bookingModel->getAttendanceActionState($booking);
-        }
-        unset($booking);
 
         $this->view('booking/my_bookings', [
             'my_bookings' => $my_bookings

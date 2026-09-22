@@ -38,24 +38,6 @@ if (!defined('DB_USER')) define('DB_USER', getenv('DB_USER') ?: 'root');
 if (!defined('DB_PASS')) define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
 if (!defined('DB_NAME')) define('DB_NAME', getenv('DB_NAME') ?: 'meetspace_db');
 
-// Attendance Feature Configuration
-if (!defined('ATTENDANCE_CHECK_IN_EARLY_MINUTES')) {
-    $attendanceEarlyEnv = filter_var(
-        getenv('ATTENDANCE_CHECK_IN_EARLY_MINUTES'),
-        FILTER_VALIDATE_INT,
-        ['options' => ['min_range' => 0]]
-    );
-    define('ATTENDANCE_CHECK_IN_EARLY_MINUTES', $attendanceEarlyEnv !== false ? $attendanceEarlyEnv : 15);
-}
-if (!defined('ATTENDANCE_GRACE_MINUTES')) {
-    $attendanceGraceEnv = filter_var(
-        getenv('ATTENDANCE_GRACE_MINUTES'),
-        FILTER_VALIDATE_INT,
-        ['options' => ['min_range' => 0]]
-    );
-    define('ATTENDANCE_GRACE_MINUTES', $attendanceGraceEnv !== false ? $attendanceGraceEnv : 15);
-}
-
 // Secure Session Initialization
 if (PHP_SAPI !== 'cli' && session_status() === PHP_SESSION_NONE) {
     $isHttps = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || 

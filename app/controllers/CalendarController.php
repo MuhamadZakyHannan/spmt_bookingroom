@@ -57,7 +57,6 @@ class CalendarController extends Controller {
                     'purpose' => $b['purpose'],
                     'attendees' => $b['attendees_count'],
                     'status' => $b['status'],
-                    'attendance_status' => $b['attendance_status'] ?? null,
                     'time' => format_time($b['start_time']) . ' - ' . format_time($b['end_time']),
                     'date_formatted' => format_date($b['date'])
                 ]

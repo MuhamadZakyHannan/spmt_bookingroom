@@ -1,16 +1,12 @@
 <?php
 require_once __DIR__ . '/../core/Database.php';
-require_once __DIR__ . '/../core/AttendancePolicy.php';
-require_once __DIR__ . '/../services/AttendanceService.php';
 
 class BookingModel {
     private $db;
-    private $attendanceService;
     private $lastInsertId = 0;
 
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
-        $this->attendanceService = new AttendanceService($this->db);
     }
 
     public function getTodayActiveBookingsCount() {
@@ -20,7 +16,6 @@ class BookingModel {
 
     public function getTodayBookings() {
         if (!$this->db) return [];
-        $this->processAutomaticAttendanceTransitions();
         $stmt = $this->db->prepare("SELECT b.*, r.name as room_name, u.name as user_name, u.avatar as user_avatar 
                                     FROM bookings b 
                                     JOIN rooms r ON b.room_id = r.id 
@@ -53,9 +48,8 @@ class BookingModel {
         $activity_type = $data['activity_type'] ?? 'internal_divisi';
 
         try {
-            $attendanceStatus = ($data['status'] ?? '') === 'confirmed' ? 'scheduled' : null;
-            $stmt = $this->db->prepare("INSERT INTO bookings (user_id, room_id, title, date, start_time, end_time, purpose, activity_type, attendees_count, status, attendance_status, user_name, user_dept)
-                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $this->db->prepare("INSERT INTO bookings (user_id, room_id, title, date, start_time, end_time, purpose, activity_type, attendees_count, status, user_name, user_dept)
+                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $success = $stmt->execute([
                 $data['user_id'],
                 $data['room_id'],
@@ -67,7 +61,6 @@ class BookingModel {
                 $activity_type,
                 $data['attendees_count'],
                 $data['status'],
-                $attendanceStatus,
                 $data['user_name'] ?? null,
                 $data['user_dept'] ?? null
             ]);
@@ -222,7 +215,7 @@ class BookingModel {
             $this->db->beginTransaction();
 
             // Setujui pemenang
-            $stmtWin = $this->db->prepare("UPDATE bookings SET status = 'confirmed', attendance_status = 'scheduled' WHERE id = ?");
+            $stmtWin = $this->db->prepare("UPDATE bookings SET status = 'confirmed' WHERE id = ?");
             $stmtWin->execute([$winnerId]);
 
             // Batalkan pengajuan yang kalah
@@ -251,41 +244,19 @@ class BookingModel {
         return $stmt->fetchAll();
     }
 
-    public function getAttendanceActionState(array $booking, ?DateTimeImmutable $now = null) {
-        return AttendancePolicy::getActionState($booking, $now);
-    }
-
-    /**
-     * Memproses booking melewati grace period dan rapat yang telah mencapai
-     * jam selesai. Dipanggil oleh halaman user, admin, dan polling display;
-     * scripts/process_attendance.php juga dapat dijadwalkan tiap menit.
-     */
-    public function processAutomaticAttendanceTransitions() {
-        return $this->attendanceService->processAutomaticTransitions();
-    }
-
-    public function checkIn($bookingId, $userId) {
-        return $this->attendanceService->checkIn($bookingId, $userId);
-    }
-
-    public function checkOut($bookingId, $userId) {
-        return $this->attendanceService->checkOut($bookingId, $userId);
-    }
-
     public function cancel($bookingId, $userId, $isAdmin = false) {
         if (!$this->db) return false;
         if ($isAdmin) {
             $stmt = $this->db->prepare("UPDATE bookings SET status = 'cancelled' WHERE id = ?");
             return $stmt->execute([$bookingId]);
         } else {
-            $stmt = $this->db->prepare("UPDATE bookings SET status = 'cancelled' WHERE id = ? AND user_id = ? AND status IN ('pending', 'confirmed') AND (attendance_status IS NULL OR attendance_status = 'scheduled')");
+            $stmt = $this->db->prepare("UPDATE bookings SET status = 'cancelled' WHERE id = ? AND user_id = ? AND status IN ('pending', 'confirmed')");
             return $stmt->execute([$bookingId, $userId]);
         }
     }
 
     public function getAllBookings($search = '', $status = '') {
         if (!$this->db) return [];
-        $this->processAutomaticAttendanceTransitions();
         $sql = "SELECT b.*, r.name as room_name, r.code as room_code, 
                        IFNULL(b.user_name, u.name) as user_name, 
                        u.email as user_email,
@@ -322,9 +293,8 @@ class BookingModel {
         if (!in_array($status, $allowed, true)) {
             return false;
         }
-        $attendanceStatus = $status === 'confirmed' ? 'scheduled' : null;
-        $stmt = $this->db->prepare("UPDATE bookings SET status = ?, attendance_status = ? WHERE id = ?");
-        return $stmt->execute([$status, $attendanceStatus, $bookingId]);
+        $stmt = $this->db->prepare("UPDATE bookings SET status = ? WHERE id = ?");
+        return $stmt->execute([$status, $bookingId]);
     }
 
     public function delete($bookingId) {

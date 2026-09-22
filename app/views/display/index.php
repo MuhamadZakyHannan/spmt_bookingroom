@@ -19,7 +19,7 @@ $activeMeetingNow = null;
 foreach ($activeList as $b) {
     $start5 = substr($b['start_time'], 0, 5);
     $end5 = substr($b['end_time'], 0, 5);
-    if ($currentTime >= $start5 && $currentTime < $end5 && ($b['attendance_status'] ?? null) === 'checked_in') {
+    if ($currentTime >= $start5 && $currentTime < $end5) {
         $activeMeetingNow = $b;
         break;
     }
@@ -285,16 +285,14 @@ $totalActiveSesi = count($activeList);
                 activeList.forEach((b, idx) => {
                     const start5 = (b.start_time || '').substring(0, 5);
                     const end5 = (b.end_time || '').substring(0, 5);
-                    const attendanceStatus = b.attendance_status || 'scheduled';
                     const isWithinSchedule = (currentHHMM >= start5 && currentHHMM < end5);
-                    const isNow = isWithinSchedule && attendanceStatus === 'checked_in';
-                    const isAwaitingCheckIn = isWithinSchedule && attendanceStatus === 'scheduled';
+                    const isNow = isWithinSchedule;
 
                     if (isNow) isRoomOccupied = true;
 
                     const rowBg = isNow
-                        ? 'bg-amber-100/90 shadow-2xs'
-                        : (isAwaitingCheckIn ? 'bg-blue-50/90 shadow-2xs' : 'bg-white hover:bg-slate-50/90');
+                        ? 'bg-emerald-100/90 shadow-2xs'
+                        : 'bg-white hover:bg-slate-50/90';
                     const padIndex = String(idx + 1).padStart(2, '0');
                     const divisiName = b.user_dept || 'Divisi Operasional';
 
@@ -303,30 +301,30 @@ $totalActiveSesi = count($activeList);
                             <!-- No -->
                             <td class="${padClass} px-4 text-center font-mono font-black ${noSize} align-middle relative">
                                 <!-- Accent bar kiri rapi tanpa menggeser kolom -->
-                                <div class="absolute left-0 top-0 bottom-0 w-2.5 ${isNow ? 'bg-amber-500' : (isAwaitingCheckIn ? 'bg-blue-500' : 'bg-transparent')}"></div>
+                                <div class="absolute left-0 top-0 bottom-0 w-2.5 ${isNow ? 'bg-emerald-500' : 'bg-transparent'}"></div>
                                 <div class="flex items-center justify-center gap-2 pl-1">
                                     ${isNow ? `
                                         <span class="relative flex ${dotSize}">
-                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                                            <span class="relative inline-flex rounded-full ${dotSize} bg-amber-500"></span>
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full ${dotSize} bg-emerald-500"></span>
                                         </span>
                                     ` : `
                                         <span class="${dotSize} rounded-full bg-blue-500"></span>
                                     `}
-                                    <span class="${isNow ? 'text-amber-950 font-black' : 'text-slate-600 font-extrabold'}">${padIndex}</span>
+                                    <span class="${isNow ? 'text-emerald-950 font-black' : 'text-slate-600 font-extrabold'}">${padIndex}</span>
                                 </div>
                             </td>
 
                             <!-- Agenda Pertemuan (Judul Saja) -->
                             <td class="${padClass} px-4 text-left align-middle overflow-hidden">
-                                <div class="${titleSize} whitespace-normal break-words leading-tight sm:leading-snug font-black ${isNow ? 'text-amber-950' : 'text-slate-900'}" title="${escapeHtml(b.title)}">
+                                <div class="${titleSize} whitespace-normal break-words leading-tight sm:leading-snug font-black ${isNow ? 'text-emerald-950' : 'text-slate-900'}" title="${escapeHtml(b.title)}">
                                     ${escapeHtml(b.title)}
                                 </div>
                             </td>
 
                             <!-- Divisi Saja -->
                             <td class="${padClass} px-4 text-left align-middle overflow-hidden">
-                                <div class="${divisiSize} whitespace-normal break-words leading-tight ${isNow ? 'text-amber-900 font-black' : 'text-blue-700 font-bold'}">
+                                <div class="${divisiSize} whitespace-normal break-words leading-tight ${isNow ? 'text-emerald-900 font-black' : 'text-blue-700 font-bold'}">
                                     ${escapeHtml(divisiName)}
                                 </div>
                             </td>
@@ -334,7 +332,7 @@ $totalActiveSesi = count($activeList);
                             <!-- Waktu -->
                             <td class="${padClass} px-4 text-center align-middle">
                                 <div class="flex items-center justify-center">
-                                    <span class="font-mono ${timeSize} border-2 ${isNow ? 'border-amber-400 bg-amber-200 text-amber-950 font-black' : 'border-slate-300 bg-slate-100 text-slate-800 font-bold'} whitespace-nowrap inline-flex items-center justify-center gap-2 shadow-2xs">
+                                    <span class="font-mono ${timeSize} border-2 ${isNow ? 'border-emerald-400 bg-emerald-200 text-emerald-950 font-black' : 'border-slate-300 bg-slate-100 text-slate-800 font-bold'} whitespace-nowrap inline-flex items-center justify-center gap-2 shadow-2xs">
                                         <i class="far fa-clock opacity-80 text-xs sm:text-sm"></i>
                                         ${start5} - ${end5}
                                     </span>
@@ -344,9 +342,9 @@ $totalActiveSesi = count($activeList);
                             <!-- Status -->
                             <td class="${padClass} px-5 sm:px-6 text-right align-middle">
                                 <div class="flex items-center justify-end">
-                                    <span class="inline-flex items-center justify-center gap-2.5 ${statusSize} border-2 ${isNow ? 'border-red-700 bg-red-600 text-white animate-pulse' : (isAwaitingCheckIn ? 'border-amber-600 bg-amber-500 text-white animate-pulse' : 'border-blue-700 bg-blue-600 text-white')} font-black font-mono tracking-wider uppercase text-center leading-tight shadow-md whitespace-nowrap">
+                                    <span class="inline-flex items-center justify-center gap-2.5 ${statusSize} border-2 ${isNow ? 'border-emerald-700 bg-emerald-600 text-white animate-pulse' : 'border-blue-700 bg-blue-600 text-white'} font-black font-mono tracking-wider uppercase text-center leading-tight shadow-md whitespace-nowrap">
                                         <span class="w-2.5 h-2.5 rounded-full bg-white shrink-0"></span>
-                                        ${isNow ? 'BERLANGSUNG' : (isAwaitingCheckIn ? 'MENUNGGU CHECK-IN' : 'TERJADWAL')}
+                                        ${isNow ? 'BERLANGSUNG' : 'TERJADWAL'}
                                     </span>
                                 </div>
                             </td>
@@ -367,9 +365,9 @@ $totalActiveSesi = count($activeList);
 
             if (roomBox && roomLabel && roomValue) {
                 if (isRoomOccupied) {
-                    roomBox.className = 'px-3.5 py-2 rounded-xl border text-right shadow-xs bg-amber-50 border-amber-300';
-                    roomLabel.className = 'text-[10px] font-bold uppercase tracking-wider text-amber-700';
-                    roomValue.className = 'font-extrabold text-base text-amber-900 animate-pulse';
+                    roomBox.className = 'px-3.5 py-2 rounded-xl border text-right shadow-xs bg-emerald-50 border-emerald-300';
+                    roomLabel.className = 'text-[10px] font-bold uppercase tracking-wider text-emerald-700';
+                    roomValue.className = 'font-extrabold text-base text-emerald-900 animate-pulse';
                     roomValue.textContent = 'SEDANG DIGUNAKAN';
                 } else {
                     roomBox.className = 'px-3.5 py-2 rounded-xl border text-right shadow-xs bg-emerald-50 border-emerald-300';

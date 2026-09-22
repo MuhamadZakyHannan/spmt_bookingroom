@@ -34,7 +34,6 @@ class DashboardController extends Controller {
         $active_rooms = $this->roomModel->getActiveRooms();
         $admin_dashboard = null;
         if ($isAdmin) {
-            $this->bookingModel->processAutomaticAttendanceTransitions();
             $admin_dashboard = $this->adminDashboardService->getSnapshot();
         }
 
