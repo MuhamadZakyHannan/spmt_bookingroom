@@ -22,7 +22,7 @@ $bookingFormActivityTypes = $activity_types ?? SawService::ACTIVITY_TYPES;
 $bookingFormStartTime = substr((string)$bookingFormValues['start_time'], 0, 5);
 $bookingFormEndTime = substr((string)$bookingFormValues['end_time'], 0, 5);
 $bookingFormInfoText = $bookingFormInfoText
-    ?? 'Jadwal yang sudah terkonfirmasi tidak dapat dipilih. Pengajuan yang hanya beririsan dengan pengajuan Pending tetap dapat dikirim dan akan dianalisis Administrator menggunakan metode SAW.';
+    ?? 'Jadwal yang sudah terkonfirmasi tidak dapat dipilih. Jika jadwal beririsan dengan pengajuan lain yang masih menunggu persetujuan, pengajuan tetap dapat dikirim dan akan ditinjau oleh Administrator.';
 ?>
 
 <div class="space-y-5">
@@ -189,7 +189,7 @@ $bookingFormInfoText = $bookingFormInfoText
 
             <div class="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold">
                 <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 text-emerald-700 dark:text-emerald-300"><span class="h-2 w-2 rounded-full bg-emerald-500"></span>Tersedia</span>
-                <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 text-amber-700 dark:text-amber-300"><span class="h-2 w-2 rounded-full bg-amber-500"></span>Pengajuan bersaing (SAW)</span>
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 text-amber-700 dark:text-amber-300"><span class="h-2 w-2 rounded-full bg-amber-500"></span>Sudah diajukan</span>
                 <span class="inline-flex items-center gap-1.5 rounded-full bg-rose-50 dark:bg-rose-950/40 px-2.5 py-1 text-rose-700 dark:text-rose-300"><span class="h-2 w-2 rounded-full bg-rose-500"></span>Sudah terkonfirmasi</span>
                 <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-slate-600 dark:text-slate-300"><span class="h-2 w-2 rounded-full bg-slate-400"></span>Tidak memenuhi</span>
             </div>
@@ -220,7 +220,7 @@ $bookingFormInfoText = $bookingFormInfoText
                         <option value="<?php echo htmlspecialchars($activityKey); ?>" <?php echo $bookingFormValues['activity_type'] === $activityKey ? 'selected' : ''; ?>><?php echo htmlspecialchars($activityData['label']); ?></option>
                     <?php endforeach; ?>
                 </select>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">Digunakan sebagai salah satu kriteria SAW jika jadwal bentrok.</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">Membantu Administrator menentukan prioritas apabila jadwal beririsan.</p>
             </div>
 
             <div>

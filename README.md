@@ -86,7 +86,7 @@ Gunakan password yang panjang dan mengandung kombinasi huruf besar, huruf kecil,
 2. Tentukan tanggal, waktu, dan jumlah peserta. Panel **Ketersediaan Ruangan** akan diperbarui otomatis.
 3. Pilih kartu ruangan berdasarkan status berikut:
    - **Hijau — Tersedia:** tidak ada jadwal yang beririsan;
-   - **Kuning — Pengajuan bersaing:** ada pengajuan pending, tetapi ruangan tetap dapat dipilih dan prioritas akan dianalisis dengan SAW;
+   - **Kuning — Sudah diajukan:** terdapat pengajuan lain yang masih menunggu persetujuan, tetapi ruangan tetap dapat dipilih;
    - **Merah — Sudah terkonfirmasi:** ada booking confirmed dan ruangan tidak dapat dipilih;
    - **Abu-abu — Tidak memenuhi:** ruangan sedang dirawat atau kapasitasnya tidak cukup.
 4. Isi jenis kegiatan dan agenda, lalu kirim pengajuan.
@@ -95,7 +95,7 @@ Gunakan password yang panjang dan mengandung kombinasi huruf besar, huruf kecil,
 
 Pengajuan berstatus `pending` dapat diedit oleh pemiliknya melalui tombol **Edit Pengajuan** pada **Booking Saya**. Setelah disimpan, status tetap `pending` dan jadwal diperiksa ulang. Pemilik tidak dapat mengedit booking yang sudah `confirmed`; perubahan booking `pending` atau `confirmed` tersebut hanya dapat dilakukan Admin atau Super Admin.
 
-SAW tetap digunakan khusus untuk membandingkan beberapa pengajuan `pending` yang menginginkan ruangan dan waktu beririsan. Jadwal yang sudah `confirmed` diblokir sejak form dan diperiksa ulang oleh server saat penyimpanan.
+Jika beberapa pengajuan `pending` menginginkan ruangan dan waktu yang beririsan, Administrator akan meninjau dan menentukan prioritasnya. Jadwal yang sudah `confirmed` diblokir sejak form dan diperiksa ulang oleh server saat penyimpanan.
 
 ### Menggunakan kalender
 
@@ -198,6 +198,7 @@ php tests/run_schedule_status_tests.php
 php tests/run_admin_dashboard_tests.php
 php tests/run_room_availability_tests.php
 php tests/run_booking_edit_tests.php
+php tests/run_calendar_ui_tests.php
 php tests/run_role_hierarchy_tests.php
 php tests/run_user_account_tests.php
 ```

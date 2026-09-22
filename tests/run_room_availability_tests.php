@@ -53,6 +53,8 @@ try {
     $pendingRoom = findRoomResult($service->getAvailability($testDate, '09:15', '09:45', 1), $roomId);
     expectAvailability($pendingRoom['availability_status'] === 'pending_conflict', 'Bentrok pending ditandai kuning sebagai pengajuan bersaing.');
     expectAvailability($pendingRoom['selectable'] === true, 'Ruangan dengan bentrok pending tetap dapat dipilih untuk analisis SAW.');
+    expectAvailability($pendingRoom['label'] === 'Sudah diajukan', 'Status pengajuan lain menggunakan istilah yang mudah dipahami pengguna.');
+    expectAvailability(stripos($pendingRoom['message'], 'SAW') === false, 'Pesan ketersediaan pengguna tidak menampilkan istilah teknis SAW.');
 
     $excludedRoom = findRoomResult($service->getAvailability($testDate, '09:15', '09:45', 1, $pendingBookingId), $roomId);
     expectAvailability($excludedRoom['availability_status'] === 'available', 'Booking yang sedang diedit dapat dikecualikan dari pemeriksaan jadwal.');
@@ -128,4 +130,4 @@ try {
     $cleanup->execute([$testPrefix . '%']);
 }
 
-echo PHP_EOL . 'Hasil: 16 lulus, 0 gagal.' . PHP_EOL;
+echo PHP_EOL . 'Hasil: 18 lulus, 0 gagal.' . PHP_EOL;

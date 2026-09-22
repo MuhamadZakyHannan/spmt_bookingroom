@@ -47,7 +47,7 @@ class BookingController extends Controller {
                 if (!empty($result['success'])) {
                     $status = $result['status'];
                     if (!empty($result['pending_conflict'])) {
-                        $message = 'Pengajuan berhasil dicatat sebagai Pending. Ada pengajuan lain pada jadwal yang sama; Administrator akan menentukan prioritas menggunakan metode SAW.';
+                        $message = 'Pengajuan berhasil dicatat sebagai Pending. Ada pengajuan lain pada jadwal yang sama; Administrator akan meninjau dan menentukan prioritasnya.';
                     } else {
                         $message = $status === 'confirmed'
                             ? 'Pemesanan ruangan oleh Admin berhasil dibuat dan langsung terkonfirmasi ke jadwal!'
@@ -155,9 +155,9 @@ class BookingController extends Controller {
                         $this->notificationModel->refreshForPendingBooking((int) $bookingId);
                     }
                     if (!empty($result['pending_conflict']) && ($result['status'] ?? '') === 'confirmed') {
-                        $message = 'Booking terkonfirmasi berhasil diperbarui. Ada pengajuan Pending yang beririsan; Administrator perlu meninjau pengajuan tersebut pada analisis SAW.';
+                        $message = 'Booking terkonfirmasi berhasil diperbarui. Ada pengajuan yang masih menunggu dan beririsan; Administrator perlu meninjau pengajuan tersebut.';
                     } elseif (!empty($result['pending_conflict'])) {
-                        $message = 'Booking berhasil diperbarui. Jadwal ini memiliki pengajuan bersaing dan tetap akan dianalisis menggunakan SAW.';
+                        $message = 'Booking berhasil diperbarui. Ada pengajuan lain pada jadwal yang sama dan Administrator akan meninjau prioritasnya.';
                     } else {
                         $message = 'Booking berhasil diperbarui.';
                     }

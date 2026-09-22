@@ -55,7 +55,7 @@ $statusClass = $isConfirmed
             $bookingFormValues = $values;
             $bookingFormInfoText = $isConfirmed
                 ? 'Booking ini sudah terkonfirmasi. Hanya Administrator yang dapat menyimpan perubahan, dan bentrok dengan jadwal terkonfirmasi lain tetap ditolak.'
-                : 'Status tetap Pending setelah diedit. Jika beririsan dengan pengajuan Pending lain, Administrator akan menentukan prioritas menggunakan metode SAW.';
+                : 'Status tetap menunggu persetujuan setelah diedit. Jika beririsan dengan pengajuan lain, Administrator akan meninjau dan menentukan prioritasnya.';
             require __DIR__ . '/_form_fields.php';
             ?>
 

@@ -129,8 +129,8 @@ class RoomAvailabilityService
             return $this->result(
                 'pending_conflict',
                 true,
-                'Ada pengajuan lain',
-                count($pending) . ' pengajuan bersaing; prioritas akan dianalisis dengan SAW.',
+                'Sudah diajukan',
+                count($pending) . ' pengajuan lain sudah diajukan pada waktu ini dan menunggu peninjauan Administrator.',
                 'pending_conflict',
                 count($pending)
             );

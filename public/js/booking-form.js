@@ -233,7 +233,7 @@
         if (elements.availabilityMessage) {
             const availableCount = payload.summary.available;
             const competingCount = payload.summary.pending_conflict;
-            elements.availabilityMessage.textContent = `${availableCount} ruangan tersedia${competingCount > 0 ? `, ${competingCount} memiliki pengajuan pending yang akan dibandingkan dengan SAW` : ''}. Klik kartu hijau atau kuning untuk memilih.`;
+            elements.availabilityMessage.textContent = `${availableCount} ruangan tersedia${competingCount > 0 ? `, ${competingCount} memiliki pengajuan lain yang masih menunggu persetujuan` : ''}. Klik kartu hijau atau kuning untuk memilih.`;
         }
     }
 
