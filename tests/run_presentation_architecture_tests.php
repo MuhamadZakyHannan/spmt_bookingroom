@@ -40,9 +40,11 @@ expectPresentation(
     str_contains($header, 'class="w-full px-3 sm:px-4 lg:px-6"')
         && str_contains($header, 'grid-cols-[1fr_auto_1fr]')
         && str_contains($header, 'justify-self-center')
+        && str_contains($header, 'col-start-3 flex shrink-0')
+        && substr_count($header, 'aria-label="Ke dashboard"') === 1
         && str_contains($header, 'theme-toggle-button flex h-10 w-10')
         && str_contains($shell, "button.setAttribute('aria-label', label)"),
-    'Navbar seimbang dengan logo tengah dan kontrol tema berupa ikon aksesibel.'
+    'Navbar seimbang, bebas tabrakan mobile, dan memiliki kontrol tema berupa ikon aksesibel.'
 );
 
 $sharedUtilityViews = [

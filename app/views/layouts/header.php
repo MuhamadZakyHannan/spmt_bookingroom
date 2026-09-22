@@ -22,30 +22,26 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <div class="w-full px-3 sm:px-4 lg:px-6">
             <div class="relative grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-2">
                 <!-- Sidebar Toggle -->
-                <div class="flex min-w-0 items-center gap-2 justify-self-start">
+                <div class="col-start-1 flex min-w-0 items-center justify-self-start">
                     <button onclick="toggleSidebar()" class="p-2 rounded-xl bg-sky-100/80 hover:bg-sky-200/80 text-sky-900 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white focus:outline-none transition flex items-center gap-2 text-xs font-semibold border border-sky-200/60 dark:border-transparent" title="Buka Sidebar">
                         <i class="fas fa-bars text-sm text-sky-700 dark:text-sky-300"></i>
                         <span class="hidden sm:inline">Menu</span>
                     </button>
-
-                    <a href="dashboard.php" class="flex items-center transition hover:opacity-90 md:hidden" aria-label="Ke dashboard">
-                        <img src="public/logo.png" onerror="this.src='public/logo.svg'" alt="Pelindo" class="h-7 w-auto max-w-24 object-contain" />
-                    </a>
                 </div>
 
                 <!-- Identitas aplikasi menjaga komposisi navbar tetap seimbang. -->
-                <a href="dashboard.php" class="hidden items-center justify-self-center transition hover:opacity-90 md:flex" aria-label="Ke dashboard">
+                <a href="dashboard.php" class="col-start-2 hidden items-center justify-self-center transition hover:opacity-90 md:flex" aria-label="Ke dashboard">
                     <img src="public/logo.png" onerror="this.src='public/logo.svg'" alt="Pelindo" class="h-8 w-auto max-w-44 object-contain" />
                 </a>
 
                 <!-- Right Actions -->
-                <div class="flex shrink-0 items-center gap-2 justify-self-end sm:gap-3">
+                <div class="col-start-3 flex shrink-0 items-center gap-1 justify-self-end sm:gap-3">
                     <button onclick="toggleTheme()" class="theme-toggle-button flex h-10 w-10 items-center justify-center rounded-xl border border-sky-200/60 bg-sky-100/80 text-slate-700 transition hover:bg-sky-200/80 focus:outline-none dark:border-transparent dark:bg-white/10 dark:text-white dark:hover:bg-white/20" title="Aktifkan mode gelap" aria-label="Aktifkan mode gelap">
                         <i class="theme-toggle-icon fas fa-moon text-sky-700 dark:text-amber-300"></i>
                     </button>
 
                     <?php if (is_logged_in()): ?>
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1 sm:gap-3">
                         <?php if (is_admin()): ?>
                         <button
                             type="button"
