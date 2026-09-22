@@ -1,11 +1,53 @@
 <?php require_once __DIR__ . '/../layouts/header.php'; ?>
 
+<script>
+    document.title = 'Statistik dan Analisis Penggunaan Ruangan SPMT';
+</script>
+
 <!-- Chart.js 4 CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
-<div class="space-y-6">
-    <!-- Header Section -->
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
+<div class="space-y-6 print:space-y-4">
+    <!-- Kop Surat Resmi Laporan Statistik SPMT (Hanya Tampil Saat Dicetak / Ekspor PDF) -->
+    <div class="hidden print:flex items-center justify-between pb-3 border-b-2 border-slate-800 mb-4">
+        <div class="flex items-center gap-3.5">
+            <img src="public/logo.png" onerror="this.src='public/logo.svg'" class="h-10 w-auto object-contain" alt="Logo Pelindo">
+            <div>
+                <h1 class="text-sm font-black tracking-tight text-slate-900 uppercase">PT PELABUHAN INDONESIA (PERSERO)</h1>
+                <div class="text-xs text-slate-700 font-bold tracking-wide">PT PELINDO MULTI TERMINAL</div>
+                <div class="text-[10px] text-slate-500">Jl. Coaster No. 10, Kelurahan Tanjung Mas, Kecamatan Semarang Utara, Kota Semarang, Jawa Tengah 50174</div>
+            </div>
+        </div>
+        <div class="text-right">
+            <div class="text-xs font-black text-blue-900 uppercase">STATISTIK & ANALISIS PENGGUNAAN RUANGAN</div>
+            <div class="text-[11px] text-slate-600 font-semibold mt-0.5">
+                Periode: <?php
+                    if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+                        echo htmlspecialchars($filters['start_date']) . ' s/d ' . htmlspecialchars($filters['end_date']);
+                    } elseif (!empty($filters['start_date'])) {
+                        echo 'Mulai ' . htmlspecialchars($filters['start_date']);
+                    } elseif (!empty($filters['end_date'])) {
+                        echo 'Sampai ' . htmlspecialchars($filters['end_date']);
+                    } else {
+                        $periodLabels = [
+                            'this_month' => 'Bulan Ini',
+                            'last_month' => 'Bulan Lalu',
+                            'last_3_months' => '3 Bulan Terakhir',
+                            'this_year' => 'Tahun Ini (' . date('Y') . ')',
+                            'all_time' => 'Semua Waktu'
+                        ];
+                        echo $periodLabels[$filters['period'] ?? 'this_year'] ?? 'Tahun Ini';
+                    }
+                ?>
+            </div>
+            <div class="text-[10px] text-slate-400 font-mono mt-0.5">
+                Dicetak: <?php echo date('d/m/Y H:i'); ?> WIB &bull; Oleh: <?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Admin'); ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Section (Tampil di Layar) -->
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors print:hidden">
         <div>
             <div class="flex items-center gap-2 text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1">
                 <i class="fas fa-chart-pie"></i> Executive Analytics & Insights
@@ -17,15 +59,15 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2.5">
-            <button onclick="window.print()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition flex items-center gap-2 shadow-sm">
+            <button onclick="printStatisticsReport()" class="no-print px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-xs transition flex items-center gap-2 shadow-sm">
                 <i class="fas fa-print"></i>
                 <span>Cetak Laporan</span>
             </button>
         </div>
     </div>
 
-    <!-- Filter & Time Range Bar -->
-    <form method="GET" action="admin_statistics.php" class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
+    <!-- Filter & Time Range Bar (Tampil di Layar Saja) -->
+    <form method="GET" action="admin_statistics.php" class="no-print bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
         <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
             <!-- Period Preset Buttons -->
             <div class="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-900/60 rounded-xl">
@@ -95,331 +137,379 @@
         </div>
     </form>
 
-    <!-- Top KPI Cards Grid -->
-    <div class="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-        <!-- KPI 1: Total Bookings -->
-        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
-            <div class="flex items-center justify-between text-slate-400 mb-2">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Rapat</span>
-                <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm font-bold">
-                    <i class="fas fa-calendar-check"></i>
+    <!-- Halaman 1 Cetak: Kartu Ringkasan KPI dan Grafik Tren + Komposisi Divisi -->
+    <div>
+        <!-- Top KPI Cards Grid -->
+        <div class="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 print:grid-cols-6 print:gap-2 print:mb-3">
+            <!-- KPI 1: Total Bookings -->
+            <div class="analytics-card bg-white dark:bg-slate-800 p-4 print:p-2.5 rounded-2xl print:rounded-xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
+                <div class="flex items-center justify-between text-slate-400 mb-2 print:mb-1">
+                    <span class="text-[11px] print:text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Rapat</span>
+                    <div class="w-8 h-8 print:w-6 print:h-6 print:text-xs rounded-lg bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-sm font-bold">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                </div>
+                <div class="text-2xl print:text-xl font-black text-slate-900 dark:text-white"><?php echo number_format($kpi['total_bookings']); ?></div>
+                <div class="text-[11px] print:text-[10px] text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-1">
+                    <span class="text-emerald-600 dark:text-emerald-400 font-semibold"><?php echo $kpi['confirmed_count']; ?> Sah</span> • 
+                    <span class="text-amber-600 dark:text-amber-400 font-semibold"><?php echo $kpi['pending_count']; ?> Pending</span>
                 </div>
             </div>
-            <div class="text-2xl font-black text-slate-900 dark:text-white"><?php echo number_format($kpi['total_bookings']); ?></div>
-            <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1 flex items-center gap-1">
-                <span class="text-emerald-600 dark:text-emerald-400 font-semibold"><?php echo $kpi['confirmed_count']; ?> Sah</span> • 
-                <span class="text-amber-600 dark:text-amber-400 font-semibold"><?php echo $kpi['pending_count']; ?> Pending</span>
+
+            <!-- KPI 2: Total Hours -->
+            <div class="analytics-card bg-white dark:bg-slate-800 p-4 print:p-2.5 rounded-2xl print:rounded-xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
+                <div class="flex items-center justify-between text-slate-400 mb-2 print:mb-1">
+                    <span class="text-[11px] print:text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Durasi Rapat</span>
+                    <div class="w-8 h-8 print:w-6 print:h-6 print:text-xs rounded-lg bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm font-bold">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                <div class="text-2xl print:text-xl font-black text-slate-900 dark:text-white"><?php echo $kpi['total_hours']; ?> <span class="text-xs font-normal text-slate-400">Jam</span></div>
+                <div class="text-[11px] print:text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                    Rata-rata <strong class="text-slate-700 dark:text-slate-300"><?php echo $kpi['avg_duration_minutes']; ?> mnt</strong> / rapat
+                </div>
+            </div>
+
+            <!-- KPI 3: Total Attendees -->
+            <div class="analytics-card bg-white dark:bg-slate-800 p-4 print:p-2.5 rounded-2xl print:rounded-xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
+                <div class="flex items-center justify-between text-slate-400 mb-2 print:mb-1">
+                    <span class="text-[11px] print:text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Peserta</span>
+                    <div class="w-8 h-8 print:w-6 print:h-6 print:text-xs rounded-lg bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm font-bold">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+                <div class="text-2xl print:text-xl font-black text-slate-900 dark:text-white"><?php echo number_format($kpi['total_attendees']); ?></div>
+                <div class="text-[11px] print:text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                    Rata-rata <strong class="text-slate-700 dark:text-slate-300"><?php echo $kpi['avg_attendees']; ?></strong> org / rapat
+                </div>
+            </div>
+
+            <!-- KPI 4: Approval Rate -->
+            <div class="analytics-card bg-white dark:bg-slate-800 p-4 print:p-2.5 rounded-2xl print:rounded-xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
+                <div class="flex items-center justify-between text-slate-400 mb-2 print:mb-1">
+                    <span class="text-[11px] print:text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tingkat Setuju</span>
+                    <div class="w-8 h-8 print:w-6 print:h-6 print:text-xs rounded-lg bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm font-bold">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <div class="text-2xl print:text-xl font-black text-emerald-600 dark:text-emerald-400"><?php echo $kpi['approval_rate']; ?>%</div>
+                <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden mt-2 print:mt-1">
+                    <div class="data-progress-bar bg-emerald-500 h-full rounded-full transition-all duration-500" style="--progress-value: <?php echo min(100, $kpi['approval_rate']); ?>%"></div>
+                </div>
+            </div>
+
+            <!-- KPI 5: Active Rooms Used -->
+            <div class="analytics-card bg-white dark:bg-slate-800 p-4 print:p-2.5 rounded-2xl print:rounded-xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
+                <div class="flex items-center justify-between text-slate-400 mb-2 print:mb-1">
+                    <span class="text-[11px] print:text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Ruangan Aktif</span>
+                    <div class="w-8 h-8 print:w-6 print:h-6 print:text-xs rounded-lg bg-rose-50 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 flex items-center justify-center text-sm font-bold">
+                        <i class="fas fa-door-open"></i>
+                    </div>
+                </div>
+                <div class="text-2xl print:text-xl font-black text-slate-900 dark:text-white"><?php echo $kpi['active_rooms_used']; ?> <span class="text-xs font-normal text-slate-400">/ <?php echo $kpi['total_rooms']; ?></span></div>
+                <div class="text-[11px] print:text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                    Ruangan telah terpakai
+                </div>
+            </div>
+
+            <!-- KPI 6: Top Department -->
+            <div class="analytics-card bg-white dark:bg-slate-800 p-4 print:p-2.5 rounded-2xl print:rounded-xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
+                <div class="flex items-center justify-between text-slate-400 mb-2 print:mb-1">
+                    <span class="text-[11px] print:text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Divisi Teraktif</span>
+                    <div class="w-8 h-8 print:w-6 print:h-6 print:text-xs rounded-lg bg-teal-50 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400 flex items-center justify-center text-sm font-bold">
+                        <i class="fas fa-building"></i>
+                    </div>
+                </div>
+                <div class="text-sm font-black text-slate-900 dark:text-white truncate" title="<?php echo htmlspecialchars($stats['dept_distribution']['labels'][0] ?? 'N/A'); ?>">
+                    <?php echo htmlspecialchars($stats['dept_distribution']['labels'][0] ?? 'Belum ada data'); ?>
+                </div>
+                <div class="text-[11px] print:text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                    <?php echo ($stats['dept_distribution']['data'][0] ?? 0); ?> pertemuan tercatat
+                </div>
             </div>
         </div>
 
-        <!-- KPI 2: Total Hours -->
-        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
-            <div class="flex items-center justify-between text-slate-400 mb-2">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Durasi Rapat</span>
-                <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm font-bold">
-                    <i class="fas fa-clock"></i>
+        <!-- Charts Grid Row 1 -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 print:grid-cols-3 print:gap-3">
+            <!-- Monthly Booking Trend Line/Bar Chart (2 Cols) -->
+            <div class="lg:col-span-2 print:col-span-2 analytics-card bg-white dark:bg-slate-800 p-6 print:p-3.5 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors flex flex-col justify-between">
+                <div class="flex items-center justify-between mb-4 print:mb-1.5">
+                    <div>
+                        <h2 class="text-base print:text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i class="fas fa-chart-line text-brand-600 dark:text-brand-400"></i>
+                            Tren Aktivitas & Durasi Pemesanan
+                        </h2>
+                        <p class="text-xs print:text-[10px] text-slate-400 mt-0.5">Jumlah agenda rapat dan total akumulasi jam rapat tiap bulan.</p>
+                    </div>
+                </div>
+                <div class="relative h-72 print:h-52 w-full">
+                    <canvas id="monthlyTrendChart"></canvas>
                 </div>
             </div>
-            <div class="text-2xl font-black text-slate-900 dark:text-white"><?php echo $kpi['total_hours']; ?> <span class="text-xs font-normal text-slate-400">Jam</span></div>
-            <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-                Rata-rata <strong class="text-slate-700 dark:text-slate-300"><?php echo $kpi['avg_duration_minutes']; ?> mnt</strong> / rapat
-            </div>
-        </div>
 
-        <!-- KPI 3: Total Attendees -->
-        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
-            <div class="flex items-center justify-between text-slate-400 mb-2">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Peserta</span>
-                <div class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm font-bold">
-                    <i class="fas fa-users"></i>
+            <!-- Department Distribution Doughnut Chart (1 Col) -->
+            <div class="analytics-card print:col-span-1 bg-white dark:bg-slate-800 p-6 print:p-3.5 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors flex flex-col justify-between">
+                <div class="mb-3 print:mb-1.5">
+                    <h2 class="text-base print:text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i class="fas fa-pie-chart text-emerald-600 dark:text-emerald-400"></i>
+                        Proporsi Divisi Pemohon
+                    </h2>
+                    <p class="text-xs print:text-[10px] text-slate-400 mt-0.5">Persentase pengajuan rapat berdasarkan unit kerja.</p>
                 </div>
-            </div>
-            <div class="text-2xl font-black text-slate-900 dark:text-white"><?php echo number_format($kpi['total_attendees']); ?></div>
-            <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-                Rata-rata <strong class="text-slate-700 dark:text-slate-300"><?php echo $kpi['avg_attendees']; ?></strong> org / rapat
-            </div>
-        </div>
-
-        <!-- KPI 4: Approval Rate -->
-        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
-            <div class="flex items-center justify-between text-slate-400 mb-2">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tingkat Setuju</span>
-                <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm font-bold">
-                    <i class="fas fa-check-circle"></i>
+                <div class="relative h-60 print:h-44 w-full flex items-center justify-center">
+                    <?php if (empty($stats['dept_distribution']['data'])): ?>
+                        <div class="text-center text-slate-400 text-xs py-10">Belum ada data pemesanan.</div>
+                    <?php else: ?>
+                        <canvas id="deptDistributionChart"></canvas>
+                    <?php endif; ?>
                 </div>
-            </div>
-            <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400"><?php echo $kpi['approval_rate']; ?>%</div>
-            <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden mt-2">
-                <div class="data-progress-bar bg-emerald-500 h-full rounded-full transition-all duration-500" style="--progress-value: <?php echo min(100, $kpi['approval_rate']); ?>%"></div>
-            </div>
-        </div>
-
-        <!-- KPI 5: Active Rooms Used -->
-        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
-            <div class="flex items-center justify-between text-slate-400 mb-2">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Ruangan Aktif</span>
-                <div class="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 flex items-center justify-center text-sm font-bold">
-                    <i class="fas fa-door-open"></i>
+                <div class="mt-3 print:mt-1 pt-3 print:pt-1 border-t border-slate-100 dark:border-slate-700/60 flex flex-wrap gap-2 print:gap-1 text-[11px] print:text-[9px] justify-center">
+                    <?php foreach (array_slice($stats['dept_distribution']['labels'], 0, 4) as $idx => $deptName): ?>
+                        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300">
+                            <span class="data-color-swatch w-2 h-2 rounded-full" style="--swatch-color: <?php echo ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'][$idx % 5]; ?>"></span>
+                            <?php echo htmlspecialchars($deptName); ?> (<?php echo $stats['dept_distribution']['percentages'][$idx] ?? 0; ?>%)
+                        </span>
+                    <?php endforeach; ?>
                 </div>
-            </div>
-            <div class="text-2xl font-black text-slate-900 dark:text-white"><?php echo $kpi['active_rooms_used']; ?> <span class="text-xs font-normal text-slate-400">/ <?php echo $kpi['total_rooms']; ?></span></div>
-            <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-                Ruangan telah terpakai
-            </div>
-        </div>
-
-        <!-- KPI 6: Top Department -->
-        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
-            <div class="flex items-center justify-between text-slate-400 mb-2">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Divisi Teraktif</span>
-                <div class="w-8 h-8 rounded-lg bg-teal-50 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400 flex items-center justify-center text-sm font-bold">
-                    <i class="fas fa-building"></i>
-                </div>
-            </div>
-            <div class="text-sm font-black text-slate-900 dark:text-white truncate" title="<?php echo htmlspecialchars($stats['dept_distribution']['labels'][0] ?? 'N/A'); ?>">
-                <?php echo htmlspecialchars($stats['dept_distribution']['labels'][0] ?? 'Belum ada data'); ?>
-            </div>
-            <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-                <?php echo ($stats['dept_distribution']['data'][0] ?? 0); ?> pertemuan tercatat
             </div>
         </div>
     </div>
 
-    <!-- Charts Grid Row 1 -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Monthly Booking Trend Line/Bar Chart (2 Cols) -->
-        <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <i class="fas fa-chart-line text-brand-600 dark:text-brand-400"></i>
-                        Tren Aktivitas & Durasi Pemesanan
-                    </h2>
-                    <p class="text-xs text-slate-400 mt-0.5">Jumlah agenda rapat dan total akumulasi jam rapat tiap bulan.</p>
+    <!-- Halaman 2 Cetak: Analisis Pola Ruangan, Jam Sibuk, dan Sebaran Hari -->
+    <div class="analytics-page-break space-y-6 print:space-y-3">
+        <!-- Print Header Halaman 2 -->
+        <div class="hidden print:flex items-center justify-between pb-2 border-b border-slate-300 mb-2">
+            <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Statistik & Analisis Penggunaan Ruangan SPMT &bull; Bagian 2: Pola & Utilisasi Waktu</span>
+            <span class="text-[10px] text-slate-500 font-mono">Halaman 2 dari 3</span>
+        </div>
+
+        <!-- Charts Grid Row 2 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 print:grid-cols-2 print:gap-3">
+            <!-- Room Popularity & Utilization Horizontal Bar Chart -->
+            <div class="analytics-card bg-white dark:bg-slate-800 p-6 print:p-3.5 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
+                <div class="flex items-center justify-between mb-4 print:mb-1.5">
+                    <div>
+                        <h2 class="text-base print:text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i class="fas fa-layer-group text-amber-500"></i>
+                            Popularitas Ruangan Rapat
+                        </h2>
+                        <p class="text-xs print:text-[10px] text-slate-400 mt-0.5">Frekuensi pertemuan yang diselenggarakan di tiap ruangan.</p>
+                    </div>
+                </div>
+                <div class="relative h-64 print:h-52 w-full">
+                    <canvas id="roomUsageChart"></canvas>
                 </div>
             </div>
-            <div class="relative h-72 w-full">
-                <canvas id="monthlyTrendChart"></canvas>
+
+            <!-- Peak Hours Bar Chart -->
+            <div class="analytics-card bg-white dark:bg-slate-800 p-6 print:p-3.5 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
+                <div class="flex items-center justify-between mb-4 print:mb-1.5">
+                    <div>
+                        <h2 class="text-base print:text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i class="fas fa-fire text-rose-500"></i>
+                            Distribusi Jam Sibuk Rapat (Peak Hours)
+                        </h2>
+                        <p class="text-xs print:text-[10px] text-slate-400 mt-0.5">Pola waktu tersering ruangan digunakan (pukul 08:00 - 18:00 WIB).</p>
+                    </div>
+                </div>
+                <div class="relative h-64 print:h-52 w-full">
+                    <canvas id="peakHoursChart"></canvas>
+                </div>
             </div>
         </div>
 
-        <!-- Department Distribution Doughnut Chart (1 Col) -->
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors flex flex-col justify-between">
-            <div class="mb-3">
-                <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <i class="fas fa-pie-chart text-emerald-600 dark:text-emerald-400"></i>
-                    Proporsi Divisi Pemohon
-                </h2>
-                <p class="text-xs text-slate-400 mt-0.5">Persentase pengajuan rapat berdasarkan unit kerja.</p>
+        <!-- Day-of-Week Distribution Strip -->
+        <div class="analytics-card bg-white dark:bg-slate-800 p-5 print:p-3 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 print:mb-1.5">
+                <div>
+                    <h3 class="text-sm print:text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i class="fas fa-calendar-week text-indigo-500"></i>
+                        Intensitas Hari Rapat Dalam Seminggu
+                    </h3>
+                    <p class="text-xs print:text-[10px] text-slate-400 mt-0.5">Perbandingan beban agenda ruang rapat dari hari Senin hingga Minggu.</p>
+                </div>
             </div>
-            <div class="relative h-60 w-full flex items-center justify-center">
-                <?php if (empty($stats['dept_distribution']['data'])): ?>
-                    <div class="text-center text-slate-400 text-xs py-10">Belum ada data pemesanan.</div>
-                <?php else: ?>
-                    <canvas id="deptDistributionChart"></canvas>
-                <?php endif; ?>
-            </div>
-            <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/60 flex flex-wrap gap-2 text-[11px] justify-center">
-                <?php foreach (array_slice($stats['dept_distribution']['labels'], 0, 4) as $idx => $deptName): ?>
-                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300">
-                        <span class="data-color-swatch w-2 h-2 rounded-full" style="--swatch-color: <?php echo ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'][$idx % 5]; ?>"></span>
-                        <?php echo htmlspecialchars($deptName); ?> (<?php echo $stats['dept_distribution']['percentages'][$idx] ?? 0; ?>%)
-                    </span>
+            <div class="grid grid-cols-2 min-[480px]:grid-cols-4 sm:grid-cols-7 gap-2.5 print:grid-cols-7 print:gap-1.5">
+                <?php 
+                    $maxDayCount = max(1, ...($stats['day_distribution']['data'] ?: [1]));
+                    foreach ($stats['day_distribution']['labels'] as $idx => $dName): 
+                        $cnt = $stats['day_distribution']['data'][$idx] ?? 0;
+                        $intensity = round(($cnt / $maxDayCount) * 100);
+                ?>
+                    <div class="p-3 print:p-1.5 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-center">
+                        <div class="text-xs print:text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider"><?php echo $dName; ?></div>
+                        <div class="text-xl print:text-base font-black text-slate-900 dark:text-white my-1 print:my-0.5"><?php echo $cnt; ?></div>
+                        <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden mt-1 print:mt-0.5">
+                            <div class="data-progress-bar bg-brand-500 h-full rounded-full" style="--progress-value: <?php echo $intensity; ?>%"></div>
+                        </div>
+                    </div>
                 <?php endforeach; ?>
             </div>
         </div>
     </div>
 
-    <!-- Charts Grid Row 2 -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Room Popularity & Utilization Horizontal Bar Chart -->
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
-            <div class="flex items-center justify-between mb-4">
+    <!-- Halaman 3 Cetak: Matriks Utilisasi Ruangan, Inisiator Teraktif, dan Validasi -->
+    <div class="analytics-page-break space-y-6 print:space-y-3">
+        <!-- Print Header Halaman 3 -->
+        <div class="hidden print:flex items-center justify-between pb-2 border-b border-slate-300 mb-2">
+            <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Statistik & Analisis Penggunaan Ruangan SPMT &bull; Bagian 3: Matriks Utilisasi Ruangan & Inisiator Rapat</span>
+            <span class="text-[10px] text-slate-500 font-mono">Halaman 3 dari 3</span>
+        </div>
+
+        <!-- Detailed Room Performance & Utilization Table -->
+        <div class="analytics-card bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm overflow-hidden transition-colors">
+            <div class="p-5 print:p-2.5 border-b border-slate-100 dark:border-slate-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <i class="fas fa-layer-group text-amber-500"></i>
-                        Popularitas Ruangan Rapat
+                    <h2 class="text-base print:text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i class="fas fa-table text-slate-500"></i>
+                        Matriks Analisis Utilisasi Ruangan Rapat
                     </h2>
-                    <p class="text-xs text-slate-400 mt-0.5">Frekuensi pertemuan yang diselenggarakan di tiap ruangan.</p>
+                    <p class="text-xs print:text-[10px] text-slate-400 mt-0.5">Rincian performa operasional, kapasitas, dan beban jam kerja tiap ruangan.</p>
                 </div>
+                <span class="text-xs print:text-[10px] font-semibold px-3 py-1.5 print:py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-600 w-fit">
+                    Total <?php echo count($stats['room_stats']); ?> Ruangan
+                </span>
             </div>
-            <div class="relative h-64 w-full">
-                <canvas id="roomUsageChart"></canvas>
-            </div>
-        </div>
 
-        <!-- Peak Hours Bar Chart -->
-        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <i class="fas fa-fire text-rose-500"></i>
-                        Distribusi Jam Sibuk Rapat (Peak Hours)
-                    </h2>
-                    <p class="text-xs text-slate-400 mt-0.5">Pola waktu tersering ruangan digunakan (pukul 08:00 - 18:00 WIB).</p>
-                </div>
-            </div>
-            <div class="relative h-64 w-full">
-                <canvas id="peakHoursChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Day-of-Week Distribution Strip -->
-    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-            <div>
-                <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <i class="fas fa-calendar-week text-indigo-500"></i>
-                    Intensitas Hari Rapat Dalam Seminggu
-                </h3>
-                <p class="text-xs text-slate-400 mt-0.5">Perbandingan beban agenda ruang rapat dari hari Senin hingga Minggu.</p>
-            </div>
-        </div>
-        <div class="grid grid-cols-2 min-[480px]:grid-cols-4 sm:grid-cols-7 gap-2.5">
-            <?php 
-                $maxDayCount = max(1, ...($stats['day_distribution']['data'] ?: [1]));
-                foreach ($stats['day_distribution']['labels'] as $idx => $dName): 
-                    $cnt = $stats['day_distribution']['data'][$idx] ?? 0;
-                    $intensity = round(($cnt / $maxDayCount) * 100);
-            ?>
-                <div class="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-center">
-                    <div class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider"><?php echo $dName; ?></div>
-                    <div class="text-xl font-black text-slate-900 dark:text-white my-1"><?php echo $cnt; ?></div>
-                    <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden mt-1">
-                        <div class="data-progress-bar bg-brand-500 h-full rounded-full" style="--progress-value: <?php echo $intensity; ?>%"></div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    </div>
-
-    <!-- Detailed Room Performance & Utilization Table -->
-    <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm overflow-hidden transition-colors">
-        <div class="p-5 border-b border-slate-100 dark:border-slate-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-                <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <i class="fas fa-table text-slate-500"></i>
-                    Matriks Analisis Utilisasi Ruangan Rapat
-                </h2>
-                <p class="text-xs text-slate-400 mt-0.5">Rincian performa operasional, kapasitas, dan beban jam kerja tiap ruangan.</p>
-            </div>
-            <span class="text-xs font-semibold px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-600 w-fit">
-                Total <?php echo count($stats['room_stats']); ?> Ruangan
-            </span>
-        </div>
-
-        <div class="responsive-table-shell">
-            <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-                <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 uppercase text-[11px] font-bold tracking-wider border-b border-slate-100 dark:border-slate-700/80">
-                    <tr>
-                        <th class="py-3.5 px-5">Ruang Rapat</th>
-                        <th class="py-3.5 px-5">Lokasi & Lantai</th>
-                        <th class="py-3.5 px-5 text-center">Kapasitas</th>
-                        <th class="py-3.5 px-5 text-center">Total Rapat</th>
-                        <th class="py-3.5 px-5 text-center">Total Durasi</th>
-                        <th class="py-3.5 px-5 text-center">Rata-rata Peserta</th>
-                        <th class="py-3.5 px-5">Estimasi Utilisasi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-700/80 font-medium">
-                    <?php if (empty($stats['room_stats'])): ?>
+            <div class="responsive-table-shell">
+                <table class="w-full text-left text-sm print:text-[10px] text-slate-600 dark:text-slate-300">
+                    <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 uppercase text-[11px] print:text-[9px] font-bold tracking-wider border-b border-slate-100 dark:border-slate-700/80">
                         <tr>
-                            <td colspan="7" class="text-center py-10 text-slate-400">Belum ada data ruangan tercatat.</td>
+                            <th class="py-3.5 print:py-1.5 px-5 print:px-2.5">Ruang Rapat</th>
+                            <th class="py-3.5 print:py-1.5 px-5 print:px-2.5">Lokasi & Lantai</th>
+                            <th class="py-3.5 print:py-1.5 px-5 print:px-2.5 text-center">Kapasitas</th>
+                            <th class="py-3.5 print:py-1.5 px-5 print:px-2.5 text-center">Total Rapat</th>
+                            <th class="py-3.5 print:py-1.5 px-5 print:px-2.5 text-center">Total Durasi</th>
+                            <th class="py-3.5 print:py-1.5 px-5 print:px-2.5 text-center">Rata-rata Peserta</th>
+                            <th class="py-3.5 print:py-1.5 px-5 print:px-2.5">Estimasi Utilisasi</th>
                         </tr>
-                    <?php else: ?>
-                        <?php foreach ($stats['room_stats'] as $rs): ?>
-                            <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition">
-                                <td class="py-4 px-5">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-sm">
-                                            <i class="fas fa-door-open"></i>
-                                        </div>
-                                        <div>
-                                            <div class="font-bold text-slate-900 dark:text-white"><?php echo htmlspecialchars($rs['name']); ?></div>
-                                            <span class="text-[10px] font-mono font-bold px-1.5 py-0.2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-600">
-                                                <?php echo htmlspecialchars($rs['code']); ?>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="py-4 px-5 text-xs">
-                                    <div class="text-slate-800 dark:text-slate-200 font-medium"><?php echo htmlspecialchars($rs['location']); ?></div>
-                                    <div class="text-slate-400 text-[11px]"><?php echo htmlspecialchars($rs['floor']); ?></div>
-                                </td>
-                                <td class="py-4 px-5 text-center">
-                                    <span class="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold font-mono">
-                                        <?php echo $rs['capacity']; ?> Kursi
-                                    </span>
-                                </td>
-                                <td class="py-4 px-5 text-center">
-                                    <span class="font-black text-slate-900 dark:text-white text-base"><?php echo $rs['booking_count']; ?></span>
-                                    <span class="text-xs text-slate-400 block font-normal"><?php echo $rs['confirmed_count']; ?> sah</span>
-                                </td>
-                                <td class="py-4 px-5 text-center">
-                                    <span class="font-bold text-slate-800 dark:text-slate-200"><?php echo $rs['total_hours']; ?></span>
-                                    <span class="text-xs text-slate-400 font-normal">Jam</span>
-                                </td>
-                                <td class="py-4 px-5 text-center">
-                                    <span class="font-bold text-slate-800 dark:text-slate-200"><?php echo $rs['avg_attendees']; ?></span>
-                                    <span class="text-xs text-slate-400 font-normal">Org/Sesi</span>
-                                </td>
-                                <td class="py-4 px-5">
-                                    <div class="w-full max-w-xs">
-                                        <div class="flex items-center justify-between text-xs mb-1">
-                                            <span class="font-bold text-slate-700 dark:text-slate-300"><?php echo $rs['utilization_rate']; ?>%</span>
-                                        </div>
-                                        <div class="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-                                            <div class="data-progress-bar h-full rounded-full transition-all duration-500 <?php echo $rs['utilization_rate'] > 70 ? 'bg-rose-500' : ($rs['utilization_rate'] > 30 ? 'bg-emerald-500' : 'bg-brand-500'); ?>" style="--progress-value: <?php echo min(100, $rs['utilization_rate']); ?>%"></div>
-                                        </div>
-                                    </div>
-                                </td>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700/80 font-medium">
+                        <?php if (empty($stats['room_stats'])): ?>
+                            <tr>
+                                <td colspan="7" class="text-center py-10 print:py-3 text-slate-400">Belum ada data ruangan tercatat.</td>
                             </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Top Organizers / Bookers Grid -->
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
-        <div class="flex items-center justify-between mb-4">
-            <div>
-                <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    <i class="fas fa-trophy text-amber-500"></i>
-                    Inisiator & Pemesan Rapat Teraktif
-                </h2>
-                <p class="text-xs text-slate-400 mt-0.5">Daftar staf/organizer dengan intensitas pengajuan booking tertinggi.</p>
+                        <?php else: ?>
+                            <?php foreach ($stats['room_stats'] as $rs): ?>
+                                <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition">
+                                    <td class="py-4 print:py-1.5 px-5 print:px-2.5">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-8 h-8 print:w-5 print:h-5 rounded-lg bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs print:text-[9px]">
+                                                <i class="fas fa-door-open"></i>
+                                            </div>
+                                            <div>
+                                                <div class="font-bold text-slate-900 dark:text-white print:text-[11px] leading-tight"><?php echo htmlspecialchars($rs['name']); ?></div>
+                                                <span class="text-[10px] print:text-[8px] font-mono font-bold px-1.5 py-0.2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-600">
+                                                    <?php echo htmlspecialchars($rs['code']); ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 print:py-1.5 px-5 print:px-2.5 text-xs print:text-[10px]">
+                                        <div class="text-slate-800 dark:text-slate-200 font-medium"><?php echo htmlspecialchars($rs['location']); ?></div>
+                                        <div class="text-slate-400 text-[11px] print:text-[9px]"><?php echo htmlspecialchars($rs['floor']); ?></div>
+                                    </td>
+                                    <td class="py-4 print:py-1.5 px-5 print:px-2.5 text-center">
+                                        <span class="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs print:text-[9px] font-bold font-mono">
+                                            <?php echo $rs['capacity']; ?> Kursi
+                                        </span>
+                                    </td>
+                                    <td class="py-4 print:py-1.5 px-5 print:px-2.5 text-center">
+                                        <span class="font-black text-slate-900 dark:text-white text-base print:text-xs"><?php echo $rs['booking_count']; ?></span>
+                                        <span class="text-xs print:text-[9px] text-slate-400 block font-normal"><?php echo $rs['confirmed_count']; ?> sah</span>
+                                    </td>
+                                    <td class="py-4 print:py-1.5 px-5 print:px-2.5 text-center">
+                                        <span class="font-bold text-slate-800 dark:text-slate-200 print:text-xs"><?php echo $rs['total_hours']; ?></span>
+                                        <span class="text-xs print:text-[9px] text-slate-400 font-normal">Jam</span>
+                                    </td>
+                                    <td class="py-4 print:py-1.5 px-5 print:px-2.5 text-center">
+                                        <span class="font-bold text-slate-800 dark:text-slate-200 print:text-xs"><?php echo $rs['avg_attendees']; ?></span>
+                                        <span class="text-xs print:text-[9px] text-slate-400 font-normal">Org/Sesi</span>
+                                    </td>
+                                    <td class="py-4 print:py-1.5 px-5 print:px-2.5">
+                                        <div class="w-full max-w-xs">
+                                            <div class="flex items-center justify-between text-xs print:text-[9px] mb-0.5">
+                                                <span class="font-bold text-slate-700 dark:text-slate-300"><?php echo $rs['utilization_rate']; ?>%</span>
+                                            </div>
+                                            <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                                <div class="data-progress-bar h-full rounded-full transition-all duration-500 <?php echo $rs['utilization_rate'] > 70 ? 'bg-rose-500' : ($rs['utilization_rate'] > 30 ? 'bg-emerald-500' : 'bg-brand-500'); ?>" style="--progress-value: <?php echo min(100, $rs['utilization_rate']); ?>%"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <?php if (empty($stats['top_organizers'])): ?>
-                <div class="col-span-4 text-center py-8 text-slate-400 text-xs">Belum ada data organizer.</div>
-            <?php else: ?>
-                <?php foreach ($stats['top_organizers'] as $rank => $org): ?>
-                    <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 flex items-start gap-3.5">
-                        <div class="w-8 h-8 rounded-lg <?php echo $rank === 0 ? 'bg-amber-400 text-amber-950 font-black' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold'; ?> flex items-center justify-center shrink-0 text-sm">
-                            #<?php echo $rank + 1; ?>
-                        </div>
-                        <div class="overflow-hidden flex-1">
-                            <div class="font-bold text-slate-900 dark:text-white text-sm truncate"><?php echo htmlspecialchars($org['name']); ?></div>
-                            <div class="text-xs text-brand-600 dark:text-brand-400 font-semibold truncate"><?php echo htmlspecialchars($org['department']); ?></div>
-                            <div class="text-[11px] text-slate-400 mt-1 flex items-center gap-2">
-                                <span><strong><?php echo $org['booking_count']; ?></strong> Rapat</span> •
-                                <span><strong><?php echo $org['total_hours']; ?></strong> Jam</span>
+        <!-- Top Organizers / Bookers Grid -->
+        <div class="analytics-card bg-white dark:bg-slate-800 p-6 print:p-3 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
+            <div class="flex items-center justify-between mb-3 print:mb-1.5">
+                <div>
+                    <h2 class="text-base print:text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i class="fas fa-trophy text-amber-500"></i>
+                        Inisiator & Pemesan Rapat Teraktif
+                    </h2>
+                    <p class="text-xs print:text-[10px] text-slate-400 mt-0.5">Daftar staf/organizer dengan intensitas pengajuan booking tertinggi.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4 print:gap-2">
+                <?php if (empty($stats['top_organizers'])): ?>
+                    <div class="col-span-4 text-center py-6 print:py-2 text-slate-400 text-xs">Belum ada data organizer.</div>
+                <?php else: ?>
+                    <?php foreach ($stats['top_organizers'] as $rank => $org): ?>
+                        <div class="p-3.5 print:p-2 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 flex items-start gap-2.5">
+                            <div class="w-7 h-7 print:w-5 print:h-5 rounded-lg <?php echo $rank === 0 ? 'bg-amber-400 text-amber-950 font-black' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold'; ?> flex items-center justify-center shrink-0 text-xs print:text-[10px]">
+                                #<?php echo $rank + 1; ?>
+                            </div>
+                            <div class="overflow-hidden flex-1">
+                                <div class="font-bold text-slate-900 dark:text-white text-xs print:text-[11px] truncate"><?php echo htmlspecialchars($org['name']); ?></div>
+                                <div class="text-[11px] print:text-[9px] text-brand-600 dark:text-brand-400 font-semibold truncate"><?php echo htmlspecialchars($org['department']); ?></div>
+                                <div class="text-[10px] print:text-[8px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+                                    <span><strong><?php echo $org['booking_count']; ?></strong> Rapat</span> •
+                                    <span><strong><?php echo $org['total_hours']; ?></strong> Jam</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Official Signature / Validation Block (Print Only) -->
+        <div class="hidden print:grid grid-cols-2 gap-8 mt-4 pt-2 text-xs text-slate-700">
+            <div class="text-center">
+                <div class="font-medium text-slate-500 mb-10 text-[11px]">Dibuat / Dicetak Oleh:</div>
+                <div class="font-bold border-b border-slate-800 pb-0.5 inline-block min-w-[180px] text-xs">
+                    <?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Administrator'); ?>
+                </div>
+                <div class="text-[10px] text-slate-500 mt-0.5"><?php echo htmlspecialchars($_SESSION['user_role'] ?? 'Admin SPMT'); ?></div>
+            </div>
+            <div class="text-center">
+                <div class="font-medium text-slate-500 mb-10 text-[11px]">Mengetahui & Menyetujui:</div>
+                <div class="font-bold border-b border-slate-800 pb-0.5 inline-block min-w-[180px] text-xs">
+                    Manajemen Fasilitas & Operasional
+                </div>
+                <div class="text-[10px] text-slate-500 mt-0.5">PT Pelindo Multi Terminal</div>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Chart.js Setup and Reactive Dark Mode Palette Script -->
 <script>
+/**
+ * Membuka dialog pencetakan browser untuk mengekspor statistik ke format PDF resmi.
+ * @returns {void}
+ */
+function printStatisticsReport() {
+    document.title = 'Statistik dan Analisis Penggunaan Ruangan SPMT';
+    window.print();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     /** Memeriksa apakah tema gelap sedang aktif. */
     const isDark = () => document.documentElement.classList.contains('dark');
@@ -647,11 +737,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // React to Dark Mode toggle events
-    const observer = new MutationObserver(() => {
-        const txtColor = getTextColor();
-        const gridColor = getGridColor();
-
+    /**
+     * Menerapkan konfigurasi warna tema pada seluruh grafik analitik.
+     * @param {boolean} darkMode - Menunjukkan apakah palet gelap harus digunakan.
+     * @returns {void}
+     */
+    function applyChartTheme(darkMode) {
+        const txtColor = darkMode ? '#94a3b8' : '#475569';
+        const gridColor = darkMode ? 'rgba(51, 65, 85, 0.4)' : 'rgba(226, 232, 240, 0.8)';
         [monthlyChart, roomChart, peakChart].forEach(chart => {
             if (chart) {
                 if (chart.options.scales.x) {
@@ -665,14 +758,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (chart.options.plugins.legend && chart.options.plugins.legend.labels) {
                     chart.options.plugins.legend.labels.color = txtColor;
                 }
-                chart.update();
+                chart.resize();
+                chart.update('none');
             }
         });
 
         if (deptChart) {
-            deptChart.data.datasets[0].borderColor = isDark() ? '#1e293b' : '#ffffff';
-            deptChart.update();
+            deptChart.data.datasets[0].borderColor = darkMode ? '#1e293b' : '#ffffff';
+            deptChart.resize();
+            deptChart.update('none');
         }
+    }
+
+    let wasDarkBeforePrint = false;
+
+    /** Menyiapkan grafik untuk pencetakan dokumen yang jernih dan sesuai ukuran kertas. */
+    const handleBeforePrint = () => {
+        wasDarkBeforePrint = document.documentElement.classList.contains('dark');
+        if (wasDarkBeforePrint) {
+            document.documentElement.classList.remove('dark');
+        }
+        document.title = 'Statistik dan Analisis Penggunaan Ruangan SPMT';
+        applyChartTheme(false);
+    };
+
+    /** Mengembalikan status tema setelah dialog pencetakan ditutup. */
+    const handleAfterPrint = () => {
+        if (wasDarkBeforePrint) {
+            document.documentElement.classList.add('dark');
+            applyChartTheme(true);
+        }
+        document.title = 'Statistik dan Analisis Penggunaan Ruangan SPMT';
+    };
+
+    window.addEventListener('beforeprint', handleBeforePrint);
+    window.addEventListener('afterprint', handleAfterPrint);
+
+    // React to Dark Mode toggle events on screen
+    const observer = new MutationObserver(() => {
+        applyChartTheme(isDark());
     });
 
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });

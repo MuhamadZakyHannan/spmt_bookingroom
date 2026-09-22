@@ -407,12 +407,16 @@ html, body {
     }
 }
 
-/* Printable booking report */
+/* Printable booking & statistics report */
 @page {
     size: A4 landscape;
     margin: 0.8cm;
 }
 @media print {
+    nav,
+    aside,
+    #sidebarDrawer,
+    #sidebarBackdrop,
     .no-print,
     .booking-report-page .no-print {
         display: none !important;
@@ -421,7 +425,7 @@ html, body {
     body,
     body.booking-report-page {
         background: white !important;
-        color: black !important;
+        color: #0f172a !important;
         font-size: 11px !important;
         margin: 0 !important;
         padding: 0 !important;
@@ -432,6 +436,12 @@ html, body {
         overflow-x: visible !important;
         overflow-y: visible !important;
         width: 100% !important;
+    }
+    main {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
     .booking-report-page,
     .booking-report-page * {
@@ -479,5 +489,46 @@ html, body {
     .booking-report-page .page-break {
         page-break-after: always !important;
         break-after: page !important;
+    }
+    /* Analytics & Statistics Print Rules */
+    .analytics-card {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+        box-shadow: none !important;
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border-color: #cbd5e1 !important;
+    }
+    .dark .analytics-card {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border-color: #cbd5e1 !important;
+    }
+    .dark .analytics-card h1,
+    .dark .analytics-card h2,
+    .dark .analytics-card h3,
+    .dark .analytics-card .text-slate-900,
+    .dark .analytics-card .text-white {
+        color: #0f172a !important;
+    }
+    .dark .analytics-card .text-slate-400,
+    .dark .analytics-card .text-slate-500 {
+        color: #64748b !important;
+    }
+    .analytics-page-break {
+        page-break-before: always !important;
+        break-before: page !important;
+        margin-top: 0 !important;
+        padding-top: 0.25rem !important;
+    }
+    .analytics-card canvas {
+        max-width: 100% !important;
+    }
+    .responsive-table-shell {
+        overflow: visible !important;
+    }
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
 }
