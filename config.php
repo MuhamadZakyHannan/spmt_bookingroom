@@ -5,48 +5,22 @@
 // Set Zona Waktu Default Indonesia (WIB / Asia/Jakarta)
 date_default_timezone_set('Asia/Jakarta');
 
-// Optional .env File Loader
-$envFile = __DIR__ . '/.env';
-if (file_exists($envFile)) {
-    $envLines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($envLines as $envLine) {
-        $envLine = trim($envLine);
-        if ($envLine === '' || strpos($envLine, '#') === 0) continue;
-        if (strpos($envLine, '=') !== false) {
-            list($envKey, $envVal) = explode('=', $envLine, 2);
-            $envKey = trim($envKey);
-            $envVal = trim($envVal, " \t\n\r\0\x0B\"'");
-            if (getenv($envKey) === false && !array_key_exists($envKey, $_ENV)) {
-                $_ENV[$envKey] = $envVal;
-                putenv("$envKey=$envVal");
-            }
-        }
-    }
-}
+require_once __DIR__ . '/app/core/Environment.php';
+Environment::load(__DIR__ . '/.env');
 
-/**
- * Membaca environment variable boolean secara konsisten.
- */
-function env_bool(string $key, bool $default = false): bool
-{
-    $value = getenv($key);
-    if ($value === false || trim((string) $value) === '') return $default;
-    return filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ?? $default;
-}
-
-if (!defined('APP_ENV')) define('APP_ENV', getenv('APP_ENV') ?: 'local_lan');
-if (!defined('APP_DEBUG')) define('APP_DEBUG', env_bool('APP_DEBUG', false));
-if (!defined('APP_ALLOW_REGISTRATION')) define('APP_ALLOW_REGISTRATION', env_bool('APP_ALLOW_REGISTRATION', false));
-if (!defined('SESSION_IDLE_TIMEOUT')) define('SESSION_IDLE_TIMEOUT', max(900, (int) (getenv('SESSION_IDLE_TIMEOUT') ?: 7200)));
-if (!defined('SESSION_COOKIE_PATH')) define('SESSION_COOKIE_PATH', getenv('SESSION_COOKIE_PATH') ?: '/Room_Booking_System/');
-if (!defined('TRUST_PROXY_HEADERS')) define('TRUST_PROXY_HEADERS', env_bool('TRUST_PROXY_HEADERS', false));
+if (!defined('APP_ENV')) define('APP_ENV', Environment::get('APP_ENV', 'local_lan'));
+if (!defined('APP_DEBUG')) define('APP_DEBUG', Environment::bool('APP_DEBUG', false));
+if (!defined('APP_ALLOW_REGISTRATION')) define('APP_ALLOW_REGISTRATION', Environment::bool('APP_ALLOW_REGISTRATION', false));
+if (!defined('SESSION_IDLE_TIMEOUT')) define('SESSION_IDLE_TIMEOUT', Environment::int('SESSION_IDLE_TIMEOUT', 7200, 900, 86400));
+if (!defined('SESSION_COOKIE_PATH')) define('SESSION_COOKIE_PATH', Environment::get('SESSION_COOKIE_PATH', '/Room_Booking_System/'));
+if (!defined('TRUST_PROXY_HEADERS')) define('TRUST_PROXY_HEADERS', Environment::bool('TRUST_PROXY_HEADERS', false));
 if (!defined('APP_LOG_PATH')) {
     $defaultLogPath = dirname(__DIR__, 2)
         . DIRECTORY_SEPARATOR . 'private'
         . DIRECTORY_SEPARATOR . 'Room_Booking_System'
         . DIRECTORY_SEPARATOR . 'logs'
         . DIRECTORY_SEPARATOR . 'application.log';
-    define('APP_LOG_PATH', getenv('APP_LOG_PATH') ?: $defaultLogPath);
+    define('APP_LOG_PATH', Environment::get('APP_LOG_PATH', $defaultLogPath));
 }
 
 error_reporting(E_ALL);
@@ -67,16 +41,16 @@ if (!headers_sent()) {
 }
 
 // Database Connection Configuration Constants
-if (!defined('DB_HOST')) define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-if (!defined('DB_USER')) define('DB_USER', getenv('DB_USER') ?: 'root');
-if (!defined('DB_PASS')) define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
-if (!defined('DB_NAME')) define('DB_NAME', getenv('DB_NAME') ?: 'meetspace_db');
+if (!defined('DB_HOST')) define('DB_HOST', Environment::get('DB_HOST', 'localhost'));
+if (!defined('DB_USER')) define('DB_USER', Environment::get('DB_USER', 'root'));
+if (!defined('DB_PASS')) define('DB_PASS', Environment::get('DB_PASS', ''));
+if (!defined('DB_NAME')) define('DB_NAME', Environment::get('DB_NAME', 'meetspace_db'));
 if (!defined('BOOKING_DOCUMENT_STORAGE')) {
     $defaultDocumentStorage = dirname(__DIR__, 2)
         . DIRECTORY_SEPARATOR . 'private'
         . DIRECTORY_SEPARATOR . 'Room_Booking_System'
         . DIRECTORY_SEPARATOR . 'booking-documents';
-    define('BOOKING_DOCUMENT_STORAGE', getenv('BOOKING_DOCUMENT_STORAGE') ?: $defaultDocumentStorage);
+    define('BOOKING_DOCUMENT_STORAGE', Environment::get('BOOKING_DOCUMENT_STORAGE', $defaultDocumentStorage));
 }
 
 // Secure Session Initialization
@@ -110,21 +84,8 @@ if (PHP_SAPI !== 'cli' && session_status() === PHP_SESSION_NONE) {
     $_SESSION['last_activity_at'] = time();
 }
 
-$db_host = DB_HOST;
-$db_user = DB_USER;
-$db_pass = DB_PASS;
-$db_name = DB_NAME;
-
-try {
-    $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_user, $db_pass, [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
-    ]);
-} catch (PDOException $e) {
-    error_log('Koneksi database aplikasi gagal: ' . $e->getMessage());
-    $pdo = null; // Will trigger setup warning in UI if database is not created yet
-}
+require_once __DIR__ . '/app/core/Database.php';
+$pdo = Database::getInstance()->getConnection();
 
 // Sinkronkan identitas dan role dari database pada setiap request web.
 // Perubahan role atau penghapusan akun berlaku segera tanpa menunggu logout.

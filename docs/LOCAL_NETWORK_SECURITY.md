@@ -6,7 +6,7 @@ ditujukan untuk perangkat dalam jaringan LAN/Wi-Fi internal.
 ## Perlindungan aplikasi
 
 - Hanya entry point PHP di root dan aset dalam `public/` yang boleh dilayani.
-- `app`, `docs`, `migrations`, `node_modules`, `scripts`, `src`, dan `tests`
+- `app`, `database`, `docs`, `migrations`, `node_modules`, `scripts`, `src`, dan `tests`
   ditolak oleh Apache.
 - Pendaftaran mandiri nonaktif secara default. Akun dibuat melalui menu
   **Kelola Pengguna** oleh Administrator.
@@ -66,6 +66,7 @@ Pastikan URL berikut menghasilkan HTTP 403 atau 404:
 /Room_Booking_System/scripts/apply_migrations.php
 /Room_Booking_System/src/input.css
 /Room_Booking_System/docs/FINALIZATION_BASELINE.md
+/Room_Booking_System/database/schema.sql
 ```
 
 Halaman login harus tetap menghasilkan HTTP 200 dan tidak menampilkan tautan

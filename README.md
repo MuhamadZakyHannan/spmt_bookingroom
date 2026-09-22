@@ -38,14 +38,15 @@ C:\xampp\htdocs\Room_Booking_System
 
 1. Jalankan Apache dan MySQL dari XAMPP Control Panel.
 2. Buka `http://localhost/phpmyadmin/`.
-3. Import skema utama `C:\xampp\private\Room_Booking_System\database.sql` ke MySQL.
+3. Import skema utama `database/schema.sql` ke MySQL.
 4. Terapkan migrasi database melalui terminal dari direktori proyek:
 
 ```powershell
 php scripts/apply_migrations.php
 ```
 
-Runner mencatat migrasi yang sudah dijalankan sehingga aman dipanggil kembali.
+Runner mengunci proses migrasi dan mencatat checksum setiap file sehingga aman
+dipanggil kembali serta dapat mendeteksi migrasi lama yang berubah.
 5. Setelah migrasi selesai, buat akun database khusus aplikasi melalui phpMyAdmin. Ganti password contoh sebelum menjalankan SQL:
 
 ```sql
@@ -56,7 +57,9 @@ FLUSH PRIVILEGES;
 
 6. Pastikan database bernama `meetspace_db`, atau sesuaikan `DB_NAME` pada `.env`.
 
-Skema utama sengaja disimpan di luar `htdocs` agar tidak dapat diunduh melalui web server.
+Skema final tidak berisi akun, password, booking, atau token. Direktori
+`database/` diblokir oleh konfigurasi Apache sehingga skema tidak dapat diunduh
+melalui aplikasi.
 
 ### 3. Buat konfigurasi lokal
 
@@ -76,7 +79,9 @@ BOOKING_DOCUMENT_STORAGE="C:/xampp/private/Room_Booking_System/booking-documents
 File `.env` tidak disimpan ke Git.
 
 Panduan pembatasan Apache, MySQL, session, dan Windows Firewall tersedia di
-[`docs/LOCAL_NETWORK_SECURITY.md`](docs/LOCAL_NETWORK_SECURITY.md).
+[`docs/LOCAL_NETWORK_SECURITY.md`](docs/LOCAL_NETWORK_SECURITY.md). Struktur,
+migrasi, serta hak akses database dijelaskan di
+[`docs/DATABASE.md`](docs/DATABASE.md).
 
 ### 4. Buka aplikasi
 
@@ -84,14 +89,9 @@ Panduan pembatasan Apache, MySQL, session, dan Windows Firewall tersedia di
 http://localhost/Room_Booking_System/
 ```
 
-Jika memakai data seed bawaan, akun demo yang tersedia adalah:
-
-| Role | Username | Password |
-| --- | --- | --- |
-| User | `budi` | `password123` |
-| Administrator | `sarah` | `password123` |
-
-Ganti password demo sebelum aplikasi digunakan di lingkungan produksi.
+Skema instalasi baru tidak menyediakan akun demo. Siapkan akun Super Admin
+pertama secara terkontrol, kemudian buat akun operasional melalui menu
+**Kelola Pengguna**.
 
 ## Panduan pengguna
 
@@ -245,6 +245,7 @@ php tests/run_role_hierarchy_tests.php
 php tests/run_user_account_tests.php
 php tests/run_booking_expiration_tests.php
 php tests/run_security_hardening_tests.php
+php tests/run_database_configuration_tests.php
 ```
 
 Pengujian membuat data sementara dan membersihkannya kembali setelah selesai.
