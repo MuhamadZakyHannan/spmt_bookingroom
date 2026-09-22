@@ -142,7 +142,7 @@
 
 <?php if (is_super_admin()): ?>
 <div id="editUserModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="editUserModalTitle">
-    <div class="w-full max-w-xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800">
+    <div class="relative w-full max-w-xl rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800">
         <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
             <div class="flex items-center gap-3">
                 <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300"><i class="fas fa-user-pen"></i></span>
@@ -192,7 +192,20 @@
                 </div>
                 <div>
                     <label for="editUserPassword" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">Password Baru <span class="font-normal text-slate-400">(opsional)</span></label>
-                    <input type="password" name="password" id="editUserPassword" minlength="10" autocomplete="new-password" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white" placeholder="Kosongkan jika tidak diubah">
+                    <div class="relative">
+                        <input type="password" name="password" id="editUserPassword" minlength="10" autocomplete="new-password" aria-describedby="editPasswordRequirements" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white" placeholder="Kosongkan jika tidak diubah">
+                        <div id="editPasswordPopover" class="pointer-events-none absolute left-0 right-0 top-full z-30 mt-2 hidden rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-600 dark:bg-slate-900" role="status" aria-live="polite">
+                            <div class="absolute -top-1.5 left-5 h-3 w-3 rotate-45 border-l border-t border-slate-200 bg-white dark:border-slate-600 dark:bg-slate-900"></div>
+                            <p id="editPasswordRequirementSummary" class="relative mb-2 text-[11px] font-bold text-rose-600 dark:text-rose-400">Password belum memenuhi kriteria:</p>
+                            <ul id="editPasswordRequirements" class="relative grid grid-cols-1 gap-1 text-[10px] sm:grid-cols-2">
+                                <li data-password-rule="length" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Minimal 10 karakter</li>
+                                <li data-password-rule="uppercase" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Huruf besar</li>
+                                <li data-password-rule="lowercase" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Huruf kecil</li>
+                                <li data-password-rule="number" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Angka</li>
+                                <li data-password-rule="symbol" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Simbol unik</li>
+                            </ul>
+                        </div>
+                    </div>
                     <p class="mt-1.5 text-[10px] text-slate-500 dark:text-slate-400">Minimal 10 karakter: huruf besar, kecil, angka, dan simbol.</p>
                 </div>
             </div>
@@ -236,11 +249,57 @@
     const editUserRole = document.getElementById('editUserRole');
     const editUserPassword = document.getElementById('editUserPassword');
     const editUserRoleHint = document.getElementById('editUserRoleHint');
+    const editUserForm = document.getElementById('editUserForm');
+    const editPasswordPopover = document.getElementById('editPasswordPopover');
+    const editPasswordRequirementSummary = document.getElementById('editPasswordRequirementSummary');
 
     function escapeHtml(text) {
         if (!text) return '';
         const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
         return text.toString().replace(/[&<>"']/g, m => map[m]);
+    }
+
+    function validateEditPassword(showPopover = false) {
+        if (!editUserPassword) return true;
+        const value = editUserPassword.value;
+        const checks = {
+            length: value.length >= 10,
+            uppercase: /[A-Z]/.test(value),
+            lowercase: /[a-z]/.test(value),
+            number: /\d/.test(value),
+            symbol: /[^A-Za-z0-9]/.test(value)
+        };
+        const isEmpty = value.length === 0;
+        const isValid = isEmpty || Object.values(checks).every(Boolean);
+
+        Object.entries(checks).forEach(([rule, passed]) => {
+            const item = document.querySelector(`[data-password-rule="${rule}"]`);
+            if (!item) return;
+            const icon = item.querySelector('i');
+            item.classList.toggle('text-emerald-600', passed);
+            item.classList.toggle('dark:text-emerald-400', passed);
+            item.classList.toggle('text-rose-600', !isEmpty && !passed);
+            item.classList.toggle('dark:text-rose-400', !isEmpty && !passed);
+            item.classList.toggle('text-slate-500', isEmpty);
+            item.classList.toggle('dark:text-slate-400', isEmpty);
+            if (icon) icon.className = `fas ${passed ? 'fa-circle-check' : (!isEmpty ? 'fa-circle-xmark' : 'fa-circle')} text-[10px]`;
+        });
+
+        editUserPassword.setCustomValidity(isValid ? '' : 'Password belum memenuhi seluruh kriteria keamanan.');
+        editUserPassword.setAttribute('aria-invalid', isValid ? 'false' : 'true');
+        if (editPasswordRequirementSummary) {
+            editPasswordRequirementSummary.textContent = isValid && !isEmpty
+                ? 'Password sudah memenuhi seluruh kriteria.'
+                : (isEmpty ? 'Password tidak diubah jika kolom dikosongkan.' : 'Password belum memenuhi kriteria:');
+            editPasswordRequirementSummary.classList.toggle('text-emerald-600', isValid && !isEmpty);
+            editPasswordRequirementSummary.classList.toggle('dark:text-emerald-400', isValid && !isEmpty);
+            editPasswordRequirementSummary.classList.toggle('text-rose-600', !isValid);
+            editPasswordRequirementSummary.classList.toggle('dark:text-rose-400', !isValid);
+            editPasswordRequirementSummary.classList.toggle('text-slate-600', isEmpty);
+            editPasswordRequirementSummary.classList.toggle('dark:text-slate-300', isEmpty);
+        }
+        if (editPasswordPopover && showPopover) editPasswordPopover.classList.remove('hidden');
+        return isValid;
     }
 
     function openEditUserModal(userId) {
@@ -258,6 +317,8 @@
             ? 'Role Super Admin dilindungi dan tidak dapat diturunkan.'
             : 'Perubahan role berlaku pada request berikutnya.';
         editUserPassword.value = '';
+        validateEditPassword(false);
+        if (editPasswordPopover) editPasswordPopover.classList.add('hidden');
 
         editUserModal.classList.remove('hidden');
         editUserModal.classList.add('flex');
@@ -269,6 +330,7 @@
         if (!editUserModal) return;
         editUserModal.classList.add('hidden');
         editUserModal.classList.remove('flex');
+        if (editPasswordPopover) editPasswordPopover.classList.add('hidden');
         document.body.classList.remove('overflow-hidden');
     }
 
@@ -522,6 +584,24 @@
         });
 
         userRoleFilter.addEventListener('change', applyLiveUserFilter);
+
+        if (editUserPassword) {
+            editUserPassword.addEventListener('focus', () => validateEditPassword(true));
+            editUserPassword.addEventListener('input', () => validateEditPassword(true));
+            editUserPassword.addEventListener('blur', () => {
+                if (validateEditPassword(false) && editPasswordPopover) {
+                    window.setTimeout(() => editPasswordPopover.classList.add('hidden'), 120);
+                }
+            });
+        }
+        if (editUserForm) {
+            editUserForm.addEventListener('submit', event => {
+                if (!validateEditPassword(true)) {
+                    event.preventDefault();
+                    editUserPassword.focus();
+                }
+            });
+        }
 
         document.addEventListener('click', (e) => {
             if (!e.target.closest('#userSearchContainer')) {

@@ -64,4 +64,8 @@ try {
 $restored = $model->getById((int)$target['id']);
 expectAccount($restored['name'] === $target['name'], 'Transaksi pengujian mengembalikan akun seperti semula.');
 
-echo PHP_EOL . 'Hasil: 10 lulus, 0 gagal.' . PHP_EOL;
+$userViewSource = file_get_contents(__DIR__ . '/../app/views/admin/users.php');
+expectAccount(strpos($userViewSource, 'editPasswordPopover') !== false, 'Form edit menyediakan popover persyaratan password.');
+expectAccount(strpos($userViewSource, 'setCustomValidity') !== false, 'Password lemah dicegah pada validasi browser sebelum dikirim.');
+
+echo PHP_EOL . 'Hasil: 12 lulus, 0 gagal.' . PHP_EOL;
