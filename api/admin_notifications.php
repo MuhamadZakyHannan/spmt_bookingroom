@@ -17,7 +17,6 @@ if (!is_logged_in() || !is_admin()) {
 
 $notificationModel = new NotificationModel();
 $bookingModel = new BookingModel();
-$bookingModel->processAutomaticAttendanceTransitions();
 $adminUserId = (int)$_SESSION['user_id'];
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {

@@ -59,10 +59,10 @@ foreach ($bookings as $b) {
         'end_time' => substr($b['end_time'], 0, 5),
         'attendees_count' => (int)$b['attendees_count'],
         'status' => $b['status'],
-        'attendance_status' => $b['attendance_status'] ?? null,
-        'check_in_at' => $b['check_in_at'] ?? null,
-        'check_out_at' => $b['check_out_at'] ?? null,
+        'status_reason' => $b['status_reason'] ?? null,
         'activity_type_label' => $actLabel,
+        'document_id' => (int)($b['document_id'] ?? 0),
+        'document_name' => $b['document_name'] ?? '',
         'is_conflict' => isset($conflictBookingIds[$b['id']])
     ];
 }

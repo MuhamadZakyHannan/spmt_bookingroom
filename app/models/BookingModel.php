@@ -1,16 +1,15 @@
 <?php
 require_once __DIR__ . '/../core/Database.php';
-require_once __DIR__ . '/../core/AttendancePolicy.php';
-require_once __DIR__ . '/../services/AttendanceService.php';
 
 class BookingModel {
     private $db;
-    private $attendanceService;
     private $lastInsertId = 0;
 
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
-        $this->attendanceService = new AttendanceService($this->db);
+        if ($this->db) {
+            (new BookingLifecycleService($this->db))->expirePendingBookings();
+        }
     }
 
     public function getTodayActiveBookingsCount() {
@@ -20,7 +19,6 @@ class BookingModel {
 
     public function getTodayBookings() {
         if (!$this->db) return [];
-        $this->processAutomaticAttendanceTransitions();
         $stmt = $this->db->prepare("SELECT b.*, r.name as room_name, u.name as user_name, u.avatar as user_avatar 
                                     FROM bookings b 
                                     JOIN rooms r ON b.room_id = r.id 
@@ -33,29 +31,253 @@ class BookingModel {
 
     public function checkConflict($roomId, $date, $startTime, $endTime, $excludeId = 0) {
         if (!$this->db) return false;
-        $stmt = $this->db->prepare("SELECT id, title, start_time, end_time, status FROM bookings 
+        $stmt = $this->db->prepare("SELECT id, title, start_time, end_time, status FROM bookings
                                     WHERE room_id = ? 
                                     AND date = ? 
                                     AND status IN ('confirmed', 'pending')
                                     AND id != ?
-                                    AND (
-                                        (start_time < ? AND end_time > ?) OR
-                                        (start_time < ? AND end_time > ?) OR
-                                        (start_time >= ? AND end_time <= ?)
-                                    )");
-        $stmt->execute([$roomId, $date, $excludeId, $endTime, $startTime, $endTime, $startTime, $startTime, $endTime]);
+                                    AND start_time < ?
+                                    AND end_time > ?
+                                    ORDER BY CASE WHEN status = 'confirmed' THEN 0 ELSE 1 END, start_time ASC
+                                    LIMIT 1");
+        $stmt->execute([$roomId, $date, $excludeId, $endTime, $startTime]);
         return $stmt->fetch();
+    }
+
+    /**
+     * Menyimpan booking dengan kebijakan jadwal yang dijalankan dalam satu transaksi.
+     * Lock pada baris ruangan membuat pemeriksaan bentrok dan insert konsisten ketika
+     * dua permintaan untuk ruangan yang sama masuk hampir bersamaan.
+     */
+    public function createWithSchedulePolicy(array $data, bool $isAdmin): array {
+        if (!$this->db) {
+            return ['success' => false, 'reason' => 'database_unavailable'];
+        }
+
+        try {
+            $this->db->beginTransaction();
+
+            $roomStatement = $this->db->prepare(
+                'SELECT id, name, capacity, status FROM rooms WHERE id = ? FOR UPDATE'
+            );
+            $roomStatement->execute([(int) $data['room_id']]);
+            $room = $roomStatement->fetch(PDO::FETCH_ASSOC);
+
+            if (!$room) {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'room_not_found'];
+            }
+
+            if (($room['status'] ?? 'available') === 'maintenance') {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'maintenance', 'room' => $room];
+            }
+
+            if ((int) $data['attendees_count'] > (int) $room['capacity']) {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'insufficient_capacity', 'room' => $room];
+            }
+
+            $conflictStatement = $this->db->prepare(
+                "SELECT id, status, start_time, end_time
+                 FROM bookings
+                 WHERE room_id = ?
+                   AND date = ?
+                   AND status IN ('confirmed', 'pending')
+                   AND start_time < ?
+                   AND end_time > ?
+                 ORDER BY CASE WHEN status = 'confirmed' THEN 0 ELSE 1 END, start_time ASC
+                 FOR UPDATE"
+            );
+            $conflictStatement->execute([
+                (int) $data['room_id'],
+                $data['date'],
+                $data['end_time'],
+                $data['start_time'],
+            ]);
+            $conflicts = $conflictStatement->fetchAll(PDO::FETCH_ASSOC);
+
+            $confirmedConflict = null;
+            $hasPendingConflict = false;
+            foreach ($conflicts as $conflict) {
+                if ($conflict['status'] === 'confirmed') {
+                    $confirmedConflict = $conflict;
+                    break;
+                }
+                if ($conflict['status'] === 'pending') {
+                    $hasPendingConflict = true;
+                }
+            }
+
+            if ($confirmedConflict) {
+                $this->db->rollBack();
+                return [
+                    'success' => false,
+                    'reason' => 'confirmed_conflict',
+                    'conflict' => $confirmedConflict,
+                    'room' => $room,
+                ];
+            }
+
+            $data['status'] = $hasPendingConflict ? 'pending' : ($isAdmin ? 'confirmed' : 'pending');
+            if (!$this->insertBooking($data)) {
+                throw new RuntimeException('Gagal menyimpan booking.');
+            }
+
+            $this->db->commit();
+
+            return [
+                'success' => true,
+                'status' => $data['status'],
+                'pending_conflict' => $hasPendingConflict,
+                'booking_id' => $this->lastInsertId,
+            ];
+        } catch (Throwable $exception) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log('Booking transaction error: ' . $exception->getMessage());
+            return ['success' => false, 'reason' => 'database_error'];
+        }
+    }
+
+    /**
+     * Memperbarui booking dengan aturan otorisasi dan jadwal dalam satu transaksi.
+     *
+     * Pemilik hanya boleh mengubah booking pending miliknya. Administrator dapat
+     * mengubah booking pending maupun confirmed. Status booking tidak berubah
+     * selama proses edit; persetujuan tetap melalui alur administrasi yang ada.
+     */
+    public function updateWithSchedulePolicy(int $bookingId, array $data, int $actorUserId, bool $isAdmin): array {
+        if (!$this->db) {
+            return ['success' => false, 'reason' => 'database_unavailable'];
+        }
+
+        try {
+            $this->db->beginTransaction();
+
+            // Pastikan booking ada sebelum mengambil lock ruangan tujuan. Urutan lock
+            // ruangan -> booking sama dengan alur create agar transaksi paralel aman.
+            $snapshotStatement = $this->db->prepare(
+                'SELECT id FROM bookings WHERE id = ?'
+            );
+            $snapshotStatement->execute([$bookingId]);
+            $snapshot = $snapshotStatement->fetch(PDO::FETCH_ASSOC);
+            if (!$snapshot) {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'booking_not_found'];
+            }
+
+            $roomStatement = $this->db->prepare(
+                'SELECT id, name, capacity, status FROM rooms WHERE id = ? FOR UPDATE'
+            );
+            $roomStatement->execute([(int) $data['room_id']]);
+            $room = $roomStatement->fetch(PDO::FETCH_ASSOC);
+
+            $bookingStatement = $this->db->prepare(
+                'SELECT id, user_id, room_id, status FROM bookings WHERE id = ? FOR UPDATE'
+            );
+            $bookingStatement->execute([$bookingId]);
+            $booking = $bookingStatement->fetch(PDO::FETCH_ASSOC);
+            if (!$booking) {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'booking_not_found'];
+            }
+
+            $status = (string) $booking['status'];
+            $isOwnerPending = (int) $booking['user_id'] === $actorUserId && $status === 'pending';
+            $isAdminEditable = $isAdmin && in_array($status, ['pending', 'confirmed'], true);
+            if (!$isOwnerPending && !$isAdminEditable) {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'forbidden', 'status' => $status];
+            }
+
+            if (!$room) {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'room_not_found'];
+            }
+            if (($room['status'] ?? 'available') === 'maintenance') {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'maintenance', 'room' => $room];
+            }
+            if ((int) $data['attendees_count'] > (int) $room['capacity']) {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'insufficient_capacity', 'room' => $room];
+            }
+
+            $conflictStatement = $this->db->prepare(
+                "SELECT id, status, start_time, end_time
+                 FROM bookings
+                 WHERE room_id = ?
+                   AND date = ?
+                   AND id != ?
+                   AND status IN ('confirmed', 'pending')
+                   AND start_time < ?
+                   AND end_time > ?
+                 ORDER BY CASE WHEN status = 'confirmed' THEN 0 ELSE 1 END, start_time ASC
+                 FOR UPDATE"
+            );
+            $conflictStatement->execute([
+                (int) $data['room_id'],
+                $data['date'],
+                $bookingId,
+                $data['end_time'],
+                $data['start_time'],
+            ]);
+            $conflicts = $conflictStatement->fetchAll(PDO::FETCH_ASSOC);
+
+            $confirmedConflict = null;
+            $hasPendingConflict = false;
+            foreach ($conflicts as $conflict) {
+                if ($conflict['status'] === 'confirmed') {
+                    $confirmedConflict = $conflict;
+                    break;
+                }
+                $hasPendingConflict = true;
+            }
+
+            if ($confirmedConflict) {
+                $this->db->rollBack();
+                return [
+                    'success' => false,
+                    'reason' => 'confirmed_conflict',
+                    'conflict' => $confirmedConflict,
+                    'room' => $room,
+                ];
+            }
+
+            if (!$this->updateBookingData($bookingId, $data)) {
+                throw new RuntimeException('Gagal memperbarui booking.');
+            }
+
+            $this->db->commit();
+            return [
+                'success' => true,
+                'status' => $status,
+                'pending_conflict' => $hasPendingConflict,
+                'booking_id' => $bookingId,
+            ];
+        } catch (Throwable $exception) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log('Booking update transaction error: ' . $exception->getMessage());
+            return ['success' => false, 'reason' => 'database_error'];
+        }
     }
 
     public function create($data) {
         if (!$this->db) return false;
-        
+
+        return $this->insertBooking($data);
+    }
+
+    private function insertBooking(array $data): bool {
         $activity_type = $data['activity_type'] ?? 'internal_divisi';
 
         try {
-            $attendanceStatus = ($data['status'] ?? '') === 'confirmed' ? 'scheduled' : null;
-            $stmt = $this->db->prepare("INSERT INTO bookings (user_id, room_id, title, date, start_time, end_time, purpose, activity_type, attendees_count, status, attendance_status, user_name, user_dept)
-                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $this->db->prepare("INSERT INTO bookings (user_id, room_id, title, date, start_time, end_time, purpose, activity_type, attendees_count, status, user_name, user_dept)
+                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $success = $stmt->execute([
                 $data['user_id'],
                 $data['room_id'],
@@ -67,7 +289,6 @@ class BookingModel {
                 $activity_type,
                 $data['attendees_count'],
                 $data['status'],
-                $attendanceStatus,
                 $data['user_name'] ?? null,
                 $data['user_dept'] ?? null
             ]);
@@ -75,7 +296,11 @@ class BookingModel {
                 $this->lastInsertId = (int)$this->db->lastInsertId();
             }
             return $success;
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
+            // Kompatibilitas untuk instalasi lama yang belum memiliki kolom activity_type.
+            if ($e->getCode() !== '42S22' && (int)($e->errorInfo[1] ?? 0) !== 1054) {
+                throw $e;
+            }
             // Fallback jika database belum ada kolom activity_type
             $stmt = $this->db->prepare("INSERT INTO bookings (user_id, room_id, title, date, start_time, end_time, purpose, attendees_count, status, user_name, user_dept) 
                                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -96,6 +321,40 @@ class BookingModel {
                 $this->lastInsertId = (int)$this->db->lastInsertId();
             }
             return $success;
+        }
+    }
+
+    private function updateBookingData(int $bookingId, array $data): bool {
+        $activityType = $data['activity_type'] ?? 'internal_divisi';
+
+        try {
+            $statement = $this->db->prepare(
+                'UPDATE bookings
+                 SET room_id = ?, title = ?, date = ?, start_time = ?, end_time = ?,
+                     purpose = ?, activity_type = ?, attendees_count = ?, user_name = ?, user_dept = ?
+                 WHERE id = ?'
+            );
+            return $statement->execute([
+                $data['room_id'], $data['title'], $data['date'], $data['start_time'],
+                $data['end_time'], $data['purpose'], $activityType, $data['attendees_count'],
+                $data['user_name'] ?? null, $data['user_dept'] ?? null, $bookingId,
+            ]);
+        } catch (PDOException $exception) {
+            if ($exception->getCode() !== '42S22' && (int) ($exception->errorInfo[1] ?? 0) !== 1054) {
+                throw $exception;
+            }
+
+            $statement = $this->db->prepare(
+                'UPDATE bookings
+                 SET room_id = ?, title = ?, date = ?, start_time = ?, end_time = ?,
+                     purpose = ?, attendees_count = ?, user_name = ?, user_dept = ?
+                 WHERE id = ?'
+            );
+            return $statement->execute([
+                $data['room_id'], $data['title'], $data['date'], $data['start_time'],
+                $data['end_time'], $data['purpose'], $data['attendees_count'],
+                $data['user_name'] ?? null, $data['user_dept'] ?? null, $bookingId,
+            ]);
         }
     }
 
@@ -123,11 +382,14 @@ class BookingModel {
 
         $sql = "SELECT b.*, r.name as room_name, r.code as room_code, r.capacity as room_capacity, r.location as room_location,
                        IFNULL(b.user_name, u.name) as user_name, 
-                       u.email as user_email,
-                       IFNULL(b.user_dept, 'Internal') as user_dept 
+                       u.username as user_email,
+                       IFNULL(b.user_dept, 'Internal') as user_dept,
+                       d.id AS document_id, d.original_name AS document_name
                 FROM bookings b 
                 JOIN rooms r ON b.room_id = r.id 
-                LEFT JOIN users u ON b.user_id = u.id 
+                LEFT JOIN users u ON b.user_id = u.id
+                LEFT JOIN booking_documents d
+                  ON d.booking_id = b.id AND d.document_type = 'supporting_document'
                 WHERE b.status IN ('pending', 'confirmed') 
                 ORDER BY b.date ASC, b.room_id ASC, b.start_time ASC";
         $stmt = $this->db->query($sql);
@@ -222,14 +484,14 @@ class BookingModel {
             $this->db->beginTransaction();
 
             // Setujui pemenang
-            $stmtWin = $this->db->prepare("UPDATE bookings SET status = 'confirmed', attendance_status = 'scheduled' WHERE id = ?");
+            $stmtWin = $this->db->prepare("UPDATE bookings SET status = 'confirmed', status_reason = NULL WHERE id = ?");
             $stmtWin->execute([$winnerId]);
 
             // Batalkan pengajuan yang kalah
             if (!empty($loserIds)) {
                 $placeholders = implode(',', array_fill(0, count($loserIds), '?'));
-                $stmtLose = $this->db->prepare("UPDATE bookings SET status = 'cancelled' WHERE id IN ($placeholders)");
-                $stmtLose->execute($loserIds);
+                $stmtLose = $this->db->prepare("UPDATE bookings SET status = 'cancelled', status_reason = ? WHERE id IN ($placeholders)");
+                $stmtLose->execute(array_merge([BookingLifecycleService::REASON_CONFLICT_NOT_SELECTED], $loserIds));
             }
 
             $this->db->commit();
@@ -242,57 +504,63 @@ class BookingModel {
 
     public function getByUserId($userId) {
         if (!$this->db) return [];
-        $stmt = $this->db->prepare("SELECT b.*, r.name as room_name, r.code as room_code, r.location 
+        $stmt = $this->db->prepare("SELECT b.*, r.name as room_name, r.code as room_code, r.location,
+                                           d.id AS document_id, d.original_name AS document_name,
+                                           d.mime_type AS document_mime_type, d.size_bytes AS document_size_bytes
                                     FROM bookings b 
                                     JOIN rooms r ON b.room_id = r.id 
+                                    LEFT JOIN booking_documents d
+                                      ON d.booking_id = b.id AND d.document_type = 'supporting_document'
                                     WHERE b.user_id = ? 
                                     ORDER BY CASE WHEN b.status = 'pending' THEN 0 ELSE 1 END, b.id DESC");
         $stmt->execute([$userId]);
         return $stmt->fetchAll();
     }
 
-    public function getAttendanceActionState(array $booking, ?DateTimeImmutable $now = null) {
-        return AttendancePolicy::getActionState($booking, $now);
-    }
-
-    /**
-     * Memproses booking melewati grace period dan rapat yang telah mencapai
-     * jam selesai. Dipanggil oleh halaman user, admin, dan polling display;
-     * scripts/process_attendance.php juga dapat dijadwalkan tiap menit.
-     */
-    public function processAutomaticAttendanceTransitions() {
-        return $this->attendanceService->processAutomaticTransitions();
-    }
-
-    public function checkIn($bookingId, $userId) {
-        return $this->attendanceService->checkIn($bookingId, $userId);
-    }
-
-    public function checkOut($bookingId, $userId) {
-        return $this->attendanceService->checkOut($bookingId, $userId);
+    public function getById(int $bookingId) {
+        if (!$this->db || $bookingId <= 0) return false;
+        $stmt = $this->db->prepare(
+            "SELECT b.*, r.name AS room_name, r.code AS room_code, r.location,
+                    IFNULL(b.user_name, u.name) AS requester_name,
+                    IFNULL(b.user_dept, u.department) AS requester_department,
+                    d.id AS document_id, d.original_name AS document_name,
+                    d.mime_type AS document_mime_type, d.size_bytes AS document_size_bytes
+             FROM bookings b
+             JOIN rooms r ON r.id = b.room_id
+             JOIN users u ON u.id = b.user_id
+             LEFT JOIN booking_documents d
+               ON d.booking_id = b.id AND d.document_type = 'supporting_document'
+             WHERE b.id = ?
+             LIMIT 1"
+        );
+        $stmt->execute([$bookingId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function cancel($bookingId, $userId, $isAdmin = false) {
         if (!$this->db) return false;
         if ($isAdmin) {
-            $stmt = $this->db->prepare("UPDATE bookings SET status = 'cancelled' WHERE id = ?");
-            return $stmt->execute([$bookingId]);
+            $stmt = $this->db->prepare("UPDATE bookings SET status = 'cancelled', status_reason = ? WHERE id = ?");
+            return $stmt->execute([BookingLifecycleService::REASON_CANCELLED_BY_ADMIN, $bookingId]);
         } else {
-            $stmt = $this->db->prepare("UPDATE bookings SET status = 'cancelled' WHERE id = ? AND user_id = ? AND status IN ('pending', 'confirmed') AND (attendance_status IS NULL OR attendance_status = 'scheduled')");
-            return $stmt->execute([$bookingId, $userId]);
+            $stmt = $this->db->prepare("UPDATE bookings SET status = 'cancelled', status_reason = ? WHERE id = ? AND user_id = ? AND status IN ('pending', 'confirmed')");
+            return $stmt->execute([BookingLifecycleService::REASON_CANCELLED_BY_USER, $bookingId, $userId]);
         }
     }
 
     public function getAllBookings($search = '', $status = '') {
         if (!$this->db) return [];
-        $this->processAutomaticAttendanceTransitions();
         $sql = "SELECT b.*, r.name as room_name, r.code as room_code, 
                        IFNULL(b.user_name, u.name) as user_name, 
-                       u.email as user_email,
-                       IFNULL(b.user_dept, 'Internal') as user_dept 
+                       u.username as user_email,
+                       IFNULL(b.user_dept, 'Internal') as user_dept,
+                       d.id AS document_id, d.original_name AS document_name,
+                       d.mime_type AS document_mime_type, d.size_bytes AS document_size_bytes
                 FROM bookings b 
                 JOIN rooms r ON b.room_id = r.id 
                 JOIN users u ON b.user_id = u.id 
+                LEFT JOIN booking_documents d
+                  ON d.booking_id = b.id AND d.document_type = 'supporting_document'
                 WHERE 1=1";
         $params = [];
 
@@ -322,15 +590,42 @@ class BookingModel {
         if (!in_array($status, $allowed, true)) {
             return false;
         }
-        $attendanceStatus = $status === 'confirmed' ? 'scheduled' : null;
-        $stmt = $this->db->prepare("UPDATE bookings SET status = ?, attendance_status = ? WHERE id = ?");
-        return $stmt->execute([$status, $attendanceStatus, $bookingId]);
+        $reason = $status === 'cancelled'
+            ? BookingLifecycleService::REASON_CANCELLED_BY_ADMIN
+            : null;
+        $stmt = $this->db->prepare("UPDATE bookings SET status = ?, status_reason = ? WHERE id = ?");
+        return $stmt->execute([$status, $reason, $bookingId]);
     }
 
     public function delete($bookingId) {
         if (!$this->db) return false;
+        $documents = $this->documentFilesForBooking((int) $bookingId);
         $stmt = $this->db->prepare("DELETE FROM bookings WHERE id = ?");
-        return $stmt->execute([$bookingId]);
+        $deleted = $stmt->execute([$bookingId]);
+        if ($deleted) {
+            $this->removeDocumentFiles($documents);
+        }
+        return $deleted;
+    }
+
+    private function documentFilesForBooking(int $bookingId): array {
+        if ($bookingId <= 0) return [];
+        try {
+            $statement = $this->db->prepare('SELECT stored_name FROM booking_documents WHERE booking_id = ?');
+            $statement->execute([$bookingId]);
+            return $statement->fetchAll(PDO::FETCH_COLUMN);
+        } catch (Throwable $exception) {
+            error_log('Gagal membaca file dokumen booking: ' . $exception->getMessage());
+            return [];
+        }
+    }
+
+    private function removeDocumentFiles(array $storedNames): void {
+        if (!$storedNames) return;
+        $service = new BookingDocumentService();
+        foreach ($storedNames as $storedName) {
+            $service->remove((string) $storedName);
+        }
     }
 
     public function getCalendarEvents($roomId = 0) {
@@ -357,7 +652,7 @@ class BookingModel {
         if (!$this->db) return [];
         $sql = "SELECT b.*, r.name as room_name, r.code as room_code, r.location as room_location,
                        IFNULL(b.user_name, u.name) as user_name, 
-                       u.email as user_email,
+                       u.username as user_email,
                        IFNULL(b.user_dept, 'Internal') as user_dept 
                 FROM bookings b 
                 JOIN rooms r ON b.room_id = r.id 
@@ -479,7 +774,7 @@ class BookingModel {
         $sql = "SELECT b.*, r.name as room_name, r.code as room_code, r.capacity as room_capacity,
                        r.location as room_location, r.floor as room_floor,
                        IFNULL(b.user_name, u.name) as user_name,
-                       u.email as user_email,
+                       u.username as user_email,
                        IFNULL(NULLIF(b.user_dept, ''), 'Internal') as user_dept
                 FROM bookings b
                 JOIN rooms r ON b.room_id = r.id

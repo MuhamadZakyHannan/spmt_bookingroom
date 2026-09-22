@@ -224,6 +224,11 @@
                                         <div class="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
                                             <strong><?php echo htmlspecialchars($b['user_name']); ?></strong> • <?php echo htmlspecialchars($b['user_dept'] ?? '-'); ?>
                                         </div>
+                                        <?php if (!empty($b['document_id'])): ?>
+                                            <a href="booking_document.php?id=<?php echo (int) $b['document_id']; ?>" target="_blank" rel="noopener" class="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 hover:bg-violet-100 transition" title="<?php echo htmlspecialchars($b['document_name']); ?>">
+                                                <i class="fas fa-file-lines"></i> Surat Pendukung
+                                            </a>
+                                        <?php endif; ?>
                                     </td>
 
                                     <!-- Jam -->
@@ -453,6 +458,7 @@
                 <?php foreach ($bookings as $b): ?>
                     <?php 
                         $isPending = ($b['status'] === 'pending'); 
+                        $isExpired = is_booking_expired($b);
                         $purposeText = $b['purpose'] ?: 'Tanpa catatan tambahan.';
                         
                         $modalPayload = [
@@ -466,7 +472,8 @@
                             'date' => format_date($b['date']),
                             'time' => format_time($b['start_time']) . ' - ' . format_time($b['end_time']) . ' WIB',
                             'attendees' => $b['attendees_count'] . ' Orang',
-                            'status' => $b['status']
+                            'status' => $b['status'],
+                            'status_reason' => $b['status_reason'] ?? null
                         ];
                     ?>
                     <tr id="booking-row-<?php echo $b['id']; ?>" class="hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition <?php echo $isPending ? 'bg-amber-50/50 dark:bg-amber-950/25 border-l-4 border-amber-500' : ''; ?>">
@@ -493,6 +500,12 @@
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
                                     <i class="fas fa-tag text-[9px] text-amber-500"></i> <?php echo htmlspecialchars($actInfo['label']); ?>
                                 </span>
+
+                                <?php if (!empty($b['document_id'])): ?>
+                                    <a href="booking_document.php?id=<?php echo (int) $b['document_id']; ?>" target="_blank" rel="noopener" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 hover:bg-violet-100 transition" title="<?php echo htmlspecialchars($b['document_name']); ?>">
+                                        <i class="fas fa-file-lines"></i> Surat Pendukung
+                                    </a>
+                                <?php endif; ?>
 
                                 <?php if (isset($conflict_booking_ids[$b['id']])): ?>
                                     <button type="button" onclick="switchBookingTab('conflicts')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 hover:bg-rose-200 transition shadow-xs cursor-pointer" title="Jadwal ini bertabrakan! Klik untuk membuka analisis SAW.">
@@ -550,19 +563,14 @@
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
                                     <i class="fas fa-check-double text-blue-600"></i> Selesai
                                 </span>
+                            <?php elseif ($isExpired): ?>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
+                                    <i class="fas fa-clock-rotate-left text-slate-500"></i> Kedaluwarsa
+                                </span>
                             <?php else: ?>
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800">
                                     <i class="fas fa-times-circle text-rose-600"></i> Ditolak / Batal
                                 </span>
-                            <?php endif; ?>
-                            <?php if (($b['attendance_status'] ?? null) === 'scheduled'): ?>
-                                <div class="mt-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400"><i class="fas fa-user-clock"></i> Menunggu check-in</div>
-                            <?php elseif (($b['attendance_status'] ?? null) === 'checked_in'): ?>
-                                <div class="mt-1 text-[10px] font-bold text-violet-700 dark:text-violet-300"><i class="fas fa-sign-in-alt"></i> Sudah check-in</div>
-                            <?php elseif (($b['attendance_status'] ?? null) === 'checked_out'): ?>
-                                <div class="mt-1 text-[10px] font-bold text-blue-700 dark:text-blue-300"><i class="fas fa-sign-out-alt"></i> Sudah check-out</div>
-                            <?php elseif (($b['attendance_status'] ?? null) === 'no_show'): ?>
-                                <div class="mt-1 text-[10px] font-bold text-rose-700 dark:text-rose-300"><i class="fas fa-user-times"></i> No-show</div>
                             <?php endif; ?>
                         </td>
 
@@ -581,6 +589,11 @@
                         <!-- 7. Aksi -->
                         <td class="py-3.5 px-4 text-center whitespace-nowrap overflow-hidden">
                             <div class="flex items-center justify-center gap-1.5">
+                                <?php if (in_array($b['status'], ['pending', 'confirmed'], true)): ?>
+                                    <a href="edit_booking.php?id=<?php echo (int) $b['id']; ?>&amp;return_to=admin_bookings.php" class="p-1.5 px-2.5 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/40 dark:hover:bg-brand-900/50 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-bold rounded-lg transition text-xs flex items-center gap-1 cursor-pointer" title="Edit Booking">
+                                        <i class="fas fa-pen-to-square"></i>
+                                    </a>
+                                <?php endif; ?>
                                 <?php if ($b['status'] === 'pending'): ?>
                                     <!-- Aksi TERIMA -->
                                     <form method="POST" action="admin_bookings.php" class="inline-block">
@@ -737,8 +750,10 @@
             'end_time' => substr($b['end_time'], 0, 5),
             'attendees_count' => (int)$b['attendees_count'],
             'status' => $b['status'],
-            'attendance_status' => $b['attendance_status'] ?? null,
+            'status_reason' => $b['status_reason'] ?? null,
             'activity_type_label' => $actLabel,
+            'document_id' => (int)($b['document_id'] ?? 0),
+            'document_name' => $b['document_name'] ?? '',
             'is_conflict' => isset($conflict_booking_ids[$b['id']])
         ];
     }, $bookings)); ?>;
@@ -1007,7 +1022,8 @@
                 date: b.formatted_date,
                 time: b.start_time + ' - ' + b.end_time + ' WIB',
                 attendees: b.attendees_count + ' Orang',
-                status: b.status
+                status: b.status,
+                status_reason: b.status_reason || null
             };
 
             const encodedData = escapeHtml(JSON.stringify(modalData));
@@ -1037,6 +1053,12 @@
                         <i class="fas fa-check-double text-blue-600"></i> Selesai
                     </span>
                 `;
+            } else if (b.status_reason === 'expired') {
+                statusHtml = `
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
+                        <i class="fas fa-clock-rotate-left text-slate-500"></i> Kedaluwarsa
+                    </span>
+                `;
             } else {
                 statusHtml = `
                     <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800">
@@ -1045,20 +1067,16 @@
                 `;
             }
 
-            if (b.attendance_status === 'scheduled') {
-                statusHtml += `<div class="mt-1 text-[10px] font-semibold text-slate-500 dark:text-slate-400"><i class="fas fa-user-clock"></i> Menunggu check-in</div>`;
-            } else if (b.attendance_status === 'checked_in') {
-                statusHtml += `<div class="mt-1 text-[10px] font-bold text-violet-700 dark:text-violet-300"><i class="fas fa-sign-in-alt"></i> Sudah check-in</div>`;
-            } else if (b.attendance_status === 'checked_out') {
-                statusHtml += `<div class="mt-1 text-[10px] font-bold text-blue-700 dark:text-blue-300"><i class="fas fa-sign-out-alt"></i> Sudah check-out</div>`;
-            } else if (b.attendance_status === 'no_show') {
-                statusHtml += `<div class="mt-1 text-[10px] font-bold text-rose-700 dark:text-rose-300"><i class="fas fa-user-times"></i> No-show</div>`;
-            }
-
             let actionHtml = '';
+            const editAction = (b.status === 'pending' || b.status === 'confirmed') ? `
+                <a href="edit_booking.php?id=${b.id}&amp;return_to=admin_bookings.php" class="p-1.5 px-2.5 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/40 dark:hover:bg-brand-900/50 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-bold rounded-lg transition text-xs flex items-center gap-1" title="Edit Booking">
+                    <i class="fas fa-pen-to-square"></i>
+                </a>
+            ` : '';
             if (isPending) {
                 actionHtml = `
                     <div class="flex items-center justify-center gap-1.5">
+                        ${editAction}
                         <form method="POST" action="admin_bookings.php" class="inline-block">
                             ${csrfHiddenField}
                             <input type="hidden" name="action" value="update_status">
@@ -1081,6 +1099,7 @@
             } else {
                 actionHtml = `
                     <div class="flex items-center justify-center gap-1.5">
+                        ${editAction}
                         <form method="POST" action="admin_bookings.php" class="inline-block" onsubmit="return confirm('Hapus permanen data pemesanan ini?')">
                             ${csrfHiddenField}
                             <input type="hidden" name="action" value="delete">
@@ -1112,6 +1131,11 @@
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
                                     <i class="fas fa-tag text-[9px] text-amber-500"></i> ${escapeHtml(b.activity_type_label)}
                                 </span>
+                            ` : ''}
+                            ${b.document_id ? `
+                                <a href="booking_document.php?id=${b.document_id}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 hover:bg-violet-100 transition" title="${escapeHtml(b.document_name || '')}">
+                                    <i class="fas fa-file-lines"></i> Surat Pendukung
+                                </a>
                             ` : ''}
                             ${b.is_conflict ? `
                                 <button type="button" onclick="switchBookingTab('conflicts')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 hover:bg-rose-200 transition shadow-xs cursor-pointer" title="Jadwal ini bertabrakan! Klik untuk membuka analisis SAW.">

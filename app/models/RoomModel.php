@@ -107,8 +107,23 @@ class RoomModel {
 
     public function delete($id) {
         if (!$this->db) return false;
+        $documents = [];
+        try {
+            $documentStatement = $this->db->prepare(
+                'SELECT d.stored_name FROM booking_documents d JOIN bookings b ON b.id = d.booking_id WHERE b.room_id = ?'
+            );
+            $documentStatement->execute([$id]);
+            $documents = $documentStatement->fetchAll(PDO::FETCH_COLUMN);
+        } catch (Throwable $exception) {
+            error_log('Gagal membaca dokumen ruangan: ' . $exception->getMessage());
+        }
         $stmt = $this->db->prepare("DELETE FROM rooms WHERE id = ?");
-        return $stmt->execute([$id]);
+        $deleted = $stmt->execute([$id]);
+        if ($deleted && $documents) {
+            $service = new BookingDocumentService();
+            foreach ($documents as $storedName) $service->remove((string) $storedName);
+        }
+        return $deleted;
     }
 
     public function getTotalRoomsCount() {

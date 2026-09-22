@@ -54,13 +54,14 @@
             </div>
 
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Alamat Email Perusahaan</label>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Username</label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                        <i class="fas fa-envelope"></i>
+                        <i class="fas fa-at"></i>
                     </div>
-                    <input type="email" name="email" autocomplete="email" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="nama@company.com" value="<?php echo htmlspecialchars($email ?? ''); ?>" required>
+                    <input type="text" name="username" autocomplete="username" minlength="3" maxlength="100" pattern="[A-Za-z0-9._\-]+" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="Contoh: fikus" value="<?php echo htmlspecialchars($username ?? ''); ?>" required>
                 </div>
+                <p class="mt-1.5 text-[10px] text-slate-500 dark:text-slate-400">Minimal 3 karakter; gunakan huruf, angka, titik, garis bawah, atau tanda hubung.</p>
             </div>
 
             <div>
@@ -69,7 +70,7 @@
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                         <i class="fas fa-lock"></i>
                     </div>
-                    <input type="password" name="password" autocomplete="new-password" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="Minimal 6 karakter" required>
+                    <input type="password" name="password" autocomplete="new-password" minlength="8" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="Min. 8 karakter, angka & simbol" required>
                 </div>
             </div>
 

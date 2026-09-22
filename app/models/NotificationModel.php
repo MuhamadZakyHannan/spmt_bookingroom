@@ -31,11 +31,40 @@ class NotificationModel {
                  CROSS JOIN users u
                  WHERE b.id = ?
                    AND b.status = 'pending'
-                   AND u.role = 'admin'"
+                   AND u.role IN ('admin', 'super_admin')"
             );
             return $stmt->execute([$bookingId]);
         } catch (Throwable $e) {
             error_log('Gagal membuat notifikasi booking: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Menyegarkan isi notifikasi setelah pengajuan pending diedit dan memastikan
+     * administrator baru tetap menerima notifikasi untuk booking tersebut.
+     */
+    public function refreshForPendingBooking(int $bookingId): bool {
+        if (!$this->db || $bookingId <= 0) return false;
+
+        try {
+            $statement = $this->db->prepare(
+                "UPDATE notifications n
+                 JOIN bookings b ON b.id = n.booking_id
+                 JOIN users requester ON requester.id = b.user_id
+                 JOIN rooms r ON r.id = b.room_id
+                 SET n.title = 'Booking diperbarui dan menunggu persetujuan',
+                     n.message = CONCAT(IFNULL(b.user_name, requester.name), ' memperbarui ', b.title, ' di ', r.name),
+                     n.is_read = 0,
+                     n.read_at = NULL
+                 WHERE n.booking_id = ?
+                   AND n.type = 'booking_pending'
+                   AND b.status = 'pending'"
+            );
+            $statement->execute([$bookingId]);
+            return $this->createForPendingBooking($bookingId);
+        } catch (Throwable $exception) {
+            error_log('Gagal menyegarkan notifikasi booking: ' . $exception->getMessage());
             return false;
         }
     }
@@ -46,9 +75,6 @@ class NotificationModel {
      */
     public function createForAttendanceEvent($bookingId, $type) {
         $content = [
-            'attendance_check_in' => ['Check-in ruang rapat', ' telah check-in untuk '],
-            'attendance_check_out' => ['Check-out ruang rapat', ' telah check-out dari '],
-            'attendance_no_show' => ['Booking no-show', ' tidak check-in tepat waktu untuk '],
         ];
 
         if (!$this->db || $bookingId <= 0 || !isset($content[$type])) return false;
@@ -65,7 +91,7 @@ class NotificationModel {
                  JOIN users requester ON requester.id = b.user_id
                  JOIN rooms r ON r.id = b.room_id
                  CROSS JOIN users u
-                 WHERE b.id = ? AND u.role = 'admin'"
+                 WHERE b.id = ? AND u.role IN ('admin', 'super_admin')"
             );
             return $stmt->execute([$type, $title, $verb, $bookingId]);
         } catch (Throwable $e) {

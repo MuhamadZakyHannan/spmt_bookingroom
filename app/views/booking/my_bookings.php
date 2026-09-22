@@ -1,14 +1,11 @@
-<?php
-$attendanceUi = AttendancePresentation::actions();
-require_once __DIR__ . '/../layouts/header.php';
-?>
+<?php require_once __DIR__ . '/../layouts/header.php'; ?>
 
 <div class="space-y-6 max-w-7xl mx-auto">
     <!-- Header Section -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <div class="flex items-center gap-2 mb-1">
-                <?php if (($_SESSION['role'] ?? '') !== 'admin'): ?>
+                <?php if (!is_admin()): ?>
                     <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
                         <i class="fas fa-bookmark me-1"></i> PORTAL USER
                     </span>
@@ -60,6 +57,7 @@ require_once __DIR__ . '/../layouts/header.php';
                 <option value="pending">⏳ Menunggu Persetujuan</option>
                 <option value="confirmed">✓ Disetujui (Confirmed)</option>
                 <option value="completed">✓ Selesai</option>
+                <option value="expired">⌛ Kedaluwarsa</option>
                 <option value="cancelled">✕ Dibatalkan / Ditolak</option>
             </select>
         </div>
@@ -90,12 +88,10 @@ require_once __DIR__ . '/../layouts/header.php';
                     $isPending = ($b['status'] === 'pending');
                     $isCompleted = ($b['status'] === 'completed');
                     $isCancelled = ($b['status'] === 'cancelled');
-                    $attendanceStatus = $b['attendance_status'] ?? null;
-                    $attendanceAction = $b['attendance_action'] ?? [];
-
+                    $isExpired = is_booking_expired($b);
                     $purposeText = $b['purpose'] ?: 'Tidak ada catatan agenda tambahan.';
                     $isLong = strlen($purposeText) > 60;
-                    $borderColor = $isPending ? 'border-l-amber-500' : ($isConfirmed ? 'border-l-emerald-500' : ($isCompleted ? 'border-l-blue-500' : 'border-l-rose-500'));
+                    $borderColor = $isExpired ? 'border-l-slate-400' : ($isPending ? 'border-l-amber-500' : ($isConfirmed ? 'border-l-emerald-500' : ($isCompleted ? 'border-l-blue-500' : 'border-l-rose-500')));
                 ?>
                 <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/80 border-l-4 <?php echo $borderColor; ?> shadow-sm p-4 sm:p-5 hover:shadow-md transition <?php echo $isPending ? 'bg-amber-50/20 dark:bg-amber-950/10' : ''; ?>">
                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -114,26 +110,13 @@ require_once __DIR__ . '/../layouts/header.php';
                                     <span class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
                                         <i class="fas fa-check-double text-blue-600"></i> Selesai
                                     </span>
+                                <?php elseif ($isExpired): ?>
+                                    <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
+                                        <i class="fas fa-clock-rotate-left text-slate-500"></i> Kedaluwarsa
+                                    </span>
                                 <?php else: ?>
                                     <span class="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
                                         <i class="fas fa-times-circle text-rose-600"></i> Dibatalkan / Ditolak
-                                    </span>
-                                <?php endif; ?>
-                                <?php if ($attendanceStatus === 'scheduled'): ?>
-                                    <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
-                                        <i class="fas fa-user-clock"></i> Belum Check-in
-                                    </span>
-                                <?php elseif ($attendanceStatus === 'checked_in'): ?>
-                                    <span class="px-2.5 py-1 bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 border border-violet-200 dark:border-violet-800 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1 animate-pulse">
-                                        <i class="fas fa-sign-in-alt"></i> Sudah Check-in
-                                    </span>
-                                <?php elseif ($attendanceStatus === 'checked_out'): ?>
-                                    <span class="px-2.5 py-1 bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
-                                        <i class="fas fa-sign-out-alt"></i> Sudah Check-out
-                                    </span>
-                                <?php elseif ($attendanceStatus === 'no_show'): ?>
-                                    <span class="px-2.5 py-1 bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
-                                        <i class="fas fa-user-times"></i> No-show
                                     </span>
                                 <?php endif; ?>
                                 <span class="text-[11px] text-slate-400 font-mono">ID: #<?php echo $b['id']; ?></span>
@@ -161,6 +144,11 @@ require_once __DIR__ . '/../layouts/header.php';
                                     <i class="fas fa-users text-brand-500"></i>
                                     <span><?php echo $b['attendees_count']; ?> Peserta</span>
                                 </div>
+                                <?php if (!empty($b['document_id'])): ?>
+                                    <a href="booking_document.php?id=<?php echo (int) $b['document_id']; ?>" target="_blank" rel="noopener" class="px-2.5 py-1 bg-violet-50 dark:bg-violet-950/40 rounded-lg border border-violet-200 dark:border-violet-800 text-xs font-semibold text-violet-700 dark:text-violet-300 flex items-center gap-1.5 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition" title="<?php echo htmlspecialchars($b['document_name']); ?>">
+                                        <i class="fas fa-file-lines"></i><span>Surat Pendukung</span>
+                                    </a>
+                                <?php endif; ?>
                             </div>
 
                             <!-- Catatan Agenda with Baca Selengkapnya -->
@@ -202,35 +190,15 @@ require_once __DIR__ . '/../layouts/header.php';
 
                         <!-- Actions -->
                         <div class="flex sm:flex-row lg:flex-col gap-2 items-stretch lg:items-end justify-end border-t lg:border-t-0 pt-3 lg:pt-0 shrink-0">
-                            <?php if (!empty($attendanceAction['can_check_in'])): ?>
-                                <form method="POST" action="my_bookings.php" class="w-full sm:w-auto">
-                                    <?php echo csrf_field(); ?>
-                                    <input type="hidden" name="action" value="check_in">
-                                    <input type="hidden" name="booking_id" value="<?php echo $b['id']; ?>">
-                                    <button type="submit" class="<?php echo htmlspecialchars($attendanceUi['check_in']['button_class'], ENT_QUOTES, 'UTF-8'); ?>">
-                                        <i class="<?php echo htmlspecialchars($attendanceUi['check_in']['icon'], ENT_QUOTES, 'UTF-8'); ?>"></i>
-                                        <?php echo htmlspecialchars($attendanceUi['check_in']['label'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </button>
-                                </form>
-                            <?php elseif (!empty($attendanceAction['can_check_out'])): ?>
-                                <form method="POST" action="my_bookings.php" class="w-full sm:w-auto" onsubmit="return confirm('Akhiri penggunaan ruangan sekarang?')">
-                                    <?php echo csrf_field(); ?>
-                                    <input type="hidden" name="action" value="check_out">
-                                    <input type="hidden" name="booking_id" value="<?php echo $b['id']; ?>">
-                                    <button type="submit" class="<?php echo htmlspecialchars($attendanceUi['check_out']['button_class'], ENT_QUOTES, 'UTF-8'); ?>">
-                                        <i class="<?php echo htmlspecialchars($attendanceUi['check_out']['icon'], ENT_QUOTES, 'UTF-8'); ?>"></i>
-                                        <?php echo htmlspecialchars($attendanceUi['check_out']['label'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </button>
-                                </form>
+                            <?php if ($isPending): ?>
+                                <a href="edit_booking.php?id=<?php echo (int) $b['id']; ?>" class="w-full sm:w-auto px-3.5 py-2 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/40 dark:hover:bg-brand-900/50 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                                    <i class="fas fa-pen-to-square"></i> Edit Pengajuan
+                                </a>
                             <?php endif; ?>
-
-                            <?php if ($isConfirmed && $attendanceStatus === 'scheduled' && !empty($attendanceAction['message'])): ?>
-                                <span class="max-w-56 text-[10px] text-slate-500 dark:text-slate-400 text-center lg:text-right">
-                                    <?php echo htmlspecialchars($attendanceAction['message']); ?>
-                                </span>
-                            <?php endif; ?>
-
-                            <?php if ($isPending || ($isConfirmed && $attendanceStatus === 'scheduled')): ?>
+                            <?php if ($isPending || $isConfirmed): ?>
+                                <a href="booking_document_upload.php?booking_id=<?php echo (int) $b['id']; ?>" class="w-full sm:w-auto px-3.5 py-2 bg-violet-50 hover:bg-violet-100 dark:bg-violet-950/40 dark:hover:bg-violet-900/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                                    <i class="fas fa-file-arrow-up"></i> <?php echo empty($b['document_id']) ? 'Tambah' : 'Ganti'; ?> Surat Pendukung
+                                </a>
                                 <form method="POST" action="my_bookings.php" class="w-full sm:w-auto" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pemesanan ini?')">
                                     <?php echo csrf_field(); ?>
                                     <input type="hidden" name="action" value="cancel">
@@ -302,7 +270,6 @@ require_once __DIR__ . '/../layouts/header.php';
 </div>
 
 <script>
-    const attendanceUi = <?php echo json_encode($attendanceUi, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
     const rawMyBookingsList = <?php echo json_encode(array_map(function($b) {
         $purpose = $b['purpose'] ?: 'Tidak ada catatan agenda tambahan.';
         return [
@@ -320,8 +287,9 @@ require_once __DIR__ . '/../layouts/header.php';
             'attendees_count' => (int)$b['attendees_count'],
             'purpose' => $purpose,
             'status' => $b['status'],
-            'attendance_status' => $b['attendance_status'] ?? null,
-            'attendance_action' => $b['attendance_action'] ?? []
+            'status_reason' => $b['status_reason'] ?? null,
+            'document_id' => (int)($b['document_id'] ?? 0),
+            'document_name' => $b['document_name'] ?? ''
         ];
     }, $my_bookings)); ?>;
 
@@ -461,7 +429,9 @@ require_once __DIR__ . '/../layouts/header.php';
         }
 
         let filtered = rawMyBookingsList.filter(b => {
-            if (selectedStatus && b.status !== selectedStatus) return false;
+            if (selectedStatus === 'expired' && b.status_reason !== 'expired') return false;
+            if (selectedStatus === 'cancelled' && (b.status !== 'cancelled' || b.status_reason === 'expired')) return false;
+            if (selectedStatus && selectedStatus !== 'expired' && b.status !== selectedStatus) return false;
             if (!q) return true;
 
             const title = (b.title || '').toLowerCase();
@@ -527,8 +497,9 @@ require_once __DIR__ . '/../layouts/header.php';
             const isPending = (b.status === 'pending');
             const isCompleted = (b.status === 'completed');
             const isCancelled = (b.status === 'cancelled');
+            const isExpired = isCancelled && b.status_reason === 'expired';
 
-            const borderColor = isPending ? 'border-l-amber-500' : (isConfirmed ? 'border-l-emerald-500' : (isCompleted ? 'border-l-blue-500' : 'border-l-rose-500'));
+            const borderColor = isExpired ? 'border-l-slate-400' : (isPending ? 'border-l-amber-500' : (isConfirmed ? 'border-l-emerald-500' : (isCompleted ? 'border-l-blue-500' : 'border-l-rose-500')));
             const bgClass = isPending ? 'bg-amber-50/20 dark:bg-amber-950/10' : '';
 
             let badgeHtml = '';
@@ -550,23 +521,18 @@ require_once __DIR__ . '/../layouts/header.php';
                         <i class="fas fa-check-double text-blue-600"></i> Selesai
                     </span>
                 `;
+            } else if (isExpired) {
+                badgeHtml = `
+                    <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
+                        <i class="fas fa-clock-rotate-left text-slate-500"></i> Kedaluwarsa
+                    </span>
+                `;
             } else {
                 badgeHtml = `
                     <span class="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
                         <i class="fas fa-times-circle text-rose-600"></i> Dibatalkan / Ditolak
                     </span>
                 `;
-            }
-
-            let attendanceBadgeHtml = '';
-            if (b.attendance_status === 'scheduled') {
-                attendanceBadgeHtml = `<span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1"><i class="fas fa-user-clock"></i> Belum Check-in</span>`;
-            } else if (b.attendance_status === 'checked_in') {
-                attendanceBadgeHtml = `<span class="px-2.5 py-1 bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 border border-violet-200 dark:border-violet-800 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1 animate-pulse"><i class="fas fa-sign-in-alt"></i> Sudah Check-in</span>`;
-            } else if (b.attendance_status === 'checked_out') {
-                attendanceBadgeHtml = `<span class="px-2.5 py-1 bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1"><i class="fas fa-sign-out-alt"></i> Sudah Check-out</span>`;
-            } else if (b.attendance_status === 'no_show') {
-                attendanceBadgeHtml = `<span class="px-2.5 py-1 bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1"><i class="fas fa-user-times"></i> No-show</span>`;
             }
 
             const displayTitle = highlightText(b.title, highlightQuery);
@@ -588,36 +554,20 @@ require_once __DIR__ . '/../layouts/header.php';
             }));
 
             let actionHtml = '';
-            const attendanceAction = b.attendance_action || {};
-            if (attendanceAction.can_check_in) {
+            if (isPending) {
                 actionHtml += `
-                    <form method="POST" action="my_bookings.php" class="w-full sm:w-auto">
-                        ${csrfHiddenField}
-                        <input type="hidden" name="action" value="check_in">
-                        <input type="hidden" name="booking_id" value="${b.id}">
-                        <button type="submit" class="${attendanceUi.check_in.button_class}">
-                            <i class="${attendanceUi.check_in.icon}"></i> ${attendanceUi.check_in.label}
-                        </button>
-                    </form>`;
-            } else if (attendanceAction.can_check_out) {
+                    <a href="edit_booking.php?id=${b.id}" class="w-full sm:w-auto px-3.5 py-2 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/40 dark:hover:bg-brand-900/50 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                        <i class="fas fa-pen-to-square"></i> Edit Pengajuan
+                    </a>
+                `;
+            }
+            if (isPending || isConfirmed) {
                 actionHtml += `
-                    <form method="POST" action="my_bookings.php" class="w-full sm:w-auto" onsubmit="return confirm('Akhiri penggunaan ruangan sekarang?')">
-                        ${csrfHiddenField}
-                        <input type="hidden" name="action" value="check_out">
-                        <input type="hidden" name="booking_id" value="${b.id}">
-                        <button type="submit" class="${attendanceUi.check_out.button_class}">
-                            <i class="${attendanceUi.check_out.icon}"></i> ${attendanceUi.check_out.label}
-                        </button>
-                    </form>`;
-            }
-
-            if (isConfirmed && b.attendance_status === 'scheduled' && attendanceAction.message) {
-                actionHtml += `<span class="max-w-56 text-[10px] text-slate-500 dark:text-slate-400 text-center lg:text-right">${escapeHtml(attendanceAction.message)}</span>`;
-            }
-
-            if (isPending || (isConfirmed && b.attendance_status === 'scheduled')) {
-                actionHtml = `
-                    ${actionHtml}
+                    <a href="booking_document_upload.php?booking_id=${b.id}" class="w-full sm:w-auto px-3.5 py-2 bg-violet-50 hover:bg-violet-100 dark:bg-violet-950/40 dark:hover:bg-violet-900/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                        <i class="fas fa-file-arrow-up"></i> ${b.document_id ? 'Ganti' : 'Tambah'} Surat Pendukung
+                    </a>
+                `;
+                actionHtml += `
                     <form method="POST" action="my_bookings.php" class="w-full sm:w-auto" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pemesanan ini?')">
                         ${csrfHiddenField}
                         <input type="hidden" name="action" value="cancel">
@@ -641,7 +591,6 @@ require_once __DIR__ . '/../layouts/header.php';
                         <div class="space-y-2 flex-grow">
                             <div class="flex flex-wrap items-center gap-2">
                                 ${badgeHtml}
-                                ${attendanceBadgeHtml}
                                 <span class="text-[11px] text-slate-400 font-mono">ID: #${b.id}</span>
                             </div>
 
@@ -666,6 +615,11 @@ require_once __DIR__ . '/../layouts/header.php';
                                     <i class="fas fa-users text-brand-500"></i>
                                     <span>${b.attendees_count} Peserta</span>
                                 </div>
+                                ${b.document_id ? `
+                                    <a href="booking_document.php?id=${b.document_id}" target="_blank" rel="noopener" class="px-2.5 py-1 bg-violet-50 dark:bg-violet-950/40 rounded-lg border border-violet-200 dark:border-violet-800 text-xs font-semibold text-violet-700 dark:text-violet-300 flex items-center gap-1.5 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition" title="${escapeHtml(b.document_name)}">
+                                        <i class="fas fa-file-lines"></i><span>Surat Pendukung</span>
+                                    </a>
+                                ` : ''}
                             </div>
 
                             ${b.purpose ? `

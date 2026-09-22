@@ -37,23 +37,12 @@ if (!defined('DB_HOST')) define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
 if (!defined('DB_USER')) define('DB_USER', getenv('DB_USER') ?: 'root');
 if (!defined('DB_PASS')) define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
 if (!defined('DB_NAME')) define('DB_NAME', getenv('DB_NAME') ?: 'meetspace_db');
-
-// Attendance Feature Configuration
-if (!defined('ATTENDANCE_CHECK_IN_EARLY_MINUTES')) {
-    $attendanceEarlyEnv = filter_var(
-        getenv('ATTENDANCE_CHECK_IN_EARLY_MINUTES'),
-        FILTER_VALIDATE_INT,
-        ['options' => ['min_range' => 0]]
-    );
-    define('ATTENDANCE_CHECK_IN_EARLY_MINUTES', $attendanceEarlyEnv !== false ? $attendanceEarlyEnv : 15);
-}
-if (!defined('ATTENDANCE_GRACE_MINUTES')) {
-    $attendanceGraceEnv = filter_var(
-        getenv('ATTENDANCE_GRACE_MINUTES'),
-        FILTER_VALIDATE_INT,
-        ['options' => ['min_range' => 0]]
-    );
-    define('ATTENDANCE_GRACE_MINUTES', $attendanceGraceEnv !== false ? $attendanceGraceEnv : 15);
+if (!defined('BOOKING_DOCUMENT_STORAGE')) {
+    $defaultDocumentStorage = dirname(__DIR__, 2)
+        . DIRECTORY_SEPARATOR . 'private'
+        . DIRECTORY_SEPARATOR . 'Room_Booking_System'
+        . DIRECTORY_SEPARATOR . 'booking-documents';
+    define('BOOKING_DOCUMENT_STORAGE', getenv('BOOKING_DOCUMENT_STORAGE') ?: $defaultDocumentStorage);
 }
 
 // Secure Session Initialization
@@ -87,13 +76,42 @@ try {
     $pdo = null; // Will trigger setup warning in UI if database is not created yet
 }
 
+// Sinkronkan identitas dan role dari database pada setiap request web.
+// Perubahan role atau penghapusan akun berlaku segera tanpa menunggu logout.
+if (PHP_SAPI !== 'cli' && $pdo && isset($_SESSION['user_id'])) {
+    try {
+        $sessionUserStatement = $pdo->prepare(
+            'SELECT id, name, username, email, department, avatar, role FROM users WHERE id = ? LIMIT 1'
+        );
+        $sessionUserStatement->execute([(int) $_SESSION['user_id']]);
+        $sessionUser = $sessionUserStatement->fetch(PDO::FETCH_ASSOC);
+
+        if ($sessionUser) {
+            $_SESSION['user_name'] = $sessionUser['name'];
+            $_SESSION['user_username'] = $sessionUser['username'];
+            $_SESSION['user_email'] = $sessionUser['email'];
+            $_SESSION['department'] = $sessionUser['department'] ?? '';
+            $_SESSION['user_avatar'] = $sessionUser['avatar'];
+            $_SESSION['role'] = $sessionUser['role'];
+        } else {
+            session_unset();
+        }
+    } catch (Throwable $exception) {
+        error_log('Gagal menyinkronkan sesi pengguna: ' . $exception->getMessage());
+    }
+}
+
 // Helper Functions
 function is_logged_in() {
     return isset($_SESSION['user_id']);
 }
 
 function is_admin() {
-    return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
+    return isset($_SESSION['role']) && in_array($_SESSION['role'], ['admin', 'super_admin'], true);
+}
+
+function is_super_admin() {
+    return isset($_SESSION['role']) && $_SESSION['role'] === 'super_admin';
 }
 
 function require_login() {
@@ -170,6 +188,38 @@ function format_date($date_str) {
 function format_time($time_str) {
     if (!$time_str) return '-';
     return date('H:i', strtotime($time_str));
+}
+
+function is_booking_expired(array $booking): bool {
+    return ($booking['status'] ?? '') === 'cancelled'
+        && ($booking['status_reason'] ?? '') === BookingLifecycleService::REASON_EXPIRED;
+}
+
+function booking_status_label(array $booking): string {
+    if (is_booking_expired($booking)) return 'Kedaluwarsa';
+    return match ($booking['status'] ?? '') {
+        'pending' => 'Menunggu Persetujuan',
+        'confirmed' => 'Disetujui',
+        'completed' => 'Selesai',
+        'cancelled' => 'Dibatalkan / Ditolak',
+        default => 'Tidak Diketahui',
+    };
+}
+
+/**
+ * Menghasilkan versi aset dari waktu modifikasi file agar browser tidak
+ * memakai CSS atau JavaScript lama setelah aplikasi diperbarui.
+ */
+function asset_version($relative_path) {
+    $relative_path = ltrim(str_replace('\\', '/', (string) $relative_path), '/');
+    if ($relative_path === '' || strpos($relative_path, '..') !== false) {
+        return '1';
+    }
+
+    $absolute_path = __DIR__ . DIRECTORY_SEPARATOR
+        . str_replace('/', DIRECTORY_SEPARATOR, $relative_path);
+
+    return is_file($absolute_path) ? (string) filemtime($absolute_path) : '1';
 }
 
 /**

@@ -1,15 +1,18 @@
 # MeetSpace — Sistem Pemesanan Ruang Rapat
 
-MeetSpace adalah aplikasi pemesanan ruang rapat berbasis PHP dan MySQL untuk pengguna, administrator, monitor lobby, dan display pintu ruangan. Sistem menyediakan approval booking, deteksi jadwal bentrok, check-in/check-out berbasis akun, notifikasi admin, serta laporan pemakaian ruangan.
+MeetSpace adalah aplikasi pemesanan ruang rapat berbasis PHP dan MySQL untuk pengguna, administrator, monitor lobby, dan display pintu ruangan. Sistem menyediakan approval booking, deteksi jadwal bentrok, notifikasi admin, serta laporan pemakaian ruangan.
 
 ## Fitur utama
 
 - Pemesanan ruang dan kalender jadwal.
+- Pemeriksa ketersediaan ruangan secara langsung berdasarkan tanggal, waktu, dan jumlah peserta.
 - Approval booking oleh administrator.
+- Pengajuan yang belum disetujui otomatis kedaluwarsa saat waktu mulai tiba.
+- Edit pengajuan dengan aturan akses berdasarkan pemilik, role, dan status booking.
+- Lampiran surat pendukung PDF/JPG/PNG dengan penyimpanan privat dan akses terotorisasi.
 - Analisis prioritas ketika jadwal bentrok menggunakan metode SAW.
-- Check-in dan check-out oleh akun pemilik booking.
-- Grace period, auto no-show, dan auto check-out.
-- Notifikasi booking dan attendance untuk administrator.
+- Status rapat pada monitor dihitung otomatis berdasarkan waktu jadwal.
+- Notifikasi booking untuk administrator.
 - Monitor lobby dan display pintu berbasis token.
 - Pengelolaan ruangan, pengguna, role, dan monitor display.
 - Riwayat, statistik, serta ekspor laporan CSV/PDF.
@@ -36,7 +39,14 @@ C:\xampp\htdocs\Room_Booking_System
 1. Jalankan Apache dan MySQL dari XAMPP Control Panel.
 2. Buka `http://localhost/phpmyadmin/`.
 3. Import skema utama `C:\xampp\private\Room_Booking_System\database.sql` ke MySQL.
-4. Pastikan database bernama `meetspace_db`, atau sesuaikan `DB_NAME` pada `.env`.
+4. Terapkan migrasi database melalui terminal dari direktori proyek:
+
+```powershell
+php scripts/apply_migrations.php
+```
+
+Runner mencatat migrasi yang sudah dijalankan sehingga aman dipanggil kembali.
+5. Pastikan database bernama `meetspace_db`, atau sesuaikan `DB_NAME` pada `.env`.
 
 Skema utama sengaja disimpan di luar `htdocs` agar tidak dapat diunduh melalui web server.
 
@@ -49,24 +59,12 @@ DB_HOST="localhost"
 DB_USER="root"
 DB_PASS=""
 DB_NAME="meetspace_db"
-
-ATTENDANCE_CHECK_IN_EARLY_MINUTES=15
-ATTENDANCE_GRACE_MINUTES=15
+BOOKING_DOCUMENT_STORAGE="C:/xampp/private/Room_Booking_System/booking-documents"
 ```
 
 File `.env` tidak disimpan ke Git.
 
-### 4. Pasang migrasi attendance
-
-Jalankan dari PowerShell pada direktori proyek:
-
-```powershell
-php scripts/run_attendance_migration.php up
-```
-
-Perintah ini aman dijalankan kembali; migrasi akan dilewati jika sudah terpasang.
-
-### 5. Buka aplikasi
+### 4. Buka aplikasi
 
 ```text
 http://localhost/Room_Booking_System/
@@ -74,10 +72,10 @@ http://localhost/Room_Booking_System/
 
 Jika memakai data seed bawaan, akun demo yang tersedia adalah:
 
-| Role | Email | Password |
+| Role | Username | Password |
 | --- | --- | --- |
-| User | `budi@company.com` | `password123` |
-| Administrator | `sarah@company.com` | `password123` |
+| User | `budi` | `password123` |
+| Administrator | `sarah` | `password123` |
 
 Ganti password demo sebelum aplikasi digunakan di lingkungan produksi.
 
@@ -86,7 +84,7 @@ Ganti password demo sebelum aplikasi digunakan di lingkungan produksi.
 ### Membuat akun dan masuk
 
 1. Pilih **Daftar** untuk membuat akun baru.
-2. Isi nama, email, password minimal 6 karakter, dan konfirmasi password.
+2. Isi nama, username, password minimal 8 karakter yang memuat huruf besar, huruf kecil, angka, dan simbol, lalu isi konfirmasi password.
 3. Masuk melalui halaman **Login**.
 
 Gunakan password yang panjang dan mengandung kombinasi huruf besar, huruf kecil, angka, serta simbol unik.
@@ -94,12 +92,24 @@ Gunakan password yang panjang dan mengandung kombinasi huruf besar, huruf kecil,
 ### Memesan ruangan
 
 1. Masuk ke menu **Pesan Ruangan**.
-2. Pilih ruangan, tanggal, waktu, jenis kegiatan, jumlah peserta, dan isi agenda.
-3. Kirim pengajuan.
-4. Booking dari user berstatus `pending` sampai disetujui admin. Booking yang dibuat admin dan tidak bentrok langsung terkonfirmasi.
-5. Pantau status melalui **Booking Saya** atau **Kalender Jadwal**.
+2. Tentukan tanggal, waktu, dan jumlah peserta. Panel **Ketersediaan Ruangan** akan diperbarui otomatis.
+3. Pilih kartu ruangan berdasarkan status berikut:
+   - **Hijau — Tersedia:** tidak ada jadwal yang beririsan;
+   - **Kuning — Sudah diajukan:** terdapat pengajuan lain yang masih menunggu persetujuan, tetapi ruangan tetap dapat dipilih;
+   - **Merah — Sudah terkonfirmasi:** ada booking confirmed dan ruangan tidak dapat dipilih;
+   - **Abu-abu — Tidak memenuhi:** ruangan sedang dirawat atau kapasitasnya tidak cukup.
+4. Isi jenis kegiatan dan agenda, lalu kirim pengajuan.
+5. Jika rapat memerlukan surat resmi, unggah pada bagian **Dokumen Pendukung**. Format yang didukung adalah PDF, JPG, dan PNG dengan ukuran maksimal 5 MB.
+6. Booking dari user berstatus `pending` sampai disetujui admin. Booking yang dibuat admin dan tidak bentrok langsung terkonfirmasi.
+7. Pantau status melalui **Booking Saya** atau **Kalender Jadwal**.
 
-Jika jadwal bertabrakan, pengajuan tetap dicatat sebagai pending agar administrator dapat menentukan prioritas.
+Pengajuan yang masih `pending` ketika waktu mulai tiba otomatis dipindahkan ke status **Kedaluwarsa**. Status ini dibedakan dari penolakan atau pembatalan manual dan tidak lagi dihitung sebagai konflik jadwal.
+
+Pengajuan berstatus `pending` dapat diedit oleh pemiliknya melalui tombol **Edit Pengajuan** pada **Booking Saya**. Setelah disimpan, status tetap `pending` dan jadwal diperiksa ulang. Pemilik tidak dapat mengedit booking yang sudah `confirmed`; perubahan booking `pending` atau `confirmed` tersebut hanya dapat dilakukan Admin atau Super Admin.
+
+Dokumen dapat dilihat oleh pemilik booking, Admin, dan Super Admin melalui tautan **Surat Pendukung**. Jika dokumen belum tersedia ketika booking dibuat, gunakan tombol **Tambah Surat Pendukung** pada menu **Booking Saya** selama status masih `pending` atau `confirmed`. Alur ini hanya mengunggah dokumen dan tidak mengubah jadwal maupun status booking. Tombol berubah menjadi **Ganti Surat Pendukung** setelah dokumen tersedia. File fisik disimpan di direktori `BOOKING_DOCUMENT_STORAGE` di luar `htdocs`; database hanya menyimpan metadata, checksum, dan nama file acak.
+
+Jika beberapa pengajuan `pending` menginginkan ruangan dan waktu yang beririsan, Administrator akan meninjau dan menentukan prioritasnya. Jadwal yang sudah `confirmed` diblokir sejak form dan diperiksa ulang oleh server saat penyimpanan.
 
 ### Menggunakan kalender
 
@@ -108,20 +118,9 @@ Menu **Kalender Jadwal** menyediakan dua tampilan tanpa mode mingguan:
 - **Bulan** untuk melihat jadwal dalam grid kalender;
 - **Agenda** untuk melihat daftar jadwal pada bulan aktif.
 
+Pada tampilan Agenda, nama hari dan tanggal ditampilkan dalam satu header lengkap, misalnya **Selasa, 22 September 2026**.
+
 Gunakan tombol **Hari ini**, panah sebelumnya/berikutnya, pencarian agenda, dan filter ruangan untuk mempersempit jadwal. Klik sebuah agenda untuk membuka detail. Klik tanggal hari ini atau tanggal mendatang yang masih kosong untuk membuka form booking dengan tanggal tersebut terisi otomatis.
-
-### Check-in dan check-out
-
-Check-in dilakukan melalui menu **Booking Saya** menggunakan akun pemilik booking. Sistem tidak menggunakan QR Code.
-
-- Tombol **Check-in** tersedia mulai 15 menit sebelum jadwal, atau mengikuti `ATTENDANCE_CHECK_IN_EARLY_MINUTES`.
-- Batas check-in adalah 15 menit setelah jadwal mulai, atau mengikuti `ATTENDANCE_GRACE_MINUTES`.
-- Booking yang melewati batas tanpa check-in otomatis menjadi `no_show`.
-- Setelah check-in, tombol berubah menjadi **Check-out**.
-- Jika pengguna belum check-out sampai waktu rapat selesai, sistem melakukan auto check-out.
-- Booking yang sudah check-in tidak dapat dibatalkan sebelum check-out.
-
-Warna tombol check-in/check-out otomatis mengikuti light mode dan dark mode.
 
 ## Panduan administrator
 
@@ -132,11 +131,22 @@ Dashboard admin tetap menggunakan tampilan katalog ruangan. Pada kolom kanan ter
 Gunakan menu **Kelola Semua Booking** untuk:
 
 - menyetujui atau menolak pengajuan;
+- mengedit booking berstatus `pending` atau `confirmed`;
 - meninjau jadwal yang bentrok;
 - melihat rekomendasi prioritas SAW;
-- memantau status check-in, check-out, dan no-show.
+- memantau status serta detail peminjaman.
 
 Notifikasi baru dapat dibuka melalui ikon lonceng pada header admin.
+
+### Menjalankan kedaluwarsa otomatis
+
+Aplikasi menyelaraskan pengajuan kedaluwarsa setiap kali halaman booking, dashboard admin, atau pemeriksa ketersediaan dibuka. Agar proses tetap berjalan tanpa menunggu ada pengguna yang membuka aplikasi, jadwalkan skrip berikut melalui **Windows Task Scheduler** setiap satu menit:
+
+- Program/script: `C:\xampp\php\php.exe`
+- Add arguments: `C:\xampp\htdocs\Room_Booking_System\scripts\expire_pending_bookings.php`
+- Start in: `C:\xampp\htdocs\Room_Booking_System`
+
+Skrip aman dijalankan berulang kali. Hanya booking berstatus `pending` dengan waktu mulai yang sudah tiba yang diubah menjadi **Kedaluwarsa**; booking terkonfirmasi tidak terpengaruh.
 
 ### Mengelola ruangan
 
@@ -157,7 +167,9 @@ Foto bawaan yang tersedia:
 
 ### Mengelola pengguna
 
-Menu **Kelola Pengguna** digunakan untuk mencari pengguna, mengubah role `user`/`admin`, dan menghapus akun. Administrator tidak dapat menghapus akun yang sedang dipakai sendiri.
+Menu **Kelola Pengguna** digunakan untuk mencari dan melihat akun. Super Admin memperoleh tombol **Edit** untuk memperbarui nama, username, divisi, role, dan password opsional. Username harus unik; password baru minimal 8 karakter dan mengandung huruf besar, huruf kecil, angka, serta simbol.
+
+Role `super_admin` dikhususkan untuk pengelola teknis sistem. Super admin memiliki seluruh akses administrator dan menjadi satu-satunya role yang dapat mengubah role atau menghapus akun lain. Akun super admin tidak dapat diubah atau dihapus dari halaman pengelolaan pengguna.
 
 ### Mengelola monitor display
 
@@ -178,21 +190,13 @@ Monitor lobby dapat dibuka melalui:
 http://localhost/Room_Booking_System/display_lobby.php
 ```
 
-Display memperbarui status ruangan secara berkala dan membedakan kondisi terjadwal, menunggu check-in, berlangsung, serta tersedia.
+Display memperbarui status ruangan secara berkala. Rapat otomatis berstatus **Berlangsung** berdasarkan waktu mulai dan selesai, tanpa check-in. Status berlangsung ditampilkan dengan warna hijau.
+
+Kolom attendance lama pada database tidak perlu dihapus. Versi aplikasi ini mengabaikannya agar perubahan aman untuk database yang sudah berisi riwayat booking.
 
 ### Riwayat dan laporan
 
 Gunakan menu **Riwayat Booking** untuk memfilter data berdasarkan tanggal, ruangan, status, atau kata kunci. Laporan dapat diekspor sebagai CSV atau tampilan PDF/print.
-
-## Menjalankan attendance otomatis
-
-Halaman user, admin, dan display dapat memicu pemrosesan status otomatis. Agar transisi tetap tepat waktu meskipun halaman tidak sedang terbuka, jadwalkan perintah berikut setiap menit melalui Windows Task Scheduler:
-
-```powershell
-php C:\xampp\htdocs\Room_Booking_System\scripts\process_attendance.php
-```
-
-Gunakan direktori proyek sebagai **Start in** pada konfigurasi task.
 
 ## Pengembangan
 
@@ -216,37 +220,22 @@ npm run watch:css
 Pastikan MySQL aktif dan database uji dapat diakses, lalu jalankan:
 
 ```powershell
-php tests/run_attendance_tests.php
+php tests/run_schedule_status_tests.php
 php tests/run_admin_dashboard_tests.php
+php tests/run_room_availability_tests.php
+php tests/run_booking_edit_tests.php
+php tests/run_booking_document_tests.php
+php tests/run_booking_document_http_tests.php
+php tests/run_calendar_ui_tests.php
+php tests/run_role_hierarchy_tests.php
+php tests/run_user_account_tests.php
+php tests/run_booking_expiration_tests.php
 ```
 
 Pengujian membuat data sementara dan membersihkannya kembali setelah selesai.
 
-### Struktur attendance
-
-- `app/core/AttendancePolicy.php`: aturan jendela waktu dan ketersediaan aksi.
-- `app/core/AttendancePresentation.php`: label, ikon, dan tema tombol.
-- `app/services/AttendanceService.php`: transaksi check-in, check-out, no-show, dan auto check-out.
-- `app/models/NotificationModel.php`: notifikasi admin.
-- `app/models/BookingModel.php`: facade kompatibilitas untuk controller dan endpoint lama.
-- `scripts/process_attendance.php`: pemrosesan otomatis melalui CLI.
-
-## Rollback attendance
-
-Cadangkan database terlebih dahulu. Untuk menghapus fitur attendance dari skema database:
-
-```powershell
-php scripts/run_attendance_migration.php down
-```
-
-Migrasi `down` menghapus notifikasi attendance, mengembalikan booking hasil auto check-out/no-show menjadi `confirmed`, lalu menghapus kolom attendance. SQL manual tersedia di `migrations/20260921_attendance_phase_one_down.sql`.
-
-Untuk mengembalikan perubahan kode, gunakan riwayat Git sesuai commit yang ingin dibatalkan. Jangan menjalankan `git reset --hard` pada worktree yang memiliki perubahan lokal.
-
 ## Pemecahan masalah
 
 - **Database tidak tersambung:** periksa Apache/MySQL, isi `.env`, nama database, dan ekstensi `pdo_mysql`.
-- **Kolom attendance tidak ditemukan:** jalankan migrasi attendance `up`.
-- **Status otomatis terlambat:** pastikan Windows Task Scheduler menjalankan `scripts/process_attendance.php` setiap menit.
 - **Perubahan warna tidak muncul:** jalankan `npm run build:css`, lalu lakukan hard refresh pada browser.
 - **Display tidak menemukan ruangan:** periksa token melalui menu **Kelola Monitor Display** dan pastikan token pada URL sesuai.

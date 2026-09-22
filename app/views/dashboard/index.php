@@ -298,13 +298,13 @@
                 <div id="modalBookingErrorMessage" class="flex-1 leading-relaxed"></div>
             </div>
 
-            <form id="bookingModalForm" method="POST" action="booking.php" onsubmit="handleBookingSubmit(event)" class="space-y-6" data-booking-form>
+            <form id="bookingModalForm" method="POST" action="booking.php" enctype="multipart/form-data" onsubmit="handleBookingSubmit(event)" class="space-y-6" data-booking-form data-availability-url="api/room_availability.php">
                 <?php echo csrf_field(); ?>
                 <input type="hidden" name="is_ajax" value="1">
 
                 <?php
                 $bookingFormPrefix = 'modalBooking';
-                $bookingFormRooms = !empty($active_rooms) ? $active_rooms : (!empty($rooms) ? $rooms : []);
+                $bookingFormRooms = $booking_rooms ?? [];
                 $bookingFormSelectedRoomId = 0;
                 $bookingFormValues = [
                     'user_name' => $_SESSION['user_name'] ?? '',
@@ -335,7 +335,7 @@
     </div>
 </div>
 
-<script src="public/js/booking-form.js"></script>
+<script src="public/js/booking-form.js?v=<?php echo asset_version('public/js/booking-form.js'); ?>"></script>
 <script>
     // All rooms in-memory data for instant client-side filtering & re-ranking
     const rawDashboardRooms = <?php echo json_encode(array_map(function ($r) {

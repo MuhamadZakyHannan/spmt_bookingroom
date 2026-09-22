@@ -1,6 +1,7 @@
 <?php require_once __DIR__ . '/../layouts/header.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/locales-all.global.min.js"></script>
 
 <style>
     .calendar-shell .fc {
@@ -522,6 +523,7 @@
 
         calendarInstance = new FullCalendar.Calendar(calendarElement, {
             initialView: 'dayGridMonth',
+            locale: 'id',
             headerToolbar: false,
             firstDay: 1,
             fixedWeekCount: false,
@@ -529,6 +531,8 @@
             dayMaxEvents: 4,
             displayEventEnd: false,
             eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+            listDayFormat: { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' },
+            listDaySideFormat: false,
             events: 'api/get_events.php?room_id=<?php echo (int)$room_filter; ?>',
             eventSourceFailure: () => {
                 loadingElement.classList.add('hidden');
@@ -538,7 +542,17 @@
             },
             noEventsContent: 'Tidak ada jadwal pada periode ini.',
             moreLinkContent: args => `+${args.num} lainnya`,
-            dayHeaderContent: args => ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'][args.date.getDay()],
+            dayHeaderContent: args => {
+                if (args.view.type.startsWith('list')) {
+                    return capitalize(new Intl.DateTimeFormat('id-ID', {
+                        weekday: 'long',
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric'
+                    }).format(args.date));
+                }
+                return ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'][args.date.getDay()];
+            },
             eventClassNames: args => matchesSearch(args.event) ? [] : ['calendar-event-filtered'],
             eventContent: args => {
                 const wrapper = document.createElement('div');
@@ -580,17 +594,14 @@
             },
             eventClick: args => {
                 const props = args.event.extendedProps;
-                const attendanceStatus = props.attendance_status || '';
                 let statusKey = 'scheduled';
                 let statusLabel = 'Terjadwal';
+                const now = new Date();
 
-                if (attendanceStatus === 'checked_in') {
+                if (args.event.start <= now && args.event.end > now && props.status === 'confirmed') {
                     statusKey = 'ongoing';
                     statusLabel = 'Berlangsung';
-                } else if (attendanceStatus === 'no_show') {
-                    statusKey = 'no-show';
-                    statusLabel = 'Tidak hadir';
-                } else if (props.status === 'completed' || attendanceStatus === 'checked_out') {
+                } else if (props.status === 'completed' || args.event.end <= now) {
                     statusKey = 'completed';
                     statusLabel = 'Selesai';
                 }

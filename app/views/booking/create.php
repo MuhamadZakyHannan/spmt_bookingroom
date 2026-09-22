@@ -24,7 +24,7 @@
             </div>
         <?php endif; ?>
 
-        <form method="POST" action="booking.php" class="space-y-6" data-booking-form>
+        <form method="POST" action="booking.php" enctype="multipart/form-data" class="space-y-6" data-booking-form data-availability-url="api/room_availability.php">
             <?php echo csrf_field(); ?>
             <?php
             $bookingFormPrefix = 'pageBooking';
@@ -54,5 +54,5 @@
     </div>
 </div>
 
-<script src="public/js/booking-form.js"></script>
+<script src="public/js/booking-form.js?v=<?php echo asset_version('public/js/booking-form.js'); ?>"></script>
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>

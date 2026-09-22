@@ -29,12 +29,11 @@ class DashboardController extends Controller {
         $total_users = $this->userModel->getTotalCount();
         $rooms = $this->roomModel->getAllRooms($search, $status_filter, $capacity_filter);
         $room_suggestions = $this->roomModel->getAllRooms();
+        $booking_rooms = $room_suggestions;
         $today_bookings = $this->bookingModel->getTodayBookings();
 
-        $active_rooms = $this->roomModel->getActiveRooms();
         $admin_dashboard = null;
         if ($isAdmin) {
-            $this->bookingModel->processAutomaticAttendanceTransitions();
             $admin_dashboard = $this->adminDashboardService->getSnapshot();
         }
 
@@ -44,7 +43,7 @@ class DashboardController extends Controller {
             'active_bookings_today' => $active_bookings_today,
             'total_users' => $total_users,
             'rooms' => $rooms,
-            'active_rooms' => $active_rooms,
+            'booking_rooms' => $booking_rooms,
             'room_suggestions' => $room_suggestions,
             'today_bookings' => $today_bookings,
             'search' => $search,
