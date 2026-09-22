@@ -24,12 +24,8 @@ class CalendarController extends Controller {
     }
 
     public function eventsApi() {
-        header('Content-Type: application/json');
-
-        if (!is_logged_in()) {
-            echo json_encode([]);
-            exit;
-        }
+        ApiRequest::requireMethod('GET');
+        ApiRequest::requireLogin();
 
         $room_filter = (int)($_GET['room_id'] ?? 0);
         $bookings = $this->bookingModel->getCalendarEvents($room_filter);
@@ -63,7 +59,6 @@ class CalendarController extends Controller {
             ];
         }
 
-        echo json_encode($events);
-        exit;
+        ApiResponse::send($events);
     }
 }

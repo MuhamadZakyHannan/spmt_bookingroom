@@ -6,8 +6,7 @@
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../app/models/BookingModel.php';
 
-date_default_timezone_set('Asia/Jakarta');
-header('Content-Type: application/json');
+ApiRequest::requireMethod('GET');
 
 $bookingModel = new BookingModel();
 $todayBookings = $bookingModel->getTodayBookings();
@@ -25,7 +24,7 @@ usort($activeBookings, function($a, $b) {
     return strcmp(substr($a['start_time'], 0, 5), substr($b['start_time'], 0, 5));
 });
 
-echo json_encode([
+ApiResponse::send([
     'success' => true,
     'server_time' => date('H:i:s'),
     'server_date' => date('Y-m-d'),
@@ -33,4 +32,3 @@ echo json_encode([
     'total_active' => count($activeBookings),
     'bookings' => $activeBookings
 ]);
-exit;

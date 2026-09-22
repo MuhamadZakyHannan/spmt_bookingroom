@@ -17,7 +17,8 @@ perilaku aplikasi serta melewati seluruh regression test sebelum dilanjutkan.
    `public/js` dan pecah partial UI yang digunakan ulang. Status: selesai;
    shell global, tema, notifikasi, dan utility escaping sudah dimodulkan.
 5. **Endpoint API** — seragamkan validasi request, response JSON, status HTTP,
-   autentikasi, dan penanganan error.
+   autentikasi, dan penanganan error. Status: selesai melalui `ApiRequest` dan
+   `ApiResponse`.
 6. **Finalisasi** — hapus kompatibilitas yang tidak lagi digunakan, lengkapi
    dokumentasi arsitektur, lalu jalankan pemeriksaan regresi dan keamanan.
 

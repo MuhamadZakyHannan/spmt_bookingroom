@@ -86,7 +86,7 @@ class DisplayController extends Controller {
     }
 
     public function apiStatus() {
-        header('Content-Type: application/json');
+        ApiRequest::requireMethod('GET');
         
         $token = trim($_GET['token'] ?? '');
         $roomId = (int)($_GET['room'] ?? 0);
@@ -100,24 +100,21 @@ class DisplayController extends Controller {
         }
 
         if ($roomId <= 0) {
-            echo json_encode(['success' => false, 'message' => 'Room or token required']);
-            exit;
+            ApiResponse::error('Ruangan atau token display wajib diberikan.', 422, 'display_target_required');
         }
 
         $liveData = $this->displayModel->getRoomLiveStatus($roomId);
 
         if (!$liveData) {
-            echo json_encode(['success' => false, 'message' => 'Room data not found']);
-            exit;
+            ApiResponse::error('Data ruangan tidak ditemukan.', 404, 'room_not_found');
         }
 
-        echo json_encode([
+        ApiResponse::send([
             'success' => true,
             'data' => $liveData,
             'server_time' => date('H:i:s'),
             'server_date' => date('Y-m-d')
         ]);
-        exit;
     }
 
     public function lobby() {

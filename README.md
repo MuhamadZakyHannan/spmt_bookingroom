@@ -251,6 +251,7 @@ php tests/run_database_configuration_tests.php
 php tests/run_model_architecture_tests.php
 php tests/run_booking_domain_refactor_tests.php
 php tests/run_presentation_architecture_tests.php
+php tests/run_api_architecture_tests.php
 ```
 
 Pengujian membuat data sementara dan membersihkannya kembali setelah selesai.
