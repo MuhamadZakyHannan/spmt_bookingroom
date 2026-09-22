@@ -8,15 +8,23 @@ class UserModel {
         $this->db = Database::getInstance()->getConnection();
     }
 
-    public function findByEmail($email) {
+    public function findByUsername($username) {
         if (!$this->db) return false;
-        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = ?");
-        $stmt->execute([$email]);
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE username = ?");
+        $stmt->execute([$username]);
         return $stmt->fetch();
     }
 
+    public function findByEmail($email) {
+        return $this->findByUsername($email);
+    }
+
+    public function getByUsername($username) {
+        return $this->findByUsername($username);
+    }
+
     public function getByEmail($email) {
-        return $this->findByEmail($email);
+        return $this->findByUsername($email);
     }
 
     public function findById($id) {
@@ -30,11 +38,15 @@ class UserModel {
         return $this->findById($id);
     }
 
-    public function emailExistsForOtherUser($email, $userId) {
+    public function usernameExistsForOtherUser($username, $userId) {
         if (!$this->db) return false;
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM users WHERE email = ? AND id != ?");
-        $stmt->execute([$email, $userId]);
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM users WHERE username = ? AND id != ?");
+        $stmt->execute([$username, $userId]);
         return (int)$stmt->fetchColumn() > 0;
+    }
+
+    public function emailExistsForOtherUser($email, $userId) {
+        return $this->usernameExistsForOtherUser($email, $userId);
     }
 
     public function create($nameOrData, $email = '', $password = '', $role = 'user') {
@@ -44,7 +56,7 @@ class UserModel {
 
         if (is_array($nameOrData)) {
             $name = $nameOrData['name'] ?? '';
-            $email = $nameOrData['email'] ?? '';
+            $email = $nameOrData['username'] ?? $nameOrData['email'] ?? '';
             $password = $nameOrData['password'] ?? '';
             $role = $nameOrData['role'] ?? 'user';
             $department = trim((string)($nameOrData['department'] ?? '')) ?: null;
@@ -57,8 +69,8 @@ class UserModel {
         $hash = password_hash($password, PASSWORD_DEFAULT);
         $avatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80';
 
-        $stmt = $this->db->prepare("INSERT INTO users (name, email, department, password, avatar, role) VALUES (?, ?, ?, ?, ?, ?)");
-        return $stmt->execute([$name, $email, $department, $hash, $avatar, $role]);
+        $stmt = $this->db->prepare("INSERT INTO users (name, username, email, department, password, avatar, role) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        return $stmt->execute([$name, $email, $email, $department, $hash, $avatar, $role]);
     }
 
     public function getAllUsers() {
@@ -90,12 +102,14 @@ class UserModel {
         if ($password !== '') {
             $stmt = $this->db->prepare(
                 "UPDATE users
-                 SET name = ?, email = ?, department = ?, role = ?, password = ?
+                 SET name = ?, username = ?, email = ?, department = ?, role = ?, password = ?
                  WHERE id = ?"
             );
+            $username = $data['username'] ?? $data['email'];
             return $stmt->execute([
                 $data['name'],
-                $data['email'],
+                $username,
+                $username,
                 $department,
                 $role,
                 password_hash($password, PASSWORD_DEFAULT),
@@ -104,9 +118,10 @@ class UserModel {
         }
 
         $stmt = $this->db->prepare(
-            "UPDATE users SET name = ?, email = ?, department = ?, role = ? WHERE id = ?"
+            "UPDATE users SET name = ?, username = ?, email = ?, department = ?, role = ? WHERE id = ?"
         );
-        return $stmt->execute([$data['name'], $data['email'], $department, $role, $userId]);
+        $username = $data['username'] ?? $data['email'];
+        return $stmt->execute([$data['name'], $username, $username, $department, $role, $userId]);
     }
 
     public function delete($userId) {

@@ -379,7 +379,7 @@ class BookingModel {
 
         $sql = "SELECT b.*, r.name as room_name, r.code as room_code, r.capacity as room_capacity, r.location as room_location,
                        IFNULL(b.user_name, u.name) as user_name, 
-                       u.email as user_email,
+                       u.username as user_email,
                        IFNULL(b.user_dept, 'Internal') as user_dept,
                        d.id AS document_id, d.original_name AS document_name
                 FROM bookings b 
@@ -549,7 +549,7 @@ class BookingModel {
         if (!$this->db) return [];
         $sql = "SELECT b.*, r.name as room_name, r.code as room_code, 
                        IFNULL(b.user_name, u.name) as user_name, 
-                       u.email as user_email,
+                       u.username as user_email,
                        IFNULL(b.user_dept, 'Internal') as user_dept,
                        d.id AS document_id, d.original_name AS document_name,
                        d.mime_type AS document_mime_type, d.size_bytes AS document_size_bytes
@@ -646,7 +646,7 @@ class BookingModel {
         if (!$this->db) return [];
         $sql = "SELECT b.*, r.name as room_name, r.code as room_code, r.location as room_location,
                        IFNULL(b.user_name, u.name) as user_name, 
-                       u.email as user_email,
+                       u.username as user_email,
                        IFNULL(b.user_dept, 'Internal') as user_dept 
                 FROM bookings b 
                 JOIN rooms r ON b.room_id = r.id 
@@ -768,7 +768,7 @@ class BookingModel {
         $sql = "SELECT b.*, r.name as room_name, r.code as room_code, r.capacity as room_capacity,
                        r.location as room_location, r.floor as room_floor,
                        IFNULL(b.user_name, u.name) as user_name,
-                       u.email as user_email,
+                       u.username as user_email,
                        IFNULL(NULLIF(b.user_dept, ''), 'Internal') as user_dept
                 FROM bookings b
                 JOIN rooms r ON b.room_id = r.id

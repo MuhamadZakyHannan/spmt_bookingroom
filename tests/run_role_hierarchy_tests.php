@@ -32,8 +32,8 @@ if (! $pdo) {
     throw new RuntimeException('Koneksi database tidak tersedia.');
 }
 
-$statement = $pdo->prepare('SELECT role, department FROM users WHERE email = ?');
-$statement->execute(['fikus@company.com']);
+$statement = $pdo->prepare('SELECT role, department FROM users WHERE username = ?');
+$statement->execute(['fikus']);
 $fikus = $statement->fetch(PDO::FETCH_ASSOC);
 
 expectRole(($fikus['role'] ?? '') === 'super_admin', 'Akun fikus tersimpan sebagai Super Admin.');

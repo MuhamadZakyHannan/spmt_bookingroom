@@ -93,7 +93,7 @@ class DisplayModel {
         $currentTimestamp = strtotime($currentTime);
 
         // Ambil jadwal hari ini (CURDATE()) - HANYA YANG SUDAH DISETUJUI ADMIN (CONFIRMED)
-        $stmtBookings = $this->db->prepare("SELECT b.*, u.name as user_name, u.email as user_email, u.avatar as user_avatar 
+        $stmtBookings = $this->db->prepare("SELECT b.*, u.name as user_name, u.username as user_email, u.avatar as user_avatar
                                             FROM bookings b 
                                             JOIN users u ON b.user_id = u.id 
                                             WHERE b.room_id = ? 

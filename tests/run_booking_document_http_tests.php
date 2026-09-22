@@ -46,7 +46,7 @@ $baseUrl = 'http://localhost/Room_Booking_System';
 $cookieJar = tempnam(sys_get_temp_dir(), 'meetspace_cookie_');
 $pdfPath = tempnam(sys_get_temp_dir(), 'meetspace_http_pdf_');
 $suffix = bin2hex(random_bytes(5));
-$email = 'document-http-' . $suffix . '@example.test';
+$username = 'document-http-' . $suffix;
 $password = 'Document#123';
 $title = 'TEST-DOCUMENT-HTTP-' . $suffix;
 $bookingId = 0;
@@ -57,7 +57,7 @@ file_put_contents($pdfPath, "%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\n%%
 try {
     $created = (new UserModel())->create([
         'name' => 'Document HTTP Test',
-        'email' => $email,
+        'username' => $username,
         'department' => 'SPMT - Teknik & IT',
         'password' => $password,
         'role' => 'admin',
@@ -68,7 +68,7 @@ try {
     $loginToken = csrfFromHtml($loginPage['body']);
     $login = httpRequest($baseUrl . '/login.php', $cookieJar, http_build_query([
         'csrf_token' => $loginToken,
-        'email' => $email,
+        'username' => $username,
         'password' => $password,
     ]));
     expectDocumentHttp($login['status'] === 302, 'Login HTTP berhasil dan sesi terautentikasi.');
@@ -149,8 +149,8 @@ try {
         $deleteBooking = $pdo->prepare('DELETE FROM bookings WHERE id = ?');
         $deleteBooking->execute([$bookingId]);
     }
-    $deleteUser = $pdo->prepare('DELETE FROM users WHERE email = ?');
-    $deleteUser->execute([$email]);
+    $deleteUser = $pdo->prepare('DELETE FROM users WHERE username = ?');
+    $deleteUser->execute([$username]);
     @unlink($cookieJar);
     @unlink($pdfPath);
 }

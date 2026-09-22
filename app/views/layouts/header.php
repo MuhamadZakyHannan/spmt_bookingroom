@@ -83,7 +83,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                             <div class="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 py-2 hidden group-hover:block z-50 text-slate-700 dark:text-slate-200">
                                 <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-700">
                                     <p class="text-xs text-slate-400 dark:text-slate-400 font-medium">Logged in as</p>
-                                    <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate"><?php echo htmlspecialchars($_SESSION['user_email'] ?? ''); ?></p>
+                                    <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate"><?php echo htmlspecialchars($_SESSION['user_username'] ?? $_SESSION['user_email'] ?? ''); ?></p>
                                 </div>
                                 <a href="logout.php" class="block px-4 py-2 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-medium transition">
                                     <i class="fas fa-sign-out-alt w-5"></i> Keluar (Logout)
@@ -213,7 +213,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <img src="<?php echo htmlspecialchars($_SESSION['user_avatar'] ?? $_SESSION['avatar'] ?? 'https://via.placeholder.com/40'); ?>" class="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700">
                 <div class="overflow-hidden">
                     <div class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate"><?php echo htmlspecialchars($_SESSION['user_name'] ?? 'User'); ?></div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate"><?php echo htmlspecialchars($_SESSION['user_email'] ?? ''); ?></div>
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate"><?php echo htmlspecialchars($_SESSION['user_username'] ?? $_SESSION['user_email'] ?? ''); ?></div>
                 </div>
             </div>
             <a href="logout.php" class="w-full py-2 px-3 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 font-bold rounded-xl text-xs transition flex items-center justify-center gap-2">

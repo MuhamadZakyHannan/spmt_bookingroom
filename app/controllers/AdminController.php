@@ -3,6 +3,7 @@ require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../core/SawService.php';
 require_once __DIR__ . '/../core/Organization.php';
 require_once __DIR__ . '/../core/PasswordPolicy.php';
+require_once __DIR__ . '/../core/UsernamePolicy.php';
 
 class AdminController extends Controller {
     private $roomModel;
@@ -293,7 +294,7 @@ class AdminController extends Controller {
 
             if ($action === 'add') {
                 $name = trim($_POST['name'] ?? '');
-                $email = strtolower(trim($_POST['email'] ?? ''));
+                $username = UsernamePolicy::normalize((string) ($_POST['username'] ?? ''));
                 $password = $_POST['password'] ?? '';
                 $department = trim($_POST['department'] ?? '');
                 $roleInput = trim($_POST['role'] ?? 'user');
@@ -303,20 +304,20 @@ class AdminController extends Controller {
 
                 $passwordError = PasswordPolicy::validationError($password);
 
-                if (empty($name) || empty($email) || empty($password) || empty($department)) {
-                    $error = 'Nama, email, divisi, dan password wajib diisi!';
-                } else if (strlen($name) > 100 || strlen($email) > 100 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                    $error = 'Nama atau alamat email tidak valid!';
+                if (empty($name) || empty($username) || empty($password) || empty($department)) {
+                    $error = 'Nama, username, divisi, dan password wajib diisi!';
+                } else if (strlen($name) > 100 || ($usernameError = UsernamePolicy::validationError($username))) {
+                    $error = strlen($name) > 100 ? 'Nama pengguna terlalu panjang.' : $usernameError;
                 } else if (!Organization::isValidDepartment($department)) {
                     $error = 'Divisi yang dipilih tidak valid!';
                 } else if ($passwordError) {
                     $error = $passwordError;
-                } else if ($this->userModel->getByEmail($email)) {
-                    $error = 'Email sudah terdaftar!';
+                } else if ($this->userModel->getByUsername($username)) {
+                    $error = 'Username sudah digunakan!';
                 } else {
                     $this->userModel->create([
                         'name' => $name,
-                        'email' => $email,
+                        'username' => $username,
                         'password' => $password,
                         'department' => $department,
                         'role' => $role
@@ -328,7 +329,7 @@ class AdminController extends Controller {
                 $user_id = (int)($_POST['user_id'] ?? 0);
                 $targetUser = $user_id > 0 ? $this->userModel->getById($user_id) : false;
                 $name = trim($_POST['name'] ?? '');
-                $email = strtolower(trim($_POST['email'] ?? ''));
+                $username = UsernamePolicy::normalize((string) ($_POST['username'] ?? ''));
                 $department = trim($_POST['department'] ?? '');
                 $password = (string)($_POST['password'] ?? '');
                 $requestedRole = trim($_POST['role'] ?? 'user');
@@ -338,16 +339,16 @@ class AdminController extends Controller {
                     set_flash('danger', 'Hanya Super Admin yang dapat mengedit akun pengguna.');
                 } else if (!$targetUser) {
                     set_flash('danger', 'Akun yang akan diedit tidak ditemukan.');
-                } else if ($name === '' || $email === '' || $department === '') {
-                    set_flash('danger', 'Nama, email, dan divisi wajib diisi.');
-                } else if (strlen($name) > 100 || strlen($email) > 100 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                    set_flash('danger', 'Nama atau alamat email tidak valid.');
+                } else if ($name === '' || $username === '' || $department === '') {
+                    set_flash('danger', 'Nama, username, dan divisi wajib diisi.');
+                } else if (strlen($name) > 100 || ($usernameError = UsernamePolicy::validationError($username))) {
+                    set_flash('danger', strlen($name) > 100 ? 'Nama pengguna terlalu panjang.' : $usernameError);
                 } else if (!Organization::isValidDepartment($department)) {
                     set_flash('danger', 'Divisi yang dipilih tidak valid.');
                 } else if ($passwordError) {
                     set_flash('danger', $passwordError);
-                } else if ($this->userModel->emailExistsForOtherUser($email, $user_id)) {
-                    set_flash('danger', 'Email sudah digunakan oleh akun lain.');
+                } else if ($this->userModel->usernameExistsForOtherUser($username, $user_id)) {
+                    set_flash('danger', 'Username sudah digunakan oleh akun lain.');
                 } else {
                     $role = ($targetUser['role'] ?? '') === 'super_admin'
                         ? 'super_admin'
@@ -355,7 +356,7 @@ class AdminController extends Controller {
 
                     $updated = $this->userModel->updateAccount($user_id, [
                         'name' => $name,
-                        'email' => $email,
+                        'username' => $username,
                         'department' => $department,
                         'role' => $role,
                         'password' => $password,

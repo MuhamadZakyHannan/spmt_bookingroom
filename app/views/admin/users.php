@@ -23,7 +23,7 @@
             id="userSearchInput" 
             name="search" 
             autocomplete="off" 
-            placeholder="Ketik untuk mencari nama pengguna atau email..." 
+            placeholder="Ketik untuk mencari nama pengguna atau username..."
             class="w-full pl-9 pr-8 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500 transition"
         >
         <button 
@@ -62,7 +62,7 @@
             <thead>
                 <tr class="bg-slate-50/80 dark:bg-slate-900/60 border-b border-slate-200/80 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
                     <th class="py-3.5 px-4">Pengguna</th>
-                    <th class="py-3.5 px-4">Email</th>
+                    <th class="py-3.5 px-4">Username</th>
                     <th class="py-3.5 px-4">Role Hak Akses</th>
                     <th class="py-3.5 px-4">Tanggal Terdaftar</th>
                     <th class="py-3.5 px-4 text-right">Aksi</th>
@@ -90,7 +90,7 @@
                             </div>
                         </td>
                         <td class="py-3.5 px-4 whitespace-nowrap font-medium text-slate-700 dark:text-slate-300">
-                            <?php echo htmlspecialchars($u['email']); ?>
+                            <?php echo htmlspecialchars($u['username']); ?>
                         </td>
                         <td class="py-3.5 px-4 whitespace-nowrap">
                             <?php if ($u['role'] === 'super_admin'): ?>
@@ -165,8 +165,8 @@
                     <input type="text" name="name" id="editUserName" maxlength="100" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
                 </div>
                 <div>
-                    <label for="editUserEmail" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">Email</label>
-                    <input type="email" name="email" id="editUserEmail" maxlength="100" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                    <label for="editUserEmail" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">Username</label>
+                    <input type="text" name="username" id="editUserEmail" minlength="3" maxlength="100" pattern="[A-Za-z0-9._\-]+" autocomplete="username" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
                 </div>
             </div>
 
@@ -227,7 +227,7 @@
         return [
             'id' => (int)$u['id'],
             'name' => $u['name'],
-            'email' => $u['email'],
+            'username' => $u['username'],
             'department' => $u['department'] ?? '',
             'role' => $u['role'],
             'avatar' => $u['avatar'] ?: 'https://via.placeholder.com/40',
@@ -309,7 +309,7 @@
 
         editUserId.value = user.id;
         editUserName.value = user.name || '';
-        editUserEmail.value = user.email || '';
+        editUserEmail.value = user.username || '';
         editUserDepartment.value = user.department || '';
         editUserRole.value = user.role;
         editUserRole.disabled = user.role === 'super_admin';
@@ -373,9 +373,9 @@
                 seen.add('name:' + u.name);
                 suggestions.push({ type: 'Nama', text: u.name, icon: 'fa-user text-amber-500' });
             }
-            if (u.email && u.email.toLowerCase().includes(q) && !seen.has('email:' + u.email)) {
-                seen.add('email:' + u.email);
-                suggestions.push({ type: 'Email', text: u.email, icon: 'fa-envelope text-blue-500' });
+            if (u.username && u.username.toLowerCase().includes(q) && !seen.has('username:' + u.username)) {
+                seen.add('username:' + u.username);
+                suggestions.push({ type: 'Username', text: u.username, icon: 'fa-at text-blue-500' });
             }
             if (u.department && u.department.toLowerCase().includes(q) && !seen.has('department:' + u.department)) {
                 seen.add('department:' + u.department);
@@ -441,10 +441,10 @@
             if (!q) return true;
 
             const name = (u.name || '').toLowerCase();
-            const email = (u.email || '').toLowerCase();
+            const username = (u.username || '').toLowerCase();
             const department = (u.department || '').toLowerCase();
 
-            return name.includes(q) || email.includes(q) || department.includes(q);
+            return name.includes(q) || username.includes(q) || department.includes(q);
         });
 
         // Priority Re-ranking: Direct name matches float to top
@@ -458,11 +458,11 @@
 
                 if (aName.startsWith(q)) aScore += 100;
                 else if (aName.includes(q)) aScore += 75;
-                if ((a.email || '').toLowerCase().includes(q)) aScore += 40;
+                if ((a.username || '').toLowerCase().includes(q)) aScore += 40;
 
                 if (bName.startsWith(q)) bScore += 100;
                 else if (bName.includes(q)) bScore += 75;
-                if ((b.email || '').toLowerCase().includes(q)) bScore += 40;
+                if ((b.username || '').toLowerCase().includes(q)) bScore += 40;
 
                 if (bScore !== aScore) return bScore - aScore;
                 return a.id - b.id;
@@ -492,7 +492,7 @@
         let html = '';
         users.forEach(u => {
             const displayName = highlightText(u.name, highlightQuery);
-            const displayEmail = highlightText(u.email, highlightQuery);
+            const displayUsername = highlightText(u.username, highlightQuery);
             const displayDepartment = highlightText(u.department || 'Divisi belum diatur', highlightQuery);
             const isSelf = (u.id === currentSessionUserId);
 
@@ -553,7 +553,7 @@
                         </div>
                     </td>
                     <td class="py-3.5 px-4 whitespace-nowrap font-medium text-slate-700 dark:text-slate-300">
-                        ${displayEmail}
+                        ${displayUsername}
                     </td>
                     <td class="py-3.5 px-4 whitespace-nowrap">
                         ${roleHtml}

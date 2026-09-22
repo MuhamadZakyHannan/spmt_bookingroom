@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../core/PasswordPolicy.php';
+require_once __DIR__ . '/../core/UsernamePolicy.php';
 
 class AuthController extends Controller {
     private $userModel;
@@ -15,24 +16,25 @@ class AuthController extends Controller {
         }
 
         $error = '';
-        $email = '';
+        $username = '';
 
         if ($this->isPost()) {
             $this->validateCsrf('login.php');
 
-            $email = trim($_POST['email'] ?? '');
+            $username = UsernamePolicy::normalize((string) ($_POST['username'] ?? ''));
             $password = trim($_POST['password'] ?? '');
 
-            if (empty($email) || empty($password)) {
-                $error = 'Harap isi email dan password!';
+            if (empty($username) || empty($password)) {
+                $error = 'Harap isi username dan password!';
             } else {
-                $user = $this->userModel->findByEmail($email);
+                $user = $this->userModel->findByUsername($username);
                 if ($user && password_verify($password, $user['password'])) {
                     // Prevent Session Fixation
                     session_regenerate_id(true);
 
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['user_name'] = $user['name'];
+                    $_SESSION['user_username'] = $user['username'];
                     $_SESSION['user_email'] = $user['email'];
                     $_SESSION['user_avatar'] = $user['avatar'];
                     $_SESSION['role'] = $user['role'];
@@ -40,14 +42,14 @@ class AuthController extends Controller {
 
                     $this->redirect('dashboard.php');
                 } else {
-                    $error = 'Email atau password yang Anda masukkan salah!';
+                    $error = 'Username atau password yang Anda masukkan salah!';
                 }
             }
         }
 
         $this->view('auth/login', [
             'error' => $error,
-            'email' => $email
+            'username' => $username
         ]);
     }
 
@@ -58,28 +60,34 @@ class AuthController extends Controller {
 
         $error = '';
         $name = '';
-        $email = '';
+        $username = '';
 
         if ($this->isPost()) {
             $this->validateCsrf('register.php');
 
             $name = trim($_POST['name'] ?? '');
-            $email = trim($_POST['email'] ?? '');
+            $username = UsernamePolicy::normalize((string) ($_POST['username'] ?? ''));
             $password = trim($_POST['password'] ?? '');
             $confirm_password = trim($_POST['confirm_password'] ?? '');
 
-            if (empty($name) || empty($email) || empty($password)) {
+            if (empty($name) || empty($username) || empty($password)) {
                 $error = 'Harap isi semua kolom bertanda bintang (*)!';
+            } else if ($usernameError = UsernamePolicy::validationError($username)) {
+                $error = $usernameError;
             } else if ($password !== $confirm_password) {
                 $error = 'Konfirmasi password tidak cocok!';
             } else if ($passwordError = PasswordPolicy::validationError($password)) {
                 $error = $passwordError;
             } else {
-                $existing = $this->userModel->findByEmail($email);
+                $existing = $this->userModel->findByUsername($username);
                 if ($existing) {
-                    $error = 'Email tersebut sudah terdaftar! Gunakan email lain.';
+                    $error = 'Username tersebut sudah digunakan! Gunakan username lain.';
                 } else {
-                    if ($this->userModel->create($name, $email, $password)) {
+                    if ($this->userModel->create([
+                        'name' => $name,
+                        'username' => $username,
+                        'password' => $password,
+                    ])) {
                         set_flash('success', 'Pendaftaran akun berhasil! Silakan login.');
                         $this->redirect('login.php');
                     } else {
@@ -92,7 +100,7 @@ class AuthController extends Controller {
         $this->view('auth/register', [
             'error' => $error,
             'name' => $name,
-            'email' => $email
+            'username' => $username
         ]);
     }
 

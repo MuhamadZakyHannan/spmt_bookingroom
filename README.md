@@ -71,10 +71,10 @@ http://localhost/Room_Booking_System/
 
 Jika memakai data seed bawaan, akun demo yang tersedia adalah:
 
-| Role | Email | Password |
+| Role | Username | Password |
 | --- | --- | --- |
-| User | `budi@company.com` | `password123` |
-| Administrator | `sarah@company.com` | `password123` |
+| User | `budi` | `password123` |
+| Administrator | `sarah` | `password123` |
 
 Ganti password demo sebelum aplikasi digunakan di lingkungan produksi.
 
@@ -83,7 +83,7 @@ Ganti password demo sebelum aplikasi digunakan di lingkungan produksi.
 ### Membuat akun dan masuk
 
 1. Pilih **Daftar** untuk membuat akun baru.
-2. Isi nama, email, password minimal 8 karakter yang memuat huruf besar, huruf kecil, angka, dan simbol, lalu isi konfirmasi password.
+2. Isi nama, username, password minimal 8 karakter yang memuat huruf besar, huruf kecil, angka, dan simbol, lalu isi konfirmasi password.
 3. Masuk melalui halaman **Login**.
 
 Gunakan password yang panjang dan mengandung kombinasi huruf besar, huruf kecil, angka, serta simbol unik.
@@ -154,7 +154,7 @@ Foto bawaan yang tersedia:
 
 ### Mengelola pengguna
 
-Menu **Kelola Pengguna** digunakan untuk mencari dan melihat akun. Super Admin memperoleh tombol **Edit** untuk memperbarui nama, email, divisi, role, dan password opsional. Email harus unik; password baru minimal 8 karakter dan mengandung huruf besar, huruf kecil, angka, serta simbol.
+Menu **Kelola Pengguna** digunakan untuk mencari dan melihat akun. Super Admin memperoleh tombol **Edit** untuk memperbarui nama, username, divisi, role, dan password opsional. Username harus unik; password baru minimal 8 karakter dan mengandung huruf besar, huruf kecil, angka, serta simbol.
 
 Role `super_admin` dikhususkan untuk pengelola teknis sistem. Super admin memiliki seluruh akses administrator dan menjadi satu-satunya role yang dapat mengubah role atau menghapus akun lain. Akun super admin tidak dapat diubah atau dihapus dari halaman pengelolaan pengguna.
 

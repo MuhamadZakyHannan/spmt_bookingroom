@@ -45,12 +45,12 @@
         <form method="POST" action="login.php" class="space-y-4">
             <?php echo csrf_field(); ?>
             <div>
-                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Alamat Email</label>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Username</label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                        <i class="fas fa-envelope"></i>
+                        <i class="fas fa-user"></i>
                     </div>
-                    <input type="email" name="email" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="nama@company.com" value="<?php echo htmlspecialchars($email ?? ''); ?>" required>
+                    <input type="text" name="username" autocomplete="username" maxlength="100" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 text-sm focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="Masukkan username" value="<?php echo htmlspecialchars($username ?? ''); ?>" required>
                 </div>
             </div>
 

@@ -81,13 +81,14 @@ try {
 if (PHP_SAPI !== 'cli' && $pdo && isset($_SESSION['user_id'])) {
     try {
         $sessionUserStatement = $pdo->prepare(
-            'SELECT id, name, email, department, avatar, role FROM users WHERE id = ? LIMIT 1'
+            'SELECT id, name, username, email, department, avatar, role FROM users WHERE id = ? LIMIT 1'
         );
         $sessionUserStatement->execute([(int) $_SESSION['user_id']]);
         $sessionUser = $sessionUserStatement->fetch(PDO::FETCH_ASSOC);
 
         if ($sessionUser) {
             $_SESSION['user_name'] = $sessionUser['name'];
+            $_SESSION['user_username'] = $sessionUser['username'];
             $_SESSION['user_email'] = $sessionUser['email'];
             $_SESSION['department'] = $sessionUser['department'] ?? '';
             $_SESSION['user_avatar'] = $sessionUser['avatar'];
