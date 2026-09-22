@@ -3,6 +3,8 @@ require_once __DIR__ . '/../core/BaseModel.php';
 
 class BookingModel extends BaseModel {
     private $lastInsertId = 0;
+    private ?BookingHistoryService $historyService = null;
+    private ?BookingConflictService $conflictService = null;
 
     public function __construct(?PDO $connection = null) {
         parent::__construct($connection);
@@ -378,127 +380,19 @@ class BookingModel extends BaseModel {
      */
     public function getConflictingGroups() {
         if (!$this->db) return [];
-
-        $sql = "SELECT b.*, r.name as room_name, r.code as room_code, r.capacity as room_capacity, r.location as room_location,
-                       IFNULL(b.user_name, u.name) as user_name, 
-                       u.username as user_email,
-                       IFNULL(b.user_dept, 'Internal') as user_dept,
-                       d.id AS document_id, d.original_name AS document_name
-                FROM bookings b 
-                JOIN rooms r ON b.room_id = r.id 
-                LEFT JOIN users u ON b.user_id = u.id
-                LEFT JOIN booking_documents d
-                  ON d.booking_id = b.id AND d.document_type = 'supporting_document'
-                WHERE b.status IN ('pending', 'confirmed') 
-                ORDER BY b.date ASC, b.room_id ASC, b.start_time ASC";
-        $stmt = $this->db->query($sql);
-        $allBookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        if (empty($allBookings)) return [];
-
-        // Kelompokkan per room_id dan date
-        $byRoomDate = [];
-        foreach ($allBookings as $b) {
-            $key = $b['room_id'] . '_' . $b['date'];
-            $byRoomDate[$key][] = $b;
-        }
-
-        $conflictGroups = [];
-        $groupId = 1;
-
-        foreach ($byRoomDate as $key => $roomDateBookings) {
-            if (count($roomDateBookings) < 2) continue;
-
-            $n = count($roomDateBookings);
-            $adj = array_fill(0, $n, []);
-
-            for ($i = 0; $i < $n; $i++) {
-                $startA = strtotime($roomDateBookings[$i]['start_time']);
-                $endA = strtotime($roomDateBookings[$i]['end_time']);
-
-                for ($j = $i + 1; $j < $n; $j++) {
-                    $startB = strtotime($roomDateBookings[$j]['start_time']);
-                    $endB = strtotime($roomDateBookings[$j]['end_time']);
-
-                    // Overlap: max(startA, startB) < min(endA, endB)
-                    if ($startA < $endB && $endA > $startB) {
-                        $adj[$i][] = $j;
-                        $adj[$j][] = $i;
-                    }
-                }
-            }
-
-            $visited = array_fill(0, $n, false);
-            for ($i = 0; $i < $n; $i++) {
-                if ($visited[$i]) continue;
-
-                $clusterIndices = [];
-                $queue = [$i];
-                $visited[$i] = true;
-
-                while (!empty($queue)) {
-                    $curr = array_shift($queue);
-                    $clusterIndices[] = $curr;
-
-                    foreach ($adj[$curr] as $neighbor) {
-                        if (!$visited[$neighbor]) {
-                            $visited[$neighbor] = true;
-                            $queue[] = $neighbor;
-                        }
-                    }
-                }
-
-                if (count($clusterIndices) >= 2) {
-                    $groupBookings = [];
-                    $hasPending = false;
-                    foreach ($clusterIndices as $idx) {
-                        $item = $roomDateBookings[$idx];
-                        if ($item['status'] === 'pending') {
-                            $hasPending = true;
-                        }
-                        $groupBookings[] = $item;
-                    }
-
-                    if ($hasPending) {
-                        $first = $groupBookings[0];
-                        $conflictGroups[] = [
-                            'group_id' => $groupId++,
-                            'room_id' => $first['room_id'],
-                            'room_name' => $first['room_name'],
-                            'room_code' => $first['room_code'],
-                            'date' => $first['date'],
-                            'bookings' => $groupBookings
-                        ];
-                    }
-                }
-            }
-        }
-
-        return $conflictGroups;
+        return $this->bookingConflictService()->getGroups();
     }
 
     public function resolveConflict($winnerId, array $loserIds) {
         if (!$this->db) return false;
-        try {
-            $this->db->beginTransaction();
+        return $this->bookingConflictService()->resolve((int) $winnerId, $loserIds);
+    }
 
-            // Setujui pemenang
-            $stmtWin = $this->db->prepare("UPDATE bookings SET status = 'confirmed', status_reason = NULL WHERE id = ?");
-            $stmtWin->execute([$winnerId]);
-
-            // Batalkan pengajuan yang kalah
-            if (!empty($loserIds)) {
-                $placeholders = implode(',', array_fill(0, count($loserIds), '?'));
-                $stmtLose = $this->db->prepare("UPDATE bookings SET status = 'cancelled', status_reason = ? WHERE id IN ($placeholders)");
-                $stmtLose->execute(array_merge([BookingLifecycleService::REASON_CONFLICT_NOT_SELECTED], $loserIds));
-            }
-
-            $this->db->commit();
-            return true;
-        } catch (Exception $e) {
-            $this->db->rollBack();
-            return false;
-        }
+    /**
+     * Membuat service konflik secara lazy menggunakan koneksi model yang sama.
+     */
+    private function bookingConflictService(): BookingConflictService {
+        return $this->conflictService ??= new BookingConflictService($this->db);
     }
 
     public function getByUserId($userId) {
@@ -649,72 +543,28 @@ class BookingModel extends BaseModel {
 
     public function getBookingHistory($filters = []) {
         if (!$this->db) return [];
-        $sql = "SELECT b.*, r.name as room_name, r.code as room_code, r.location as room_location,
-                       IFNULL(b.user_name, u.name) as user_name, 
-                       u.username as user_email,
-                       IFNULL(b.user_dept, 'Internal') as user_dept 
-                FROM bookings b 
-                JOIN rooms r ON b.room_id = r.id 
-                JOIN users u ON b.user_id = u.id 
-                WHERE 1=1";
-        $params = [];
-
-        if (!empty($filters['start_date'])) {
-            $sql .= " AND b.date >= ?";
-            $params[] = $filters['start_date'];
-        }
-        if (!empty($filters['end_date'])) {
-            $sql .= " AND b.date <= ?";
-            $params[] = $filters['end_date'];
-        }
-        if (!empty($filters['room_id'])) {
-            $sql .= " AND b.room_id = ?";
-            $params[] = (int)$filters['room_id'];
-        }
-        if (!empty($filters['status'])) {
-            $sql .= " AND b.status = ?";
-            $params[] = $filters['status'];
-        }
-        if (!empty($filters['search'])) {
-            $sql .= " AND (b.title LIKE ? OR u.name LIKE ? OR r.name LIKE ? OR IFNULL(b.user_name, '') LIKE ? OR IFNULL(b.user_dept, '') LIKE ?)";
-            $term = "%" . $filters['search'] . "%";
-            $params[] = $term; $params[] = $term; $params[] = $term; $params[] = $term; $params[] = $term;
-        }
-
-        $sql .= " ORDER BY b.date DESC, b.start_time DESC, b.id DESC";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchAll();
+        return $this->bookingHistoryService()->getHistory($filters);
     }
 
     public function getBookingHistorySummary($filters = []) {
-        $bookings = $this->getBookingHistory($filters);
-        $totalBookings = count($bookings);
-        $confirmedCount = 0;
-        $pendingCount = 0;
-        $totalAttendees = 0;
-        $totalMinutes = 0;
-
-        foreach ($bookings as $b) {
-            if ($b['status'] === 'confirmed') $confirmedCount++;
-            if ($b['status'] === 'pending') $pendingCount++;
-            $totalAttendees += (int)($b['attendees_count'] ?? 1);
-
-            $start = strtotime($b['date'] . ' ' . $b['start_time']);
-            $end = strtotime($b['date'] . ' ' . $b['end_time']);
-            if ($end > $start) {
-                $totalMinutes += ($end - $start) / 60;
-            }
+        if (!$this->db) {
+            return [
+                'total_bookings' => 0,
+                'confirmed_count' => 0,
+                'pending_count' => 0,
+                'total_attendees' => 0,
+                'total_hours' => 0,
+                'bookings' => [],
+            ];
         }
+        return $this->bookingHistoryService()->getSummary($filters);
+    }
 
-        return [
-            'total_bookings' => $totalBookings,
-            'confirmed_count' => $confirmedCount,
-            'pending_count' => $pendingCount,
-            'total_attendees' => $totalAttendees,
-            'total_hours' => round($totalMinutes / 60, 1),
-            'bookings' => $bookings
-        ];
+    /**
+     * Membuat service riwayat secara lazy menggunakan koneksi model yang sama.
+     */
+    private function bookingHistoryService(): BookingHistoryService {
+        return $this->historyService ??= new BookingHistoryService($this->db);
     }
 
     public function getStatisticsData($filters = []) {

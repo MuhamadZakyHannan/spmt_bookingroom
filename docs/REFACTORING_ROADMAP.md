@@ -9,6 +9,7 @@ perilaku aplikasi serta melewati seluruh regression test sebelum dilanjutkan.
    injection. Status: selesai.
 2. **Domain booking** — pecah `BookingModel` menjadi komponen query, penulisan
    jadwal, penyelesaian konflik, dan laporan tanpa mengubah API controller.
+   Status: riwayat, ringkasan laporan, serta konflik sudah diekstrak.
 3. **Controller admin** — pisahkan pengelolaan ruangan, booking, pengguna,
    display, dan statistik dari `AdminController`.
 4. **Presentasi** — pindahkan JavaScript besar dari view ke modul dalam
