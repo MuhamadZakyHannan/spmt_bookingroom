@@ -36,7 +36,8 @@ C:\xampp\htdocs\Room_Booking_System
 1. Jalankan Apache dan MySQL dari XAMPP Control Panel.
 2. Buka `http://localhost/phpmyadmin/`.
 3. Import skema utama `C:\xampp\private\Room_Booking_System\database.sql` ke MySQL.
-4. Pastikan database bernama `meetspace_db`, atau sesuaikan `DB_NAME` pada `.env`.
+4. Import file SQL pada folder `migrations/` sesuai urutan nama file.
+5. Pastikan database bernama `meetspace_db`, atau sesuaikan `DB_NAME` pada `.env`.
 
 Skema utama sengaja disimpan di luar `htdocs` agar tidak dapat diunduh melalui web server.
 

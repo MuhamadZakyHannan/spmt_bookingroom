@@ -33,20 +33,25 @@ class UserModel {
     public function create($nameOrData, $email = '', $password = '', $role = 'user') {
         if (!$this->db) return false;
 
+        $department = null;
+
         if (is_array($nameOrData)) {
             $name = $nameOrData['name'] ?? '';
             $email = $nameOrData['email'] ?? '';
             $password = $nameOrData['password'] ?? '';
             $role = $nameOrData['role'] ?? 'user';
+            $department = trim((string)($nameOrData['department'] ?? '')) ?: null;
         } else {
             $name = $nameOrData;
         }
 
+        $role = in_array($role, ['user', 'admin'], true) ? $role : 'user';
+
         $hash = password_hash($password, PASSWORD_DEFAULT);
         $avatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80';
-        
-        $stmt = $this->db->prepare("INSERT INTO users (name, email, password, avatar, role) VALUES (?, ?, ?, ?, ?)");
-        return $stmt->execute([$name, $email, $hash, $avatar, $role]);
+
+        $stmt = $this->db->prepare("INSERT INTO users (name, email, department, password, avatar, role) VALUES (?, ?, ?, ?, ?, ?)");
+        return $stmt->execute([$name, $email, $department, $hash, $avatar, $role]);
     }
 
     public function getAllUsers() {

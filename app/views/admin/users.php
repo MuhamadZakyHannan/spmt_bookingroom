@@ -82,6 +82,7 @@
                             <img src="<?php echo htmlspecialchars($u['avatar'] ?: 'https://via.placeholder.com/40'); ?>" class="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0">
                             <div>
                                 <div class="font-bold text-slate-900 dark:text-white text-sm"><?php echo htmlspecialchars($u['name']); ?></div>
+                                <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5"><?php echo htmlspecialchars($u['department'] ?: 'Divisi belum diatur'); ?></div>
                                 <?php if ($u['id'] === $_SESSION['user_id']): ?>
                                     <span class="text-[9px] font-bold px-1.5 py-0.5 bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300 rounded">Akun Anda</span>
                                 <?php endif; ?>
@@ -139,6 +140,7 @@
             'id' => (int)$u['id'],
             'name' => $u['name'],
             'email' => $u['email'],
+            'department' => $u['department'] ?? '',
             'role' => $u['role'],
             'avatar' => $u['avatar'] ?: 'https://via.placeholder.com/40',
             'created_at' => format_date($u['created_at'])
@@ -201,6 +203,10 @@
                 seen.add('email:' + u.email);
                 suggestions.push({ type: 'Email', text: u.email, icon: 'fa-envelope text-blue-500' });
             }
+            if (u.department && u.department.toLowerCase().includes(q) && !seen.has('department:' + u.department)) {
+                seen.add('department:' + u.department);
+                suggestions.push({ type: 'Divisi', text: u.department, icon: 'fa-building text-brand-500' });
+            }
         });
 
         if (suggestions.length === 0) {
@@ -262,8 +268,9 @@
 
             const name = (u.name || '').toLowerCase();
             const email = (u.email || '').toLowerCase();
+            const department = (u.department || '').toLowerCase();
 
-            return name.includes(q) || email.includes(q);
+            return name.includes(q) || email.includes(q) || department.includes(q);
         });
 
         // Priority Re-ranking: Direct name matches float to top
@@ -312,6 +319,7 @@
         users.forEach(u => {
             const displayName = highlightText(u.name, highlightQuery);
             const displayEmail = highlightText(u.email, highlightQuery);
+            const displayDepartment = highlightText(u.department || 'Divisi belum diatur', highlightQuery);
             const isSelf = (u.id === currentSessionUserId);
 
             let roleHtml = '';
@@ -357,6 +365,7 @@
                         <img src="${escapeHtml(u.avatar)}" class="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0">
                         <div>
                             <div class="font-bold text-slate-900 dark:text-white text-sm">${displayName}</div>
+                            <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">${displayDepartment}</div>
                             ${isSelf ? '<span class="text-[9px] font-bold px-1.5 py-0.5 bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300 rounded">Akun Anda</span>' : ''}
                         </div>
                     </td>

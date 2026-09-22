@@ -35,6 +35,7 @@ class AuthController extends Controller {
                     $_SESSION['user_email'] = $user['email'];
                     $_SESSION['user_avatar'] = $user['avatar'];
                     $_SESSION['role'] = $user['role'];
+                    $_SESSION['department'] = $user['department'] ?? '';
 
                     $this->redirect('dashboard.php');
                 } else {
