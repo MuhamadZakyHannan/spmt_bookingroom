@@ -190,6 +190,22 @@ function format_time($time_str) {
     return date('H:i', strtotime($time_str));
 }
 
+function is_booking_expired(array $booking): bool {
+    return ($booking['status'] ?? '') === 'cancelled'
+        && ($booking['status_reason'] ?? '') === BookingLifecycleService::REASON_EXPIRED;
+}
+
+function booking_status_label(array $booking): string {
+    if (is_booking_expired($booking)) return 'Kedaluwarsa';
+    return match ($booking['status'] ?? '') {
+        'pending' => 'Menunggu Persetujuan',
+        'confirmed' => 'Disetujui',
+        'completed' => 'Selesai',
+        'cancelled' => 'Dibatalkan / Ditolak',
+        default => 'Tidak Diketahui',
+    };
+}
+
 /**
  * Menghasilkan versi aset dari waktu modifikasi file agar browser tidak
  * memakai CSS atau JavaScript lama setelah aplikasi diperbarui.

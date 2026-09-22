@@ -7,6 +7,9 @@ class BookingModel {
 
     public function __construct() {
         $this->db = Database::getInstance()->getConnection();
+        if ($this->db) {
+            (new BookingLifecycleService($this->db))->expirePendingBookings();
+        }
     }
 
     public function getTodayActiveBookingsCount() {
@@ -481,14 +484,14 @@ class BookingModel {
             $this->db->beginTransaction();
 
             // Setujui pemenang
-            $stmtWin = $this->db->prepare("UPDATE bookings SET status = 'confirmed' WHERE id = ?");
+            $stmtWin = $this->db->prepare("UPDATE bookings SET status = 'confirmed', status_reason = NULL WHERE id = ?");
             $stmtWin->execute([$winnerId]);
 
             // Batalkan pengajuan yang kalah
             if (!empty($loserIds)) {
                 $placeholders = implode(',', array_fill(0, count($loserIds), '?'));
-                $stmtLose = $this->db->prepare("UPDATE bookings SET status = 'cancelled' WHERE id IN ($placeholders)");
-                $stmtLose->execute($loserIds);
+                $stmtLose = $this->db->prepare("UPDATE bookings SET status = 'cancelled', status_reason = ? WHERE id IN ($placeholders)");
+                $stmtLose->execute(array_merge([BookingLifecycleService::REASON_CONFLICT_NOT_SELECTED], $loserIds));
             }
 
             $this->db->commit();
@@ -537,11 +540,11 @@ class BookingModel {
     public function cancel($bookingId, $userId, $isAdmin = false) {
         if (!$this->db) return false;
         if ($isAdmin) {
-            $stmt = $this->db->prepare("UPDATE bookings SET status = 'cancelled' WHERE id = ?");
-            return $stmt->execute([$bookingId]);
+            $stmt = $this->db->prepare("UPDATE bookings SET status = 'cancelled', status_reason = ? WHERE id = ?");
+            return $stmt->execute([BookingLifecycleService::REASON_CANCELLED_BY_ADMIN, $bookingId]);
         } else {
-            $stmt = $this->db->prepare("UPDATE bookings SET status = 'cancelled' WHERE id = ? AND user_id = ? AND status IN ('pending', 'confirmed')");
-            return $stmt->execute([$bookingId, $userId]);
+            $stmt = $this->db->prepare("UPDATE bookings SET status = 'cancelled', status_reason = ? WHERE id = ? AND user_id = ? AND status IN ('pending', 'confirmed')");
+            return $stmt->execute([BookingLifecycleService::REASON_CANCELLED_BY_USER, $bookingId, $userId]);
         }
     }
 
@@ -587,8 +590,11 @@ class BookingModel {
         if (!in_array($status, $allowed, true)) {
             return false;
         }
-        $stmt = $this->db->prepare("UPDATE bookings SET status = ? WHERE id = ?");
-        return $stmt->execute([$status, $bookingId]);
+        $reason = $status === 'cancelled'
+            ? BookingLifecycleService::REASON_CANCELLED_BY_ADMIN
+            : null;
+        $stmt = $this->db->prepare("UPDATE bookings SET status = ?, status_reason = ? WHERE id = ?");
+        return $stmt->execute([$status, $reason, $bookingId]);
     }
 
     public function delete($bookingId) {

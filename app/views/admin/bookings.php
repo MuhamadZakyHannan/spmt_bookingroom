@@ -458,6 +458,7 @@
                 <?php foreach ($bookings as $b): ?>
                     <?php 
                         $isPending = ($b['status'] === 'pending'); 
+                        $isExpired = is_booking_expired($b);
                         $purposeText = $b['purpose'] ?: 'Tanpa catatan tambahan.';
                         
                         $modalPayload = [
@@ -471,7 +472,8 @@
                             'date' => format_date($b['date']),
                             'time' => format_time($b['start_time']) . ' - ' . format_time($b['end_time']) . ' WIB',
                             'attendees' => $b['attendees_count'] . ' Orang',
-                            'status' => $b['status']
+                            'status' => $b['status'],
+                            'status_reason' => $b['status_reason'] ?? null
                         ];
                     ?>
                     <tr id="booking-row-<?php echo $b['id']; ?>" class="hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition <?php echo $isPending ? 'bg-amber-50/50 dark:bg-amber-950/25 border-l-4 border-amber-500' : ''; ?>">
@@ -560,6 +562,10 @@
                             <?php elseif ($b['status'] === 'completed'): ?>
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
                                     <i class="fas fa-check-double text-blue-600"></i> Selesai
+                                </span>
+                            <?php elseif ($isExpired): ?>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
+                                    <i class="fas fa-clock-rotate-left text-slate-500"></i> Kedaluwarsa
                                 </span>
                             <?php else: ?>
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800">
@@ -744,6 +750,7 @@
             'end_time' => substr($b['end_time'], 0, 5),
             'attendees_count' => (int)$b['attendees_count'],
             'status' => $b['status'],
+            'status_reason' => $b['status_reason'] ?? null,
             'activity_type_label' => $actLabel,
             'document_id' => (int)($b['document_id'] ?? 0),
             'document_name' => $b['document_name'] ?? '',
@@ -1015,7 +1022,8 @@
                 date: b.formatted_date,
                 time: b.start_time + ' - ' + b.end_time + ' WIB',
                 attendees: b.attendees_count + ' Orang',
-                status: b.status
+                status: b.status,
+                status_reason: b.status_reason || null
             };
 
             const encodedData = escapeHtml(JSON.stringify(modalData));
@@ -1043,6 +1051,12 @@
                 statusHtml = `
                     <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800">
                         <i class="fas fa-check-double text-blue-600"></i> Selesai
+                    </span>
+                `;
+            } else if (b.status_reason === 'expired') {
+                statusHtml = `
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
+                        <i class="fas fa-clock-rotate-left text-slate-500"></i> Kedaluwarsa
                     </span>
                 `;
             } else {

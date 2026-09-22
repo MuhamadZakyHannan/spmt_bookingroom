@@ -16,6 +16,8 @@ class AdminDashboardService {
             return $this->emptySnapshot();
         }
 
+        (new BookingLifecycleService($this->db))->expirePendingBookings();
+
         return [
             'pending_count' => $this->getPendingCount(),
             'pending_requests' => $this->getPendingRequests(),

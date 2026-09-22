@@ -57,6 +57,7 @@
                 <option value="pending">⏳ Menunggu Persetujuan</option>
                 <option value="confirmed">✓ Disetujui (Confirmed)</option>
                 <option value="completed">✓ Selesai</option>
+                <option value="expired">⌛ Kedaluwarsa</option>
                 <option value="cancelled">✕ Dibatalkan / Ditolak</option>
             </select>
         </div>
@@ -87,9 +88,10 @@
                     $isPending = ($b['status'] === 'pending');
                     $isCompleted = ($b['status'] === 'completed');
                     $isCancelled = ($b['status'] === 'cancelled');
+                    $isExpired = is_booking_expired($b);
                     $purposeText = $b['purpose'] ?: 'Tidak ada catatan agenda tambahan.';
                     $isLong = strlen($purposeText) > 60;
-                    $borderColor = $isPending ? 'border-l-amber-500' : ($isConfirmed ? 'border-l-emerald-500' : ($isCompleted ? 'border-l-blue-500' : 'border-l-rose-500'));
+                    $borderColor = $isExpired ? 'border-l-slate-400' : ($isPending ? 'border-l-amber-500' : ($isConfirmed ? 'border-l-emerald-500' : ($isCompleted ? 'border-l-blue-500' : 'border-l-rose-500')));
                 ?>
                 <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/80 border-l-4 <?php echo $borderColor; ?> shadow-sm p-4 sm:p-5 hover:shadow-md transition <?php echo $isPending ? 'bg-amber-50/20 dark:bg-amber-950/10' : ''; ?>">
                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -107,6 +109,10 @@
                                 <?php elseif ($isCompleted): ?>
                                     <span class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
                                         <i class="fas fa-check-double text-blue-600"></i> Selesai
+                                    </span>
+                                <?php elseif ($isExpired): ?>
+                                    <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
+                                        <i class="fas fa-clock-rotate-left text-slate-500"></i> Kedaluwarsa
                                     </span>
                                 <?php else: ?>
                                     <span class="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
@@ -281,6 +287,7 @@
             'attendees_count' => (int)$b['attendees_count'],
             'purpose' => $purpose,
             'status' => $b['status'],
+            'status_reason' => $b['status_reason'] ?? null,
             'document_id' => (int)($b['document_id'] ?? 0),
             'document_name' => $b['document_name'] ?? ''
         ];
@@ -422,7 +429,9 @@
         }
 
         let filtered = rawMyBookingsList.filter(b => {
-            if (selectedStatus && b.status !== selectedStatus) return false;
+            if (selectedStatus === 'expired' && b.status_reason !== 'expired') return false;
+            if (selectedStatus === 'cancelled' && (b.status !== 'cancelled' || b.status_reason === 'expired')) return false;
+            if (selectedStatus && selectedStatus !== 'expired' && b.status !== selectedStatus) return false;
             if (!q) return true;
 
             const title = (b.title || '').toLowerCase();
@@ -488,8 +497,9 @@
             const isPending = (b.status === 'pending');
             const isCompleted = (b.status === 'completed');
             const isCancelled = (b.status === 'cancelled');
+            const isExpired = isCancelled && b.status_reason === 'expired';
 
-            const borderColor = isPending ? 'border-l-amber-500' : (isConfirmed ? 'border-l-emerald-500' : (isCompleted ? 'border-l-blue-500' : 'border-l-rose-500'));
+            const borderColor = isExpired ? 'border-l-slate-400' : (isPending ? 'border-l-amber-500' : (isConfirmed ? 'border-l-emerald-500' : (isCompleted ? 'border-l-blue-500' : 'border-l-rose-500')));
             const bgClass = isPending ? 'bg-amber-50/20 dark:bg-amber-950/10' : '';
 
             let badgeHtml = '';
@@ -509,6 +519,12 @@
                 badgeHtml = `
                     <span class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
                         <i class="fas fa-check-double text-blue-600"></i> Selesai
+                    </span>
+                `;
+            } else if (isExpired) {
+                badgeHtml = `
+                    <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
+                        <i class="fas fa-clock-rotate-left text-slate-500"></i> Kedaluwarsa
                     </span>
                 `;
             } else {

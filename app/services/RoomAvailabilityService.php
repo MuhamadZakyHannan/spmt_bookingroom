@@ -5,9 +5,10 @@ require_once __DIR__ . '/../core/Database.php';
 /**
  * Menyajikan status ketersediaan ruangan untuk satu rentang waktu.
  *
- * Service ini hanya membaca data. Keputusan akhir ketika menyimpan booking
- * tetap dilakukan secara atomik oleh BookingModel agar tidak dapat dilewati
- * melalui manipulasi antarmuka.
+ * Sebelum membaca jadwal, service menyelaraskan pengajuan pending yang telah
+ * melewati waktu mulai. Keputusan akhir ketika menyimpan booking tetap
+ * dilakukan secara atomik oleh BookingModel agar tidak dapat dilewati melalui
+ * manipulasi antarmuka.
  */
 class RoomAvailabilityService
 {
@@ -29,6 +30,8 @@ class RoomAvailabilityService
         if (! $this->db) {
             throw new RuntimeException('Koneksi database tidak tersedia.');
         }
+
+        (new BookingLifecycleService($this->db))->expirePendingBookings();
 
         $rooms = $this->db->query(
             'SELECT id, code, name, capacity, location, facilities, status

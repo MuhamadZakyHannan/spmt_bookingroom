@@ -7,6 +7,7 @@ MeetSpace adalah aplikasi pemesanan ruang rapat berbasis PHP dan MySQL untuk pen
 - Pemesanan ruang dan kalender jadwal.
 - Pemeriksa ketersediaan ruangan secara langsung berdasarkan tanggal, waktu, dan jumlah peserta.
 - Approval booking oleh administrator.
+- Pengajuan yang belum disetujui otomatis kedaluwarsa saat waktu mulai tiba.
 - Edit pengajuan dengan aturan akses berdasarkan pemilik, role, dan status booking.
 - Lampiran surat pendukung PDF/JPG/PNG dengan penyimpanan privat dan akses terotorisasi.
 - Analisis prioritas ketika jadwal bentrok menggunakan metode SAW.
@@ -102,6 +103,8 @@ Gunakan password yang panjang dan mengandung kombinasi huruf besar, huruf kecil,
 6. Booking dari user berstatus `pending` sampai disetujui admin. Booking yang dibuat admin dan tidak bentrok langsung terkonfirmasi.
 7. Pantau status melalui **Booking Saya** atau **Kalender Jadwal**.
 
+Pengajuan yang masih `pending` ketika waktu mulai tiba otomatis dipindahkan ke status **Kedaluwarsa**. Status ini dibedakan dari penolakan atau pembatalan manual dan tidak lagi dihitung sebagai konflik jadwal.
+
 Pengajuan berstatus `pending` dapat diedit oleh pemiliknya melalui tombol **Edit Pengajuan** pada **Booking Saya**. Setelah disimpan, status tetap `pending` dan jadwal diperiksa ulang. Pemilik tidak dapat mengedit booking yang sudah `confirmed`; perubahan booking `pending` atau `confirmed` tersebut hanya dapat dilakukan Admin atau Super Admin.
 
 Dokumen dapat dilihat oleh pemilik booking, Admin, dan Super Admin melalui tautan **Surat Pendukung**. Jika dokumen belum tersedia ketika booking dibuat, gunakan tombol **Tambah Surat Pendukung** pada menu **Booking Saya** selama status masih `pending` atau `confirmed`. Alur ini hanya mengunggah dokumen dan tidak mengubah jadwal maupun status booking. Tombol berubah menjadi **Ganti Surat Pendukung** setelah dokumen tersedia. File fisik disimpan di direktori `BOOKING_DOCUMENT_STORAGE` di luar `htdocs`; database hanya menyimpan metadata, checksum, dan nama file acak.
@@ -134,6 +137,16 @@ Gunakan menu **Kelola Semua Booking** untuk:
 - memantau status serta detail peminjaman.
 
 Notifikasi baru dapat dibuka melalui ikon lonceng pada header admin.
+
+### Menjalankan kedaluwarsa otomatis
+
+Aplikasi menyelaraskan pengajuan kedaluwarsa setiap kali halaman booking, dashboard admin, atau pemeriksa ketersediaan dibuka. Agar proses tetap berjalan tanpa menunggu ada pengguna yang membuka aplikasi, jadwalkan skrip berikut melalui **Windows Task Scheduler** setiap satu menit:
+
+- Program/script: `C:\xampp\php\php.exe`
+- Add arguments: `C:\xampp\htdocs\Room_Booking_System\scripts\expire_pending_bookings.php`
+- Start in: `C:\xampp\htdocs\Room_Booking_System`
+
+Skrip aman dijalankan berulang kali. Hanya booking berstatus `pending` dengan waktu mulai yang sudah tiba yang diubah menjadi **Kedaluwarsa**; booking terkonfirmasi tidak terpengaruh.
 
 ### Mengelola ruangan
 
@@ -216,6 +229,7 @@ php tests/run_booking_document_http_tests.php
 php tests/run_calendar_ui_tests.php
 php tests/run_role_hierarchy_tests.php
 php tests/run_user_account_tests.php
+php tests/run_booking_expiration_tests.php
 ```
 
 Pengujian membuat data sementara dan membersihkannya kembali setelah selesai.

@@ -205,6 +205,7 @@
                 <?php 
                 foreach ($bookings as $b): 
                     $purposeText = $b['purpose'] ?: 'Tanpa catatan tambahan.';
+                    $isExpired = is_booking_expired($b);
                     
                     // Hitung durasi jam
                     $startT = strtotime($b['date'] . ' ' . $b['start_time']);
@@ -223,7 +224,8 @@
                         'time' => format_time($b['start_time']) . ' - ' . format_time($b['end_time']) . ' WIB',
                         'duration' => $durationHours . ' Jam',
                         'attendees' => $b['attendees_count'] . ' Orang',
-                        'status' => $b['status']
+                        'status' => $b['status'],
+                        'status_reason' => $b['status_reason'] ?? null
                     ];
                 ?>
                     <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition">
@@ -284,6 +286,10 @@
                             <?php elseif ($b['status'] === 'pending'): ?>
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-amber-50 text-amber-900 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700">
                                     <i class="fas fa-hourglass-half text-amber-600"></i> Menunggu
+                                </span>
+                            <?php elseif ($isExpired): ?>
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
+                                    <i class="fas fa-clock-rotate-left text-slate-500"></i> Kedaluwarsa
                                 </span>
                             <?php else: ?>
                                 <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800">
@@ -401,7 +407,8 @@
             'duration' => $durationHours . ' Jam',
             'duration_hours' => $durationHours,
             'attendees_count' => (int)$b['attendees_count'],
-            'status' => $b['status']
+            'status' => $b['status'],
+            'status_reason' => $b['status_reason'] ?? null,
         ];
     }, $bookings)); ?>;
 
@@ -649,6 +656,12 @@
                 statusHtml = `
                     <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-amber-50 text-amber-900 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700">
                         <i class="fas fa-hourglass-half text-amber-600"></i> Menunggu
+                    </span>
+                `;
+            } else if (b.status_reason === 'expired') {
+                statusHtml = `
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
+                        <i class="fas fa-clock-rotate-left text-slate-500"></i> Kedaluwarsa
                     </span>
                 `;
             } else {
