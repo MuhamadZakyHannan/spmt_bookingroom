@@ -6,11 +6,13 @@ class CalendarController extends Controller {
     private $roomModel;
     private $bookingModel;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh CalendarController. */
     public function __construct() {
         $this->roomModel = $this->model('RoomModel');
         $this->bookingModel = $this->model('BookingModel');
     }
 
+    /** Menampilkan halaman utama calendar. */
     public function index() {
         $this->requireAuth();
 
@@ -23,13 +25,10 @@ class CalendarController extends Controller {
         ]);
     }
 
+    /** Menjalankan proses events api pada calendar. */
     public function eventsApi() {
-        header('Content-Type: application/json');
-
-        if (!is_logged_in()) {
-            echo json_encode([]);
-            exit;
-        }
+        ApiRequest::requireMethod('GET');
+        ApiRequest::requireLogin();
 
         $room_filter = (int)($_GET['room_id'] ?? 0);
         $bookings = $this->bookingModel->getCalendarEvents($room_filter);
@@ -63,7 +62,6 @@ class CalendarController extends Controller {
             ];
         }
 
-        echo json_encode($events);
-        exit;
+        ApiResponse::send($events);
     }
 }

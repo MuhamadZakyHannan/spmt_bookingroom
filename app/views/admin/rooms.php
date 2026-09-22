@@ -68,8 +68,8 @@
 <!-- ==========================================
      MODAL TAMBAH RUANGAN (DENGAN UPLOAD FOTO)
      ========================================== -->
-<div id="addModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 max-w-xl w-full overflow-hidden max-h-[90vh] flex flex-col">
+<div id="addModal" class="responsive-modal fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center">
+    <div class="responsive-modal-panel bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 max-w-xl w-full overflow-hidden flex flex-col">
         <div class="p-5 bg-amber-600 text-white flex items-center justify-between shrink-0">
             <h3 class="font-bold text-base flex items-center gap-2">
                 <i class="fas fa-plus-circle"></i> Tambah Ruangan Rapat Baru
@@ -79,11 +79,11 @@
             </button>
         </div>
 
-        <form method="POST" action="admin_rooms.php" enctype="multipart/form-data" class="p-6 space-y-4 overflow-y-auto">
+        <form method="POST" action="admin_rooms.php" enctype="multipart/form-data" class="p-4 sm:p-6 space-y-4 overflow-y-auto">
             <?php echo csrf_field(); ?>
             <input type="hidden" name="action" value="add">
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="responsive-modal-grid gap-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Kode Ruangan *</label>
                     <input type="text" name="code" placeholder="Misal: R-101" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono uppercase focus:outline-none focus:ring-2 focus:ring-amber-500" required>
@@ -94,7 +94,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="responsive-modal-grid gap-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Ruangan *</label>
                     <input type="text" name="name" placeholder="Misal: Ruang Rapat Samudera" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-amber-500" required>
@@ -109,7 +109,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="responsive-modal-grid gap-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Lokasi Gedung *</label>
                     <input type="text" name="location" placeholder="Gedung Pelindo" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-amber-500" required>
@@ -128,7 +128,7 @@
             <!-- Upload Foto Ruangan Langsung -->
             <div>
                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Upload Foto Ruangan</label>
-                <div class="flex items-center gap-4">
+                <div class="flex flex-col items-stretch gap-3 min-[420px]:flex-row min-[420px]:items-center min-[420px]:gap-4">
                     <div class="w-20 h-20 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
                         <img id="addPhotoPreview" src="public/rooms/KalTim.jpeg" class="w-full h-full object-cover" alt="Preview Foto">
                     </div>
@@ -151,9 +151,9 @@
                 <textarea name="description" rows="2" placeholder="Deskripsi tata ruang, peruntukan rapat, atau informasi teknis lainnya..." class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
             </div>
 
-            <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
-                <button type="button" onclick="toggleAddModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-lg text-xs">Batal</button>
-                <button type="submit" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs shadow">Simpan Ruangan</button>
+            <div class="flex flex-col-reverse gap-2 pt-3 border-t border-slate-100 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-end">
+                <button type="button" onclick="toggleAddModal()" class="w-full px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-lg text-xs sm:w-auto">Batal</button>
+                <button type="submit" class="w-full px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs shadow sm:w-auto">Simpan Ruangan</button>
             </div>
         </form>
     </div>
@@ -162,8 +162,8 @@
 <!-- ==========================================
      MODAL EDIT INFORMASI & FOTO RUANGAN
      ========================================== -->
-<div id="editModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 max-w-xl w-full overflow-hidden max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-150">
+<div id="editModal" class="responsive-modal fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center">
+    <div class="responsive-modal-panel bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 max-w-xl w-full overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
         <div class="p-5 bg-brand-600 text-white flex items-center justify-between shrink-0">
             <h3 class="font-bold text-base flex items-center gap-2">
                 <i class="fas fa-edit"></i> Edit Informasi & Fasilitas Ruangan
@@ -173,12 +173,12 @@
             </button>
         </div>
 
-        <form method="POST" action="admin_rooms.php" enctype="multipart/form-data" class="p-6 space-y-4 overflow-y-auto">
+        <form method="POST" action="admin_rooms.php" enctype="multipart/form-data" class="p-4 sm:p-6 space-y-4 overflow-y-auto">
             <?php echo csrf_field(); ?>
             <input type="hidden" name="action" value="edit">
             <input type="hidden" name="room_id" id="editRoomId">
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="responsive-modal-grid gap-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Kode Ruangan *</label>
                     <input type="text" name="code" id="editCode" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono uppercase focus:outline-none focus:ring-2 focus:ring-brand-500" required>
@@ -189,7 +189,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="responsive-modal-grid gap-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Ruangan *</label>
                     <input type="text" name="name" id="editName" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-brand-500" required>
@@ -204,7 +204,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="responsive-modal-grid gap-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Lokasi Gedung *</label>
                     <input type="text" name="location" id="editLocation" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-brand-500" required>
@@ -223,7 +223,7 @@
             <!-- Upload Foto Baru / Ganti Foto -->
             <div>
                 <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Foto Ruangan</label>
-                <div class="flex items-center gap-4">
+                <div class="flex flex-col items-stretch gap-3 min-[420px]:flex-row min-[420px]:items-center min-[420px]:gap-4">
                     <div class="w-20 h-20 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
                         <img id="editPhotoPreview" src="public/rooms/KalTim.jpeg" class="w-full h-full object-cover" alt="Preview Foto">
                     </div>
@@ -246,9 +246,9 @@
                 <textarea name="description" id="editDescription" rows="2" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
             </div>
 
-            <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
-                <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-lg text-xs">Batal</button>
-                <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-lg text-xs shadow">Perbarui Ruangan</button>
+            <div class="flex flex-col-reverse gap-2 pt-3 border-t border-slate-100 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-end">
+                <button type="button" onclick="closeEditModal()" class="w-full px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-lg text-xs sm:w-auto">Batal</button>
+                <button type="submit" class="w-full px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-lg text-xs shadow sm:w-auto">Perbarui Ruangan</button>
             </div>
         </form>
     </div>
@@ -258,7 +258,7 @@
      TABEL DAFTAR RUANGAN RAPAT
      ========================================== -->
 <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm overflow-hidden mb-8">
-    <div class="overflow-x-auto">
+    <div class="responsive-table-shell">
         <table class="w-full text-left border-collapse text-xs">
             <thead>
                 <tr class="bg-slate-50/80 dark:bg-slate-900/60 border-b border-slate-200/80 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
@@ -396,12 +396,14 @@
     const roomDataCount = document.getElementById('roomDataCount');
     const roomsTableBody = document.getElementById('roomsTableBody');
 
+    /** Menjalankan proses toggle add modal pada fitur ini. */
     function toggleAddModal() {
         const modal = document.getElementById('addModal');
         modal.classList.toggle('hidden');
         modal.classList.toggle('flex');
     }
 
+    /** Menampilkan atau menutup edit modal. */
     function openEditModal(room) {
         document.getElementById('editRoomId').value = room.id;
         document.getElementById('editCode').value = room.code;
@@ -421,12 +423,14 @@
         modal.classList.add('flex');
     }
 
+    /** Menampilkan atau menutup edit modal. */
     function closeEditModal() {
         const modal = document.getElementById('editModal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
     }
 
+    /** Menjalankan proses preview image pada fitur ini. */
     function previewImage(input, previewId) {
         const preview = document.getElementById(previewId);
         if (input.files && input.files[0]) {
@@ -438,20 +442,9 @@
         }
     }
 
-    function escapeHtml(text) {
-        if (!text) return '';
-        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-        return text.toString().replace(/[&<>"']/g, m => map[m]);
-    }
+    const { escapeHtml, highlightText } = window.MeetSpaceUI;
 
-    function highlightText(text, query) {
-        if (!query || !text) return escapeHtml(text);
-        const safeText = escapeHtml(text);
-        const safeQuery = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`(${safeQuery})`, 'gi');
-        return safeText.replace(regex, `<mark class="bg-amber-200 dark:bg-amber-800 text-slate-900 dark:text-white rounded px-0.5 font-bold">$1</mark>`);
-    }
-
+    /** Menghapus atau mereset room search. */
     function clearRoomSearch() {
         roomSearchInput.value = '';
         clearRoomSearchBtn.classList.add('hidden');
@@ -460,6 +453,7 @@
         roomSearchInput.focus();
     }
 
+    /** Menerapkan room suggestion. */
     function selectRoomSuggestion(value) {
         roomSearchInput.value = value;
         roomSuggestionsBox.classList.add('hidden');
@@ -467,6 +461,7 @@
         applyLiveRoomFilter();
     }
 
+    /** Memperbarui room suggestions. */
     function updateRoomSuggestions(query) {
         if (!query || query.length < 1) {
             roomSuggestionsBox.innerHTML = '';
@@ -535,6 +530,7 @@
         roomSuggestionsBox.classList.remove('hidden');
     }
 
+    /** Menerapkan live room filter. */
     function applyLiveRoomFilter() {
         const query = roomSearchInput.value.trim();
         const q = query.toLowerCase();
@@ -590,6 +586,7 @@
         renderRoomsTable(filtered, query);
     }
 
+    /** Menampilkan atau menutup rooms table. */
     function renderRoomsTable(rooms, highlightQuery = '') {
         if (!rooms || rooms.length === 0) {
             roomsTableBody.innerHTML = `

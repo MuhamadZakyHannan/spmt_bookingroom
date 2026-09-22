@@ -221,8 +221,8 @@
 </div>
 
 <!-- Modal Baca Selengkapnya / Detail Meeting Modal -->
-<div id="detailModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-150 space-y-4">
+<div id="detailModal" class="responsive-modal fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center">
+    <div class="responsive-modal-panel bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-150 space-y-4">
         <div class="flex items-start justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
             <div>
                 <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
@@ -243,7 +243,7 @@
             </div>
 
             <!-- Grid Details -->
-            <div class="grid grid-cols-2 gap-2.5">
+            <div class="responsive-modal-grid">
                 <div class="p-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800">
                     <span class="text-[10px] text-slate-400 block font-medium">Ruang Rapat:</span>
                     <span id="modalRoom" class="font-bold text-slate-800 dark:text-slate-200"></span>
@@ -301,6 +301,7 @@
     const myBookingsCount = document.getElementById('myBookingsCount');
     const myBookingsContainer = document.getElementById('myBookingsContainer');
 
+    /** Menampilkan atau menutup detail modal. */
     function openDetailModal(data) {
         document.getElementById('modalTitle').textContent = data.title;
         document.getElementById('modalPurpose').textContent = data.purpose;
@@ -314,26 +315,16 @@
         modal.classList.add('flex');
     }
 
+    /** Menampilkan atau menutup detail modal. */
     function closeDetailModal() {
         const modal = document.getElementById('detailModal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
     }
 
-    function escapeHtml(text) {
-        if (!text) return '';
-        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-        return text.toString().replace(/[&<>"']/g, m => map[m]);
-    }
+    const { escapeHtml, highlightText } = window.MeetSpaceUI;
 
-    function highlightText(text, query) {
-        if (!query || !text) return escapeHtml(text);
-        const safeText = escapeHtml(text);
-        const safeQuery = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`(${safeQuery})`, 'gi');
-        return safeText.replace(regex, `<mark class="bg-amber-200 dark:bg-amber-800 text-slate-900 dark:text-white rounded px-0.5 font-bold">$1</mark>`);
-    }
-
+    /** Menghapus atau mereset my booking search. */
     function clearMyBookingSearch() {
         myBookingSearchInput.value = '';
         clearMyBookingSearchBtn.classList.add('hidden');
@@ -342,6 +333,7 @@
         myBookingSearchInput.focus();
     }
 
+    /** Menerapkan my booking suggestion. */
     function selectMyBookingSuggestion(value) {
         myBookingSearchInput.value = value;
         myBookingSuggestionsBox.classList.add('hidden');
@@ -349,6 +341,7 @@
         applyLiveMyBookingFilter();
     }
 
+    /** Memperbarui my booking suggestions. */
     function updateMyBookingSuggestions(query) {
         if (!query || query.length < 1) {
             myBookingSuggestionsBox.innerHTML = '';
@@ -417,6 +410,7 @@
         myBookingSuggestionsBox.classList.remove('hidden');
     }
 
+    /** Menerapkan live my booking filter. */
     function applyLiveMyBookingFilter() {
         const query = myBookingSearchInput.value.trim();
         const q = query.toLowerCase();
@@ -477,6 +471,7 @@
         renderMyBookingsList(filtered, query);
     }
 
+    /** Menampilkan atau menutup my bookings list. */
     function renderMyBookingsList(bookings, highlightQuery = '') {
         if (!bookings || bookings.length === 0) {
             myBookingsContainer.innerHTML = `

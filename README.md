@@ -38,31 +38,54 @@ C:\xampp\htdocs\Room_Booking_System
 
 1. Jalankan Apache dan MySQL dari XAMPP Control Panel.
 2. Buka `http://localhost/phpmyadmin/`.
-3. Import skema utama `C:\xampp\private\Room_Booking_System\database.sql` ke MySQL.
+3. Import skema utama `database/schema.sql` ke MySQL.
 4. Terapkan migrasi database melalui terminal dari direktori proyek:
 
 ```powershell
 php scripts/apply_migrations.php
 ```
 
-Runner mencatat migrasi yang sudah dijalankan sehingga aman dipanggil kembali.
-5. Pastikan database bernama `meetspace_db`, atau sesuaikan `DB_NAME` pada `.env`.
+Runner mengunci proses migrasi dan mencatat checksum setiap file sehingga aman
+dipanggil kembali serta dapat mendeteksi migrasi lama yang berubah.
+5. Setelah migrasi selesai, buat akun database khusus aplikasi melalui phpMyAdmin. Ganti password contoh sebelum menjalankan SQL:
 
-Skema utama sengaja disimpan di luar `htdocs` agar tidak dapat diunduh melalui web server.
+```sql
+CREATE USER IF NOT EXISTS 'meetspace_app'@'localhost' IDENTIFIED BY 'ganti-password-kuat';
+GRANT SELECT, INSERT, UPDATE, DELETE ON meetspace_db.* TO 'meetspace_app'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+6. Pastikan database bernama `meetspace_db`, atau sesuaikan `DB_NAME` pada `.env`.
+
+Skema final tidak berisi akun, password, booking, atau token. Direktori
+`database/` diblokir oleh konfigurasi Apache sehingga skema tidak dapat diunduh
+melalui aplikasi.
 
 ### 3. Buat konfigurasi lokal
 
 Salin `.env.example` menjadi `.env`, kemudian sesuaikan nilainya:
 
 ```dotenv
+APP_ENV="local_lan"
+APP_DEBUG="false"
+APP_ALLOW_REGISTRATION="false"
 DB_HOST="localhost"
-DB_USER="root"
-DB_PASS=""
+DB_USER="meetspace_app"
+DB_PASS="ganti-password-kuat"
 DB_NAME="meetspace_db"
 BOOKING_DOCUMENT_STORAGE="C:/xampp/private/Room_Booking_System/booking-documents"
 ```
 
 File `.env` tidak disimpan ke Git.
+
+Panduan pembatasan Apache, MySQL, session, dan Windows Firewall tersedia di
+[`docs/LOCAL_NETWORK_SECURITY.md`](docs/LOCAL_NETWORK_SECURITY.md). Struktur,
+migrasi, serta hak akses database dijelaskan di
+[`docs/DATABASE.md`](docs/DATABASE.md).
+Rencana perapian kode jangka panjang dicatat di
+[`docs/REFACTORING_ROADMAP.md`](docs/REFACTORING_ROADMAP.md).
+Arsitektur dan aturan pengembangan tersedia di
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ### 4. Buka aplikasi
 
@@ -70,22 +93,17 @@ File `.env` tidak disimpan ke Git.
 http://localhost/Room_Booking_System/
 ```
 
-Jika memakai data seed bawaan, akun demo yang tersedia adalah:
-
-| Role | Username | Password |
-| --- | --- | --- |
-| User | `budi` | `password123` |
-| Administrator | `sarah` | `password123` |
-
-Ganti password demo sebelum aplikasi digunakan di lingkungan produksi.
+Skema instalasi baru tidak menyediakan akun demo. Siapkan akun Super Admin
+pertama secara terkontrol, kemudian buat akun operasional melalui menu
+**Kelola Pengguna**.
 
 ## Panduan pengguna
 
 ### Membuat akun dan masuk
 
-1. Pilih **Daftar** untuk membuat akun baru.
-2. Isi nama, username, password minimal 8 karakter yang memuat huruf besar, huruf kecil, angka, dan simbol, lalu isi konfirmasi password.
-3. Masuk melalui halaman **Login**.
+1. Hubungi Administrator untuk pembuatan akun. Pendaftaran mandiri dinonaktifkan secara default pada server LAN.
+2. Administrator membuat akun melalui menu **Kelola Pengguna** menggunakan password awal minimal 8 karakter yang memuat huruf besar, huruf kecil, angka, dan simbol.
+3. Masuk melalui halaman **Login**, kemudian ganti password awal melalui Administrator jika diperlukan.
 
 Gunakan password yang panjang dan mengandung kombinasi huruf besar, huruf kecil, angka, serta simbol unik.
 
@@ -117,6 +135,10 @@ Menu **Kalender Jadwal** menyediakan dua tampilan tanpa mode mingguan:
 
 - **Bulan** untuk melihat jadwal dalam grid kalender;
 - **Agenda** untuk melihat daftar jadwal pada bulan aktif.
+
+Pada layar ponsel kalender otomatis membuka **Agenda** agar judul, waktu, dan
+ruangan tetap terbaca. Tampilan **Bulan** tetap dapat dipilih. Pada tablet dan
+desktop, tampilan awal tetap **Bulan**.
 
 Pada tampilan Agenda, nama hari dan tanggal ditampilkan dalam satu header lengkap, misalnya **Selasa, 22 September 2026**.
 
@@ -202,18 +224,36 @@ Gunakan menu **Riwayat Booking** untuk memfilter data berdasarkan tanggal, ruang
 
 ### Membangun ulang CSS
 
-CSS hasil build sudah tersedia di `public/css/tailwind.min.css`. Jika kelas Tailwind diubah:
+Seluruh aturan CSS statis menggunakan satu sumber utama, yaitu `src/input.css`.
+File tersebut memuat directive Tailwind, primitive responsif, tampilan kalender,
+dan tampilan kiosk. View tidak menyimpan blok `<style>` mandiri. Nilai yang
+berasal dari data, seperti persentase grafik dan warna kalender, diteruskan
+melalui CSS custom property ke kelas bersama.
+
+CSS hasil build tersedia di `public/css/tailwind.min.css`. Jangan mengedit file
+hasil build secara langsung. Jika kelas atau sumber CSS diubah, jalankan:
 
 ```powershell
 npm install
-npm run build:css
+npm.cmd run build:css
 ```
 
 Untuk mode pemantauan selama pengembangan:
 
 ```powershell
-npm run watch:css
+npm.cmd run watch:css
 ```
+
+### Dokumentasi fungsi
+
+Setiap fungsi atau metode PHP bernama wajib memiliki PHPDoc singkat yang
+menjelaskan tanggung jawabnya. Aturan yang sama berlaku untuk function
+declaration dan named arrow function JavaScript pada aset maupun script view.
+Callback anonim tidak diberi komentar satu per satu; tanggung jawabnya
+dijelaskan oleh fungsi pemilik agar dokumentasi tetap ringkas dan terawat.
+
+Audit dokumentasi dapat dijalankan melalui
+`php tests/run_function_documentation_tests.php`.
 
 ### Menjalankan pengujian
 
@@ -230,6 +270,16 @@ php tests/run_calendar_ui_tests.php
 php tests/run_role_hierarchy_tests.php
 php tests/run_user_account_tests.php
 php tests/run_booking_expiration_tests.php
+php tests/run_security_hardening_tests.php
+php tests/run_database_configuration_tests.php
+php tests/run_model_architecture_tests.php
+php tests/run_booking_domain_refactor_tests.php
+php tests/run_presentation_architecture_tests.php
+php tests/run_api_architecture_tests.php
+php tests/run_final_architecture_tests.php
+php tests/run_responsive_ui_tests.php
+php tests/run_css_consolidation_tests.php
+php tests/run_function_documentation_tests.php
 ```
 
 Pengujian membuat data sementara dan membersihkannya kembali setelah selesai.

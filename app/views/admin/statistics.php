@@ -5,7 +5,7 @@
 
 <div class="space-y-6">
     <!-- Header Section -->
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
         <div>
             <div class="flex items-center gap-2 text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1">
                 <i class="fas fa-chart-pie"></i> Executive Analytics & Insights
@@ -51,8 +51,8 @@
             </div>
 
             <!-- Custom Date Range & Room Filter -->
-            <div class="flex flex-wrap items-center gap-2.5">
-                <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div class="grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2 lg:flex lg:w-auto lg:flex-wrap lg:items-center">
+                <div class="flex w-full items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 lg:w-auto">
                     <span class="text-[11px] font-bold text-slate-400 uppercase">Dari:</span>
                     <input 
                         type="date" 
@@ -61,7 +61,7 @@
                         class="bg-transparent text-xs text-slate-700 dark:text-slate-200 focus:outline-none">
                 </div>
 
-                <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div class="flex w-full items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 lg:w-auto">
                     <span class="text-[11px] font-bold text-slate-400 uppercase">Sampai:</span>
                     <input 
                         type="date" 
@@ -70,7 +70,7 @@
                         class="bg-transparent text-xs text-slate-700 dark:text-slate-200 focus:outline-none">
                 </div>
 
-                <div class="w-44">
+                <div class="w-full lg:w-44">
                     <select name="room_id" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer">
                         <option value="0">-- Semua Ruangan --</option>
                         <?php foreach ($rooms as $r): ?>
@@ -81,7 +81,7 @@
                     </select>
                 </div>
 
-                <button type="submit" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-sm">
+                <button type="submit" class="w-full px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-sm lg:w-auto">
                     <i class="fas fa-filter"></i>
                     <span>Terapkan</span>
                 </button>
@@ -96,7 +96,7 @@
     </form>
 
     <!-- Top KPI Cards Grid -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div class="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         <!-- KPI 1: Total Bookings -->
         <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
             <div class="flex items-center justify-between text-slate-400 mb-2">
@@ -150,7 +150,7 @@
             </div>
             <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400"><?php echo $kpi['approval_rate']; ?>%</div>
             <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden mt-2">
-                <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: <?php echo min(100, $kpi['approval_rate']); ?>%"></div>
+                <div class="data-progress-bar bg-emerald-500 h-full rounded-full transition-all duration-500" style="--progress-value: <?php echo min(100, $kpi['approval_rate']); ?>%"></div>
             </div>
         </div>
 
@@ -222,7 +222,7 @@
             <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/60 flex flex-wrap gap-2 text-[11px] justify-center">
                 <?php foreach (array_slice($stats['dept_distribution']['labels'], 0, 4) as $idx => $deptName): ?>
                     <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300">
-                        <span class="w-2 h-2 rounded-full" style="background-color: <?php echo ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'][$idx % 5]; ?>"></span>
+                        <span class="data-color-swatch w-2 h-2 rounded-full" style="--swatch-color: <?php echo ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'][$idx % 5]; ?>"></span>
                         <?php echo htmlspecialchars($deptName); ?> (<?php echo $stats['dept_distribution']['percentages'][$idx] ?? 0; ?>%)
                     </span>
                 <?php endforeach; ?>
@@ -276,7 +276,7 @@
                 <p class="text-xs text-slate-400 mt-0.5">Perbandingan beban agenda ruang rapat dari hari Senin hingga Minggu.</p>
             </div>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-7 gap-2.5">
+        <div class="grid grid-cols-2 min-[480px]:grid-cols-4 sm:grid-cols-7 gap-2.5">
             <?php 
                 $maxDayCount = max(1, ...($stats['day_distribution']['data'] ?: [1]));
                 foreach ($stats['day_distribution']['labels'] as $idx => $dName): 
@@ -287,7 +287,7 @@
                     <div class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider"><?php echo $dName; ?></div>
                     <div class="text-xl font-black text-slate-900 dark:text-white my-1"><?php echo $cnt; ?></div>
                     <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden mt-1">
-                        <div class="bg-brand-500 h-full rounded-full" style="width: <?php echo $intensity; ?>%"></div>
+                        <div class="data-progress-bar bg-brand-500 h-full rounded-full" style="--progress-value: <?php echo $intensity; ?>%"></div>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -309,7 +309,7 @@
             </span>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="responsive-table-shell">
             <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                 <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 uppercase text-[11px] font-bold tracking-wider border-b border-slate-100 dark:border-slate-700/80">
                     <tr>
@@ -370,7 +370,7 @@
                                             <span class="font-bold text-slate-700 dark:text-slate-300"><?php echo $rs['utilization_rate']; ?>%</span>
                                         </div>
                                         <div class="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-                                            <div class="h-full rounded-full transition-all duration-500 <?php echo $rs['utilization_rate'] > 70 ? 'bg-rose-500' : ($rs['utilization_rate'] > 30 ? 'bg-emerald-500' : 'bg-brand-500'); ?>" style="width: <?php echo min(100, $rs['utilization_rate']); ?>%"></div>
+                                            <div class="data-progress-bar h-full rounded-full transition-all duration-500 <?php echo $rs['utilization_rate'] > 70 ? 'bg-rose-500' : ($rs['utilization_rate'] > 30 ? 'bg-emerald-500' : 'bg-brand-500'); ?>" style="--progress-value: <?php echo min(100, $rs['utilization_rate']); ?>%"></div>
                                         </div>
                                     </div>
                                 </td>
@@ -421,10 +421,14 @@
 <!-- Chart.js Setup and Reactive Dark Mode Palette Script -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    /** Memeriksa apakah tema gelap sedang aktif. */
     const isDark = () => document.documentElement.classList.contains('dark');
 
+    /** Menentukan warna teks grafik sesuai tema aktif. */
     const getTextColor = () => isDark() ? '#94a3b8' : '#64748b';
+    /** Menentukan warna garis kisi grafik sesuai tema aktif. */
     const getGridColor = () => isDark() ? 'rgba(51, 65, 85, 0.4)' : 'rgba(226, 232, 240, 0.8)';
+    /** Menentukan warna judul grafik sesuai tema aktif. */
     const getTitleColor = () => isDark() ? '#f8fafc' : '#0f172a';
 
     // 1. Monthly Trend Chart

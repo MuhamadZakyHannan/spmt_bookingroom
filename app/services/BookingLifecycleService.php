@@ -14,6 +14,7 @@ class BookingLifecycleService
 
     private $db;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh BookingLifecycleService. */
     public function __construct($connection = null)
     {
         $this->db = $connection ?: Database::getInstance()->getConnection();

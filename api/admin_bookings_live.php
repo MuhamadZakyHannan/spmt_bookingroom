@@ -1,20 +1,13 @@
 <?php
 /**
  * Real-time Live Polling API Endpoint for Admin Bookings
- * PT Pelabuhan Indonesia (Persero)
  */
 
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../app/models/BookingModel.php';
 
-date_default_timezone_set('Asia/Jakarta');
-header('Content-Type: application/json');
-
-if (!is_logged_in() || !is_admin()) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-    exit;
-}
+ApiRequest::requireMethod('GET');
+ApiRequest::requireAdmin();
 
 $bookingModel = new BookingModel();
 
@@ -70,7 +63,7 @@ foreach ($bookings as $b) {
 // Generate data hash for client-side change detection
 $dataHash = md5(json_encode($formattedBookings));
 
-echo json_encode([
+ApiResponse::send([
     'success' => true,
     'hash' => $dataHash,
     'total' => count($formattedBookings),
@@ -79,4 +72,3 @@ echo json_encode([
     'server_time' => date('H:i:s'),
     'bookings' => $formattedBookings
 ]);
-exit;

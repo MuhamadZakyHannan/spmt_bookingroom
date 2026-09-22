@@ -11,7 +11,7 @@ $statusLabel = $statusLabels[$booking['status']] ?? ucfirst((string) $booking['s
 
 <div class="max-w-2xl mx-auto">
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700/80 overflow-hidden">
-        <header class="flex items-start justify-between gap-4 p-6 sm:p-8 border-b border-slate-100 dark:border-slate-700">
+        <header class="flex items-start justify-between gap-3 p-4 sm:p-8 border-b border-slate-100 dark:border-slate-700">
             <div class="flex items-start gap-3 min-w-0">
                 <span class="flex w-11 h-11 shrink-0 items-center justify-center rounded-xl bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-300 text-lg">
                     <i class="fas fa-file-arrow-up"></i>
@@ -26,7 +26,7 @@ $statusLabel = $statusLabels[$booking['status']] ?? ucfirst((string) $booking['s
             </a>
         </header>
 
-        <div class="p-6 sm:p-8 space-y-6">
+        <div class="p-4 sm:p-8 space-y-6">
             <?php if ($error !== ''): ?>
                 <div class="flex items-start gap-3 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 p-4 text-sm text-rose-800 dark:text-rose-300">
                     <i class="fas fa-exclamation-triangle mt-0.5 text-rose-500"></i>

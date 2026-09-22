@@ -7,10 +7,12 @@ require_once __DIR__ . '/../core/Database.php';
 class AdminDashboardService {
     private $db;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh AdminDashboardService. */
     public function __construct($db = null) {
         $this->db = $db ?: Database::getInstance()->getConnection();
     }
 
+    /** Mengambil data snapshot. */
     public function getSnapshot(): array {
         if (!$this->db) {
             return $this->emptySnapshot();
@@ -25,6 +27,7 @@ class AdminDashboardService {
         ];
     }
 
+    /** Menjalankan proses empty snapshot pada admin dashboard. */
     private function emptySnapshot(): array {
         return [
             'pending_count' => 0,
@@ -33,6 +36,7 @@ class AdminDashboardService {
         ];
     }
 
+    /** Mengambil data pending count. */
     private function getPendingCount(): int {
         $query = $this->db->query(
             "SELECT COUNT(*) FROM bookings WHERE status = 'pending' AND date >= CURDATE()"
@@ -41,6 +45,7 @@ class AdminDashboardService {
         return (int)$query->fetchColumn();
     }
 
+    /** Mengambil data pending requests. */
     private function getPendingRequests(int $limit = 3): array {
         $limit = max(1, min(10, $limit));
         $sql = "SELECT
@@ -70,6 +75,7 @@ class AdminDashboardService {
         return $this->db->query($sql)->fetchAll();
     }
 
+    /** Mengambil data room displays. */
     private function getRoomDisplays(): array {
         $sql = "SELECT
                     r.id, r.code, r.name,

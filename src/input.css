@@ -3,6 +3,48 @@
 @tailwind utilities;
 
 @layer components {
+    /*
+     * Shared responsive primitives. Views opt in through semantic classes so
+     * behavior stays consistent without duplicating breakpoint rules.
+     */
+    .responsive-table-shell {
+        @apply overflow-x-auto overscroll-x-contain;
+        scrollbar-gutter: stable;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .responsive-table-shell > table {
+        @apply min-w-[720px];
+    }
+
+    .responsive-modal {
+        @apply overflow-y-auto p-3 sm:p-4;
+    }
+
+    .responsive-modal-panel {
+        @apply max-h-[calc(100dvh-1.5rem)] overflow-y-auto sm:max-h-[calc(100dvh-2rem)];
+    }
+
+    .responsive-modal-grid {
+        @apply grid grid-cols-1 gap-2.5 sm:grid-cols-2;
+    }
+
+    .data-progress-bar {
+        width: var(--progress-value, 0%);
+    }
+
+    .data-color-swatch {
+        background-color: var(--swatch-color, #3b82f6);
+    }
+
+    @media (max-width: 639px) {
+        input:not([type='checkbox']):not([type='radio']),
+        select,
+        textarea {
+            font-size: 16px;
+        }
+    }
+
     .booking-date-input {
         color-scheme: light;
     }
@@ -19,5 +61,423 @@
     .dark .booking-date-input::-webkit-calendar-picker-indicator {
         opacity: 1;
         filter: invert(1) brightness(2);
+    }
+}
+
+/* Kiosk display shared styles */
+/* Hide scrollbars in kiosk mode */
+html, body {
+    height: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+@keyframes pulse-glow {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.08); }
+}
+.pulse-glow {
+    animation: pulse-glow 2s infinite ease-in-out;
+}
+/* When in fullscreen, hide any top controls */
+:fullscreen #outsideFullscreenBar {
+    display: none !important;
+}
+:-webkit-full-screen #outsideFullscreenBar {
+    display: none !important;
+}
+
+/* FullCalendar presentation */
+.calendar-shell .fc {
+    --fc-border-color: #e5e7eb;
+    --fc-page-bg-color: transparent;
+    --fc-neutral-bg-color: #f8fafc;
+    --fc-list-event-hover-bg-color: #f8fafc;
+    color: #1f2937;
+    font-size: 0.8125rem;
+}
+.calendar-shell .fc-theme-standard td,
+.calendar-shell .fc-theme-standard th,
+.calendar-shell .fc-theme-standard .fc-scrollgrid {
+    border-color: var(--fc-border-color);
+}
+.calendar-shell .fc-scrollgrid {
+    border-radius: 0 0 1rem 1rem;
+    overflow: visible;
+}
+.calendar-shell .fc-col-header-cell {
+    background: #f8fafc;
+    padding: 0.7rem 0;
+}
+.calendar-shell .fc-col-header-cell-cushion {
+    color: #64748b;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.calendar-shell .fc-daygrid-day-frame {
+    min-height: 108px;
+}
+.calendar-shell .fc-daygrid-day-number {
+    align-items: center;
+    color: #475569;
+    display: inline-flex;
+    font-size: 0.75rem;
+    font-weight: 600;
+    height: 1.75rem;
+    justify-content: center;
+    margin: 0.25rem;
+    width: 1.75rem;
+}
+.calendar-shell .fc-day-today {
+    background: #f8fbff !important;
+}
+.calendar-shell .fc-day-today .fc-daygrid-day-number {
+    background: #1a73e8;
+    border-radius: 9999px;
+    color: #fff;
+}
+.calendar-shell .fc-day-other .fc-daygrid-day-number {
+    color: #94a3b8;
+}
+.calendar-shell .fc-daygrid-event {
+    border: 0 !important;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 1px 4px;
+    padding: 2px 5px;
+}
+.calendar-shell .fc-event-main {
+    min-width: 0;
+}
+.calendar-event-content {
+    align-items: center;
+    display: flex;
+    gap: 0.3rem;
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
+}
+.calendar-event-time {
+    flex: 0 0 auto;
+    font-size: 0.625rem;
+    font-weight: 800;
+}
+.calendar-event-title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.calendar-event-details {
+    min-width: 0;
+    overflow: hidden;
+}
+.calendar-event-room {
+    display: none;
+}
+.calendar-shell .fc-daygrid-more-link {
+    color: #1a73e8;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    margin-left: 5px;
+}
+.calendar-shell .fc-more-popover {
+    background: #ffffff;
+    border: 1px solid #dbe2ea;
+    border-radius: 0.75rem;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22);
+    max-width: calc(100vw - 2rem);
+    width: 420px;
+    z-index: 60;
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: min(340px, calc(100vh - 4rem)) !important;
+    overflow: hidden;
+}
+.calendar-shell .fc-more-popover .fc-popover-header {
+    align-items: center;
+    background: #f8fafc;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    font-size: 0.75rem;
+    font-weight: 800;
+    min-height: 2.75rem;
+    padding: 0.625rem 0.75rem;
+    flex-shrink: 0;
+}
+.calendar-shell .fc-more-popover .fc-popover-body {
+    background: #ffffff;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 240px;
+    overflow-x: hidden;
+    overflow-y: auto !important;
+    padding: 0.5rem;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+}
+.calendar-shell .fc-more-popover .fc-popover-body::-webkit-scrollbar {
+    width: 6px;
+}
+.calendar-shell .fc-more-popover .fc-popover-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+.calendar-shell .fc-more-popover .fc-popover-body::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 9999px;
+}
+.dark .calendar-shell .fc-more-popover .fc-popover-body::-webkit-scrollbar-thumb {
+    background-color: #475569;
+}
+.calendar-shell .fc-more-popover .fc-daygrid-event-harness {
+    margin-bottom: 0.35rem;
+    position: relative !important;
+}
+.calendar-shell .fc-more-popover .fc-daygrid-event {
+    display: block;
+    margin: 0;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0.45rem 0.55rem;
+    width: 100%;
+}
+.calendar-shell .fc-more-popover .calendar-event-content {
+    align-items: start;
+    display: grid;
+    gap: 0.5rem;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    white-space: normal;
+}
+.calendar-shell .fc-more-popover .calendar-event-time {
+    display: block;
+    font-size: 0.6875rem;
+    line-height: 1.15rem;
+}
+.calendar-shell .fc-more-popover .calendar-event-title {
+    display: block;
+    font-size: 0.75rem;
+    line-height: 1.15rem;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
+}
+.calendar-shell .fc-more-popover .calendar-event-room,
+.calendar-shell .fc-list .calendar-event-room {
+    display: block;
+    font-size: 0.625rem;
+    font-weight: 600;
+    line-height: 1rem;
+    opacity: 0.82;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.calendar-shell .fc-list {
+    border: 0;
+    border-radius: 0;
+}
+.calendar-shell .fc-list-day-cushion {
+    background: #f8fafc;
+    padding: 0.75rem 1rem;
+}
+.calendar-shell .fc-list-day-text,
+.calendar-shell .fc-list-day-side-text {
+    color: #334155;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+.calendar-shell .fc-list-event-time {
+    color: #475569;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+.calendar-shell .fc-list-event-dot {
+    border-width: 5px;
+}
+.calendar-shell .fc-list-empty {
+    background: transparent;
+    color: #94a3b8;
+}
+.calendar-event-filtered {
+    display: none !important;
+}
+.calendar-view-button.is-active {
+    background: #e8f0fe;
+    color: #1967d2;
+}
+.calendar-detail-status[data-status="scheduled"] {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+.calendar-detail-status[data-status="ongoing"] {
+    background: #dcfce7;
+    color: #15803d;
+}
+.calendar-detail-status[data-status="completed"] {
+    background: #e2e8f0;
+    color: #475569;
+}
+.calendar-detail-status[data-status="no-show"] {
+    background: #ffe4e6;
+    color: #be123c;
+}
+.calendar-detail-header {
+    padding-bottom: 1.5rem !important;
+    padding-top: 1.75rem !important;
+}
+.calendar-detail-icon {
+    margin-top: 0.125rem;
+}
+.dark .calendar-shell .fc {
+    --fc-border-color: #334155;
+    --fc-neutral-bg-color: #0f172a;
+    --fc-list-event-hover-bg-color: #334155;
+    color: #e2e8f0;
+}
+.dark .calendar-shell .fc-col-header-cell,
+.dark .calendar-shell .fc-list-day-cushion,
+.dark .calendar-shell .fc-more-popover .fc-popover-header {
+    background: #0f172a;
+}
+.dark .calendar-shell .fc-more-popover .fc-popover-header {
+    border-bottom-color: #334155;
+}
+.dark .calendar-shell .fc-more-popover,
+.dark .calendar-shell .fc-more-popover .fc-popover-body {
+    background: #1e293b;
+    border-color: #475569;
+}
+.dark .calendar-shell .fc-col-header-cell-cushion,
+.dark .calendar-shell .fc-daygrid-day-number,
+.dark .calendar-shell .fc-list-day-text,
+.dark .calendar-shell .fc-list-day-side-text,
+.dark .calendar-shell .fc-list-event-time {
+    color: #cbd5e1;
+}
+.dark .calendar-shell .fc-day-today {
+    background: rgba(30, 64, 175, 0.12) !important;
+}
+.dark .calendar-shell .fc-day-today .fc-daygrid-day-number {
+    color: #fff;
+}
+.dark .calendar-shell .fc-day-other .fc-daygrid-day-number {
+    color: #64748b;
+}
+.dark .calendar-view-button.is-active {
+    background: rgba(37, 99, 235, 0.28);
+    color: #bfdbfe;
+}
+.dark .calendar-detail-status[data-status="scheduled"] {
+    background: rgba(37, 99, 235, 0.25);
+    color: #bfdbfe;
+}
+.dark .calendar-detail-status[data-status="ongoing"] {
+    background: rgba(22, 163, 74, 0.22);
+    color: #bbf7d0;
+}
+.dark .calendar-detail-status[data-status="completed"] {
+    background: #334155;
+    color: #cbd5e1;
+}
+.dark .calendar-detail-status[data-status="no-show"] {
+    background: rgba(225, 29, 72, 0.22);
+    color: #fecdd3;
+}
+@media (max-width: 640px) {
+    .calendar-shell .fc-daygrid-day-frame {
+        min-height: 78px;
+    }
+    .calendar-shell .fc-daygrid-event {
+        margin-left: 2px;
+        margin-right: 2px;
+        padding-left: 3px;
+        padding-right: 3px;
+    }
+    .calendar-event-time {
+        display: none;
+    }
+    .calendar-shell .fc-more-popover {
+        width: calc(100vw - 2rem);
+    }
+}
+
+/* Printable booking report */
+@page {
+    size: A4 landscape;
+    margin: 0.8cm;
+}
+@media print {
+    .no-print,
+    .booking-report-page .no-print {
+        display: none !important;
+    }
+    html,
+    body,
+    body.booking-report-page {
+        background: white !important;
+        color: black !important;
+        font-size: 11px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+        overflow-x: visible !important;
+        overflow-y: visible !important;
+        width: 100% !important;
+    }
+    .booking-report-page,
+    .booking-report-page * {
+        overflow: visible !important;
+        overflow-x: visible !important;
+        overflow-y: visible !important;
+        max-height: none !important;
+        scrollbar-width: none !important;
+    }
+    .booking-report-page *::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+    .booking-report-page .max-w-6xl {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+    .booking-report-page table {
+        font-size: 10px !important;
+        width: 100% !important;
+        border-collapse: collapse !important;
+        page-break-inside: auto !important;
+    }
+    .booking-report-page thead {
+        display: table-header-group !important;
+    }
+    .booking-report-page tbody {
+        display: table-row-group !important;
+    }
+    .booking-report-page tr {
+        page-break-inside: avoid !important;
+        page-break-after: auto !important;
+        break-inside: avoid !important;
+    }
+    .booking-report-page td,
+    .booking-report-page th {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+    .booking-report-page .page-break {
+        page-break-after: always !important;
+        break-after: page !important;
     }
 }

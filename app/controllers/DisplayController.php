@@ -5,15 +5,18 @@ class DisplayController extends Controller {
     private $displayModel;
     private $roomModel;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh DisplayController. */
     public function __construct() {
         $this->displayModel = $this->model('DisplayModel');
         $this->roomModel = $this->model('RoomModel');
     }
 
+    /** Menampilkan halaman utama display. */
     public function index($tokenOrRoom = null) {
         $this->show($tokenOrRoom);
     }
 
+    /** Menampilkan display berdasarkan identifier yang diberikan. */
     public function show($tokenOrRoom = null) {
         $token = trim($_GET['token'] ?? '');
         $roomId = (int)($_GET['room'] ?? 0);
@@ -62,12 +65,8 @@ class DisplayController extends Controller {
         }
 
         if (!$room) {
-            echo "<div style='font-family: sans-serif; padding: 40px; text-align: center; color: #64748b;'>";
-            echo "<h2>Ruangan Tidak Ditemukan</h2>";
-            echo "<p>Token monitor atau ID ruangan tidak valid. Silakan hubungi Administrator.</p>";
-            echo "<a href='dashboard.php' style='color: #2563eb; text-decoration: underline;'>Kembali ke Dashboard</a>";
-            echo "</div>";
-            exit;
+            $this->view('display/not_found');
+            return;
         }
 
         $liveData = $this->displayModel->getRoomLiveStatus($roomId);
@@ -85,8 +84,9 @@ class DisplayController extends Controller {
         ]);
     }
 
+    /** Mengirim status ruangan terkini melalui API. */
     public function apiStatus() {
-        header('Content-Type: application/json');
+        ApiRequest::requireMethod('GET');
         
         $token = trim($_GET['token'] ?? '');
         $roomId = (int)($_GET['room'] ?? 0);
@@ -100,26 +100,24 @@ class DisplayController extends Controller {
         }
 
         if ($roomId <= 0) {
-            echo json_encode(['success' => false, 'message' => 'Room or token required']);
-            exit;
+            ApiResponse::error('Ruangan atau token display wajib diberikan.', 422, 'display_target_required');
         }
 
         $liveData = $this->displayModel->getRoomLiveStatus($roomId);
 
         if (!$liveData) {
-            echo json_encode(['success' => false, 'message' => 'Room data not found']);
-            exit;
+            ApiResponse::error('Data ruangan tidak ditemukan.', 404, 'room_not_found');
         }
 
-        echo json_encode([
+        ApiResponse::send([
             'success' => true,
             'data' => $liveData,
             'server_time' => date('H:i:s'),
             'server_date' => date('Y-m-d')
         ]);
-        exit;
     }
 
+    /** Menampilkan monitor jadwal untuk lobby. */
     public function lobby() {
         $bookingModel = $this->model('BookingModel');
         $todayBookings = $bookingModel->getTodayBookings();

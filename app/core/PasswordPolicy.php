@@ -4,6 +4,7 @@ final class PasswordPolicy
 {
     public const MIN_LENGTH = 8;
 
+    /** Menjalankan proses validation error pada password. */
     public static function validationError(string $password): ?string
     {
         $isValid = strlen($password) >= self::MIN_LENGTH

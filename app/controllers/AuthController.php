@@ -5,11 +5,15 @@ require_once __DIR__ . '/../core/UsernamePolicy.php';
 
 class AuthController extends Controller {
     private $userModel;
+    private $loginThrottle;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh AuthController. */
     public function __construct() {
         $this->userModel = $this->model('UserModel');
+        $this->loginThrottle = new LoginThrottleService();
     }
 
+    /** Memproses autentikasi pengguna dan menampilkan formulir masuk. */
     public function login() {
         if (is_logged_in()) {
             $this->redirect('dashboard.php');
@@ -23,14 +27,21 @@ class AuthController extends Controller {
 
             $username = UsernamePolicy::normalize((string) ($_POST['username'] ?? ''));
             $password = trim($_POST['password'] ?? '');
+            $ipAddress = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+            $throttleStatus = $this->loginThrottle->status($username, $ipAddress);
 
             if (empty($username) || empty($password)) {
                 $error = 'Harap isi username dan password!';
+            } else if ($throttleStatus['blocked']) {
+                $retryMinutes = max(1, (int) ceil($throttleStatus['retry_after'] / 60));
+                $error = "Terlalu banyak percobaan login gagal. Coba kembali dalam {$retryMinutes} menit.";
             } else {
                 $user = $this->userModel->findByUsername($username);
                 if ($user && password_verify($password, $user['password'])) {
+                    $this->loginThrottle->clear($username, $ipAddress);
                     // Prevent Session Fixation
                     session_regenerate_id(true);
+                    unset($_SESSION['csrf_token']);
 
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['user_name'] = $user['name'];
@@ -42,6 +53,7 @@ class AuthController extends Controller {
 
                     $this->redirect('dashboard.php');
                 } else {
+                    $this->loginThrottle->recordFailure($username, $ipAddress);
                     $error = 'Username atau password yang Anda masukkan salah!';
                 }
             }
@@ -53,7 +65,13 @@ class AuthController extends Controller {
         ]);
     }
 
+    /** Memvalidasi dan membuat akun pengguna baru. */
     public function register() {
+        if (!APP_ALLOW_REGISTRATION) {
+            set_flash('warning', 'Pendaftaran mandiri dinonaktifkan. Hubungi Administrator untuk pembuatan akun.');
+            $this->redirect('login.php');
+        }
+
         if (is_logged_in()) {
             $this->redirect('dashboard.php');
         }
@@ -104,11 +122,25 @@ class AuthController extends Controller {
         ]);
     }
 
+    /** Mengakhiri sesi pengguna dengan aman. */
     public function logout() {
-        session_unset();
+        $_SESSION = [];
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', [
+                'expires' => time() - 42000,
+                'path' => $params['path'],
+                'domain' => $params['domain'],
+                'secure' => $params['secure'],
+                'httponly' => $params['httponly'],
+                'samesite' => $params['samesite'] ?? 'Lax',
+            ]);
+        }
         session_destroy();
         if (session_status() === PHP_SESSION_NONE) {
+            session_id('');
             session_start();
+            session_regenerate_id(true);
         }
         set_flash('info', 'Anda telah berhasil keluar dari sistem.');
         $this->redirect('login.php');
