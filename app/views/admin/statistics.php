@@ -150,7 +150,7 @@
             </div>
             <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400"><?php echo $kpi['approval_rate']; ?>%</div>
             <div class="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden mt-2">
-                <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: <?php echo min(100, $kpi['approval_rate']); ?>%"></div>
+                <div class="data-progress-bar bg-emerald-500 h-full rounded-full transition-all duration-500" style="--progress-value: <?php echo min(100, $kpi['approval_rate']); ?>%"></div>
             </div>
         </div>
 
@@ -222,7 +222,7 @@
             <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700/60 flex flex-wrap gap-2 text-[11px] justify-center">
                 <?php foreach (array_slice($stats['dept_distribution']['labels'], 0, 4) as $idx => $deptName): ?>
                     <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300">
-                        <span class="w-2 h-2 rounded-full" style="background-color: <?php echo ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'][$idx % 5]; ?>"></span>
+                        <span class="data-color-swatch w-2 h-2 rounded-full" style="--swatch-color: <?php echo ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6'][$idx % 5]; ?>"></span>
                         <?php echo htmlspecialchars($deptName); ?> (<?php echo $stats['dept_distribution']['percentages'][$idx] ?? 0; ?>%)
                     </span>
                 <?php endforeach; ?>
@@ -287,7 +287,7 @@
                     <div class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider"><?php echo $dName; ?></div>
                     <div class="text-xl font-black text-slate-900 dark:text-white my-1"><?php echo $cnt; ?></div>
                     <div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden mt-1">
-                        <div class="bg-brand-500 h-full rounded-full" style="width: <?php echo $intensity; ?>%"></div>
+                        <div class="data-progress-bar bg-brand-500 h-full rounded-full" style="--progress-value: <?php echo $intensity; ?>%"></div>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -370,7 +370,7 @@
                                             <span class="font-bold text-slate-700 dark:text-slate-300"><?php echo $rs['utilization_rate']; ?>%</span>
                                         </div>
                                         <div class="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
-                                            <div class="h-full rounded-full transition-all duration-500 <?php echo $rs['utilization_rate'] > 70 ? 'bg-rose-500' : ($rs['utilization_rate'] > 30 ? 'bg-emerald-500' : 'bg-brand-500'); ?>" style="width: <?php echo min(100, $rs['utilization_rate']); ?>%"></div>
+                                            <div class="data-progress-bar h-full rounded-full transition-all duration-500 <?php echo $rs['utilization_rate'] > 70 ? 'bg-rose-500' : ($rs['utilization_rate'] > 30 ? 'bg-emerald-500' : 'bg-brand-500'); ?>" style="--progress-value: <?php echo min(100, $rs['utilization_rate']); ?>%"></div>
                                         </div>
                                     </div>
                                 </td>
@@ -421,10 +421,14 @@
 <!-- Chart.js Setup and Reactive Dark Mode Palette Script -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    /** Memeriksa apakah tema gelap sedang aktif. */
     const isDark = () => document.documentElement.classList.contains('dark');
 
+    /** Menentukan warna teks grafik sesuai tema aktif. */
     const getTextColor = () => isDark() ? '#94a3b8' : '#64748b';
+    /** Menentukan warna garis kisi grafik sesuai tema aktif. */
     const getGridColor = () => isDark() ? 'rgba(51, 65, 85, 0.4)' : 'rgba(226, 232, 240, 0.8)';
+    /** Menentukan warna judul grafik sesuai tema aktif. */
     const getTitleColor = () => isDark() ? '#f8fafc' : '#0f172a';
 
     // 1. Monthly Trend Chart

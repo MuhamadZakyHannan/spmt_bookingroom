@@ -255,6 +255,7 @@
 
     const escapeHtml = window.MeetSpaceUI.escapeHtml;
 
+    /** Memvalidasi edit password. */
     function validateEditPassword(showPopover = false) {
         if (!editUserPassword) return true;
         const value = editUserPassword.value;
@@ -298,6 +299,7 @@
         return isValid;
     }
 
+    /** Menampilkan atau menutup edit user modal. */
     function openEditUserModal(userId) {
         if (!currentSessionIsSuperAdmin || !editUserModal) return;
         const user = rawUsersList.find(item => item.id === Number(userId));
@@ -322,6 +324,7 @@
         window.setTimeout(() => editUserName.focus(), 0);
     }
 
+    /** Menampilkan atau menutup edit user modal. */
     function closeEditUserModal() {
         if (!editUserModal) return;
         editUserModal.classList.add('hidden');
@@ -332,6 +335,7 @@
 
     const highlightText = window.MeetSpaceUI.highlightText;
 
+    /** Menghapus atau mereset user search. */
     function clearUserSearch() {
         userSearchInput.value = '';
         clearUserSearchBtn.classList.add('hidden');
@@ -340,6 +344,7 @@
         userSearchInput.focus();
     }
 
+    /** Menerapkan user suggestion. */
     function selectUserSuggestion(value) {
         userSearchInput.value = value;
         userSuggestionsBox.classList.add('hidden');
@@ -347,6 +352,7 @@
         applyLiveUserFilter();
     }
 
+    /** Memperbarui user suggestions. */
     function updateUserSuggestions(query) {
         if (!query || query.length < 1) {
             userSuggestionsBox.innerHTML = '';
@@ -415,6 +421,7 @@
         userSuggestionsBox.classList.remove('hidden');
     }
 
+    /** Menerapkan live user filter. */
     function applyLiveUserFilter() {
         const query = userSearchInput.value.trim();
         const q = query.toLowerCase();
@@ -466,6 +473,7 @@
         renderUsersTable(filtered, query);
     }
 
+    /** Menampilkan atau menutup users table. */
     function renderUsersTable(users, highlightQuery = '') {
         if (!users || users.length === 0) {
             usersTableBody.innerHTML = `

@@ -5,11 +5,13 @@ class UsernamePolicy
     public const MIN_LENGTH = 3;
     public const MAX_LENGTH = 100;
 
+    /** Memformat username. */
     public static function normalize(string $username): string
     {
         return strtolower(trim($username));
     }
 
+    /** Menjalankan proses validation error pada username. */
     public static function validationError(string $username): ?string
     {
         $username = trim($username);

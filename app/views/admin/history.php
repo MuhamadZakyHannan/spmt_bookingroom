@@ -419,6 +419,7 @@
     const histStatusSelect = document.getElementById('histStatusSelect');
     const histDataCount = document.getElementById('historyDataCount');
 
+    /** Menampilkan atau menutup history modal. */
     function openHistoryModal(data) {
         document.getElementById('histTitle').textContent = data.title;
         document.getElementById('histPurpose').textContent = data.purpose;
@@ -434,6 +435,7 @@
         modal.classList.add('flex');
     }
 
+    /** Menampilkan atau menutup history modal. */
     function closeHistoryModal() {
         const modal = document.getElementById('historyModal');
         modal.classList.add('hidden');
@@ -442,6 +444,7 @@
 
     const { escapeHtml, highlightText } = window.MeetSpaceUI;
 
+    /** Menghapus atau mereset hist search input. */
     function clearHistSearchInput() {
         histSearchInput.value = '';
         clearHistSearchBtn.classList.add('hidden');
@@ -450,6 +453,7 @@
         histSearchInput.focus();
     }
 
+    /** Menerapkan hist suggestion. */
     function selectHistSuggestion(value) {
         histSearchInput.value = value;
         histSuggestionsBox.classList.add('hidden');
@@ -457,6 +461,7 @@
         applyLiveHistoryFilter();
     }
 
+    /** Memperbarui hist autocomplete. */
     function updateHistAutocomplete(query) {
         if (!query || query.length < 1) {
             histSuggestionsBox.innerHTML = '';
@@ -529,6 +534,7 @@
         histSuggestionsBox.classList.remove('hidden');
     }
 
+    /** Menerapkan live history filter. */
     function applyLiveHistoryFilter() {
         const query = histSearchInput.value.trim();
         const q = query.toLowerCase();
@@ -592,6 +598,7 @@
         renderHistoryTable(filtered, query);
     }
 
+    /** Menampilkan atau menutup history table. */
     function renderHistoryTable(bookings, highlightQuery = '') {
         const tbody = document.getElementById('historyTableBody');
         if (!bookings || bookings.length === 0) {

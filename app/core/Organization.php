@@ -17,6 +17,7 @@ final class Organization
         'Subreg - Arsip',
     ];
 
+    /** Memeriksa apakah valid department terpenuhi. */
     public static function isValidDepartment(string $department): bool
     {
         return in_array($department, self::DEPARTMENTS, true);

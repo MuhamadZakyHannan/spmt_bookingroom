@@ -5,6 +5,7 @@
  */
 final class ApiRequest
 {
+    /** Memvalidasi method. */
     public static function requireMethod(string ...$allowedMethods): string
     {
         $method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
@@ -16,6 +17,7 @@ final class ApiRequest
         return $method;
     }
 
+    /** Memvalidasi login. */
     public static function requireLogin(): void
     {
         if (!is_logged_in()) {
@@ -23,6 +25,7 @@ final class ApiRequest
         }
     }
 
+    /** Memvalidasi admin. */
     public static function requireAdmin(): void
     {
         self::requireLogin();
@@ -31,6 +34,7 @@ final class ApiRequest
         }
     }
 
+    /** Memvalidasi csrf. */
     public static function requireCsrf(): void
     {
         if (!verify_csrf_token()) {

@@ -5,6 +5,7 @@
  */
 final class ApiResponse
 {
+    /** Menjalankan proses send pada api response. */
     public static function send(array $payload, int $status = 200): never
     {
         http_response_code($status);
@@ -22,6 +23,7 @@ final class ApiResponse
         exit;
     }
 
+    /** Menjalankan proses error pada api response. */
     public static function error(string $message, int $status, string $code): never
     {
         self::send([

@@ -5,10 +5,12 @@
  */
 final class BookingQueryService
 {
+    /** Menyiapkan dependensi yang dibutuhkan oleh BookingQueryService. */
     public function __construct(private PDO $db)
     {
     }
 
+    /** Mengambil data today active count. */
     public function getTodayActiveCount(): int
     {
         return (int) $this->db->query(
@@ -16,6 +18,7 @@ final class BookingQueryService
         )->fetchColumn();
     }
 
+    /** Mengambil data today. */
     public function getToday(): array
     {
         $statement = $this->db->query(
@@ -29,6 +32,7 @@ final class BookingQueryService
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /** Mengambil data division monthly usage count. */
     public function getDivisionMonthlyUsageCount(string $department, string $date): int
     {
         if ($department === '') return 0;
@@ -41,6 +45,7 @@ final class BookingQueryService
         return (int) $statement->fetchColumn();
     }
 
+    /** Mengambil data by user id. */
     public function getByUserId(int $userId): array
     {
         $statement = $this->db->prepare(
@@ -58,6 +63,7 @@ final class BookingQueryService
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /** Mengambil data by id. */
     public function getById(int $bookingId)
     {
         if ($bookingId <= 0) return false;
@@ -78,6 +84,7 @@ final class BookingQueryService
         return $statement->fetch(PDO::FETCH_ASSOC);
     }
 
+    /** Mengambil seluruh data booking query. */
     public function getAll(string $search = '', string $status = ''): array
     {
         $sql = "SELECT b.*, r.name as room_name, r.code as room_code,
@@ -109,6 +116,7 @@ final class BookingQueryService
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /** Mengambil data calendar events. */
     public function getCalendarEvents(int $roomId = 0): array
     {
         $sql = "SELECT b.*, r.name as room_name,

@@ -7,10 +7,12 @@ final class BookingScheduleService
 {
     private int $lastInsertId = 0;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh BookingScheduleService. */
     public function __construct(private PDO $db)
     {
     }
 
+    /** Memvalidasi conflict. */
     public function checkConflict(
         int $roomId,
         string $date,
@@ -31,6 +33,7 @@ final class BookingScheduleService
         return $statement->fetch(PDO::FETCH_ASSOC);
     }
 
+    /** Menambahkan data with policy. */
     public function createWithPolicy(array $data, bool $isAdmin): array
     {
         try {
@@ -67,6 +70,7 @@ final class BookingScheduleService
         }
     }
 
+    /** Memperbarui with policy. */
     public function updateWithPolicy(
         int $bookingId,
         array $data,
@@ -125,16 +129,19 @@ final class BookingScheduleService
         }
     }
 
+    /** Membuat data booking schedule baru. */
     public function create(array $data): bool
     {
         return $this->insert($data);
     }
 
+    /** Mengambil data last insert id. */
     public function getLastInsertId(): int
     {
         return $this->lastInsertId;
     }
 
+    /** Mengunci room selama transaksi. */
     private function lockRoom(int $roomId)
     {
         $statement = $this->db->prepare(
@@ -144,6 +151,7 @@ final class BookingScheduleService
         return $statement->fetch(PDO::FETCH_ASSOC);
     }
 
+    /** Menjalankan proses booking exists pada booking schedule. */
     private function bookingExists(int $bookingId): bool
     {
         $statement = $this->db->prepare('SELECT id FROM bookings WHERE id = ?');
@@ -151,6 +159,7 @@ final class BookingScheduleService
         return (bool) $statement->fetchColumn();
     }
 
+    /** Mengunci booking selama transaksi. */
     private function lockBooking(int $bookingId)
     {
         $statement = $this->db->prepare(
@@ -160,6 +169,7 @@ final class BookingScheduleService
         return $statement->fetch(PDO::FETCH_ASSOC);
     }
 
+    /** Memvalidasi room. */
     private function validateRoom($room, int $attendeeCount): ?array
     {
         if (!$room) return ['success' => false, 'reason' => 'room_not_found'];
@@ -172,6 +182,7 @@ final class BookingScheduleService
         return null;
     }
 
+    /** Mengunci conflicts selama transaksi. */
     private function lockConflicts(array $data, int $excludeId): array
     {
         $statement = $this->db->prepare(
@@ -193,6 +204,7 @@ final class BookingScheduleService
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /** Menentukan conflicts. */
     private function classifyConflicts(array $conflicts): array
     {
         $confirmed = null;
@@ -207,6 +219,7 @@ final class BookingScheduleService
         return ['confirmed' => $confirmed, 'has_pending' => $hasPending];
     }
 
+    /** Menambahkan data booking schedule. */
     private function insert(array $data): bool
     {
         $activityType = $data['activity_type'] ?? 'internal_divisi';
@@ -243,6 +256,7 @@ final class BookingScheduleService
         return $success;
     }
 
+    /** Memperbarui booking schedule. */
     private function update(int $bookingId, array $data): bool
     {
         $activityType = $data['activity_type'] ?? 'internal_divisi';
@@ -274,18 +288,21 @@ final class BookingScheduleService
         }
     }
 
+    /** Memeriksa apakah missing column error terpenuhi. */
     private function isMissingColumnError(PDOException $exception): bool
     {
         return $exception->getCode() === '42S22'
             || (int) ($exception->errorInfo[1] ?? 0) === 1054;
     }
 
+    /** Membatalkan transaksi dan mengembalikan hasil kegagalan. */
     private function rollbackWith(array $result): array
     {
         if ($this->db->inTransaction()) $this->db->rollBack();
         return $result;
     }
 
+    /** Menjalankan proses transaction failure pada booking schedule. */
     private function transactionFailure(string $context, Throwable $exception): array
     {
         if ($this->db->inTransaction()) $this->db->rollBack();

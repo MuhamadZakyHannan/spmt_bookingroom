@@ -16,11 +16,13 @@ class CalendarPresentation {
         '#5f6368',
     ];
 
+    /** Menjalankan proses room color pada calendar. */
     public static function roomColor(int $roomId): string {
         $index = max(0, $roomId - 1) % count(self::ROOM_COLORS);
         return self::ROOM_COLORS[$index];
     }
 
+    /** Memformat rooms. */
     public static function decorateRooms(array $rooms): array {
         return array_map(static function (array $room): array {
             $room['calendar_color'] = self::roomColor((int)$room['id']);

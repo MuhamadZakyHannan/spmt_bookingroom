@@ -3,6 +3,7 @@ require_once __DIR__ . '/../core/BaseModel.php';
 
 class DisplayModel extends BaseModel {
 
+    /** Mengambil data all displays. */
     public function getAllDisplays() {
         if (!$this->db) return [];
         $sql = "SELECT d.*, r.name as room_name, r.code as room_code, r.capacity, r.location, r.floor, r.status as room_status 
@@ -13,10 +14,12 @@ class DisplayModel extends BaseModel {
         return $stmt->fetchAll();
     }
 
+    /** Mengambil seluruh data display. */
     public function getAll() {
         return $this->getAllDisplays();
     }
 
+    /** Mengambil data by token. */
     public function getByToken($token) {
         if (!$this->db) return false;
         $stmt = $this->db->prepare("SELECT d.*, r.name as room_name, r.code as room_code, r.capacity, r.location, r.floor, r.status as room_status, r.image as room_image, r.facilities as room_facilities, r.description as room_description
@@ -27,6 +30,7 @@ class DisplayModel extends BaseModel {
         return $stmt->fetch();
     }
 
+    /** Mengambil data by room id. */
     public function getByRoomId($roomId) {
         if (!$this->db) return false;
         $stmt = $this->db->prepare("SELECT d.*, r.name as room_name, r.code as room_code, r.capacity, r.location, r.floor, r.status as room_status, r.image as room_image, r.facilities as room_facilities, r.description as room_description
@@ -37,6 +41,7 @@ class DisplayModel extends BaseModel {
         return $stmt->fetch();
     }
 
+    /** Mengambil data by id. */
     public function getById($id) {
         if (!$this->db) return false;
         $stmt = $this->db->prepare("SELECT d.*, r.name as room_name, r.code as room_code 
@@ -47,24 +52,28 @@ class DisplayModel extends BaseModel {
         return $stmt->fetch();
     }
 
+    /** Membuat data display baru. */
     public function create($roomId, $displayName, $token) {
         if (!$this->db) return false;
         $stmt = $this->db->prepare("INSERT INTO room_displays (room_id, display_name, display_token) VALUES (?, ?, ?)");
         return $stmt->execute([$roomId, $displayName, $token]);
     }
 
+    /** Memperbarui token. */
     public function updateToken($id, $token) {
         if (!$this->db) return false;
         $stmt = $this->db->prepare("UPDATE room_displays SET display_token = ? WHERE id = ?");
         return $stmt->execute([$token, $id]);
     }
 
+    /** Menghapus data display beserta relasi terkait. */
     public function delete($id) {
         if (!$this->db) return false;
         $stmt = $this->db->prepare("DELETE FROM room_displays WHERE id = ?");
         return $stmt->execute([$id]);
     }
 
+    /** Memperbarui last active. */
     public function touchLastActive($displayId) {
         if (!$this->db) return false;
         $stmt = $this->db->prepare("UPDATE room_displays SET last_active = NOW() WHERE id = ?");

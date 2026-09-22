@@ -294,7 +294,7 @@
                                             <?php echo number_format($alt['preference_score'], 4); ?>
                                         </div>
                                         <div class="w-16 bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden mx-auto mt-1">
-                                            <div class="<?php echo $isWinner ? 'bg-emerald-500' : 'bg-slate-400'; ?> h-full rounded-full" style="width: <?php echo min(100, $alt['preference_score'] * 100); ?>%"></div>
+                                            <div class="data-progress-bar <?php echo $isWinner ? 'bg-emerald-500' : 'bg-slate-400'; ?> h-full rounded-full" style="--progress-value: <?php echo min(100, $alt['preference_score'] * 100); ?>%"></div>
                                         </div>
                                     </td>
 
@@ -689,6 +689,7 @@
 
 <script>
     const csrfHiddenField = '<?php echo addslashes(csrf_field()); ?>';
+    /** Menjalankan proses switch booking tab pada fitur ini. */
     function switchBookingTab(tab) {
         const tabConflicts = document.getElementById('tabContentConflicts');
         const tabAll = document.getElementById('tabContentAll');
@@ -716,6 +717,7 @@
         }
     }
 
+    /** Menjalankan proses toggle saw guide pada fitur ini. */
     function toggleSawGuide() {
         const guide = document.getElementById('sawGuideContent');
         const btnText = document.getElementById('sawGuideBtnText');
@@ -766,6 +768,7 @@
     const suggestionsBox = document.getElementById('searchSuggestionsBox');
     const statusSelect = document.getElementById('statusSelect');
 
+    /** Menampilkan atau menutup detail modal. */
     function openDetailModal(data) {
         document.getElementById('modalTitle').textContent = data.title;
         document.getElementById('modalPurpose').textContent = data.purpose;
@@ -780,12 +783,14 @@
         modal.classList.add('flex');
     }
 
+    /** Menampilkan atau menutup detail modal. */
     function closeDetailModal() {
         const modal = document.getElementById('detailModal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
     }
 
+    /** Menampilkan atau menutup toast. */
     function showToast(message, type = 'info') {
         const container = document.getElementById('liveToastContainer');
         const toast = document.createElement('div');
@@ -815,6 +820,7 @@
 
     const { escapeHtml, highlightText } = window.MeetSpaceUI;
 
+    /** Menghapus atau mereset search input. */
     function clearSearchInput() {
         searchInput.value = '';
         clearSearchBtn.classList.add('hidden');
@@ -823,6 +829,7 @@
         searchInput.focus();
     }
 
+    /** Menerapkan suggestion. */
     function selectSuggestion(value) {
         searchInput.value = value;
         suggestionsBox.classList.add('hidden');
@@ -830,6 +837,7 @@
         applyLiveFilter();
     }
 
+    /** Memperbarui autocomplete suggestions. */
     function updateAutocompleteSuggestions(query) {
         if (!query || query.length < 1) {
             suggestionsBox.innerHTML = '';
@@ -907,6 +915,7 @@
         suggestionsBox.classList.remove('hidden');
     }
 
+    /** Menerapkan live filter. */
     function applyLiveFilter() {
         const query = searchInput.value.trim();
         const q = query.toLowerCase();
@@ -980,6 +989,7 @@
         renderBookingsTable(filtered, query);
     }
 
+    /** Menampilkan atau menutup bookings table. */
     function renderBookingsTable(bookings, highlightQuery = '') {
         const tbody = document.getElementById('bookingsTableBody');
         if (!bookings || bookings.length === 0) {
@@ -1195,6 +1205,7 @@
         tbody.innerHTML = html;
     }
 
+    /** Menyelaraskan daftar booking admin dengan data terbaru dari server. */
     async function syncAdminBookings() {
         try {
             const url = `api/admin_bookings_live.php`;

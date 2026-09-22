@@ -9,11 +9,13 @@ final class AdminUserController extends Controller
 {
     private UserModel $users;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh AdminUserController. */
     public function __construct()
     {
         $this->users = $this->model('UserModel');
     }
 
+    /** Menampilkan halaman utama admin user. */
     public function index(): void
     {
         $this->requireAdmin();
@@ -30,6 +32,7 @@ final class AdminUserController extends Controller
         ]);
     }
 
+    /** Menangani proses action. */
     private function handleAction(string $action): string
     {
         if ($action === 'add') return $this->add();
@@ -39,6 +42,7 @@ final class AdminUserController extends Controller
         return '';
     }
 
+    /** Menambahkan data admin user. */
     private function add(): string
     {
         $name = trim((string) ($_POST['name'] ?? ''));
@@ -71,6 +75,7 @@ final class AdminUserController extends Controller
         $this->redirect('admin_users.php');
     }
 
+    /** Menampilkan dan memproses perubahan admin user. */
     private function edit(): void
     {
         $userId = (int) ($_POST['user_id'] ?? 0);
@@ -103,6 +108,7 @@ final class AdminUserController extends Controller
         $this->redirect('admin_users.php');
     }
 
+    /** Memperbarui validation error. */
     private function editValidationError(
         $target,
         int $userId,
@@ -124,6 +130,7 @@ final class AdminUserController extends Controller
         return null;
     }
 
+    /** Memperbarui role. */
     private function updateRole(): void
     {
         $userId = (int) ($_POST['user_id'] ?? 0);
@@ -142,6 +149,7 @@ final class AdminUserController extends Controller
         $this->redirect('admin_users.php');
     }
 
+    /** Menghapus data admin user beserta relasi terkait. */
     private function delete(): void
     {
         $userId = (int) ($_POST['user_id'] ?? 0);

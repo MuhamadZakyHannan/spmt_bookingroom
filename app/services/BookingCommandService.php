@@ -5,10 +5,12 @@
  */
 final class BookingCommandService
 {
+    /** Menyiapkan dependensi yang dibutuhkan oleh BookingCommandService. */
     public function __construct(private PDO $db)
     {
     }
 
+    /** Membatalkan booking yang masih diizinkan oleh aturan status dan kepemilikan. */
     public function cancel(int $bookingId, int $userId, bool $isAdmin = false): bool
     {
         if ($isAdmin) {
@@ -32,6 +34,7 @@ final class BookingCommandService
         ]);
     }
 
+    /** Memperbarui status. */
     public function updateStatus(int $bookingId, string $status): bool
     {
         if (!in_array($status, ['pending', 'confirmed', 'completed', 'cancelled'], true)) {
@@ -46,6 +49,7 @@ final class BookingCommandService
         return $statement->execute([$status, $reason, $bookingId]);
     }
 
+    /** Menghapus data booking command beserta relasi terkait. */
     public function delete(int $bookingId): bool
     {
         $documents = $this->documentFiles($bookingId);
@@ -55,6 +59,7 @@ final class BookingCommandService
         return $deleted;
     }
 
+    /** Menjalankan proses document files pada booking command. */
     private function documentFiles(int $bookingId): array
     {
         if ($bookingId <= 0) return [];
@@ -70,6 +75,7 @@ final class BookingCommandService
         }
     }
 
+    /** Menghapus atau mereset document files. */
     private function removeDocumentFiles(array $storedNames): void
     {
         if (!$storedNames) return;

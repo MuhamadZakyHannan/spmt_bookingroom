@@ -14,11 +14,13 @@ class RoomAvailabilityService
 {
     private $db;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh RoomAvailabilityService. */
     public function __construct($connection = null)
     {
         $this->db = $connection ?: Database::getInstance()->getConnection();
     }
 
+    /** Mengambil data availability. */
     public function getAvailability(
         string $date,
         string $startTime,
@@ -93,6 +95,7 @@ class RoomAvailabilityService
         ];
     }
 
+    /** Menentukan room. */
     private function classifyRoom(array $room, array $conflicts, int $attendeesCount): array
     {
         if (($room['status'] ?? 'available') === 'maintenance') {
@@ -142,6 +145,7 @@ class RoomAvailabilityService
         return $this->result('available', true, 'Tersedia', 'Tidak ada jadwal yang beririsan.', 'available');
     }
 
+    /** Menjalankan proses result pada room availability. */
     private function result(
         string $status,
         bool $selectable,
@@ -160,6 +164,7 @@ class RoomAvailabilityService
         ];
     }
 
+    /** Memformat ranges. */
     private function formatRanges(array $conflicts): string
     {
         $ranges = array_map(static function (array $conflict): string {

@@ -9,11 +9,13 @@ final class AdminDisplayController extends Controller
 {
     private DisplayModel $displays;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh AdminDisplayController. */
     public function __construct()
     {
         $this->displays = $this->model('DisplayModel');
     }
 
+    /** Menampilkan halaman utama admin display. */
     public function index(): void
     {
         $this->requireAdmin();
@@ -30,6 +32,7 @@ final class AdminDisplayController extends Controller
         ]);
     }
 
+    /** Menangani proses action. */
     private function handleAction(string $action): string
     {
         if ($action === 'create') {
@@ -57,6 +60,7 @@ final class AdminDisplayController extends Controller
         return '';
     }
 
+    /** Menjalankan proses new token pada admin display. */
     private function newToken(): string
     {
         return 'DISP-' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));

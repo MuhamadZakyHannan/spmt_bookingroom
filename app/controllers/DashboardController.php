@@ -8,6 +8,7 @@ class DashboardController extends Controller {
     private $userModel;
     private $adminDashboardService;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh DashboardController. */
     public function __construct() {
         $this->roomModel = $this->model('RoomModel');
         $this->bookingModel = $this->model('BookingModel');
@@ -15,6 +16,7 @@ class DashboardController extends Controller {
         $this->adminDashboardService = new AdminDashboardService();
     }
 
+    /** Menampilkan halaman utama dashboard. */
     public function index() {
         $this->requireAuth();
 

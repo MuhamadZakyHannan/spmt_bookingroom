@@ -64,6 +64,7 @@ class NotificationModel extends BaseModel {
         }
     }
 
+    /** Mengambil data unread count. */
     public function getUnreadCount($recipientUserId) {
         if (!$this->db || $recipientUserId <= 0) return 0;
 
@@ -80,6 +81,7 @@ class NotificationModel extends BaseModel {
         }
     }
 
+    /** Menjalankan proses mark all as read pada notification. */
     public function markAllAsRead($recipientUserId) {
         if (!$this->db || $recipientUserId <= 0) return false;
 

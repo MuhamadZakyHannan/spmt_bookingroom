@@ -11,10 +11,12 @@ final class BookingStatisticsService
         'Sep' => 'Sep', 'Oct' => 'Okt', 'Nov' => 'Nov', 'Dec' => 'Des',
     ];
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh BookingStatisticsService. */
     public function __construct(private PDO $db)
     {
     }
 
+    /** Menjalankan proses empty result pada booking statistics. */
     public static function emptyResult(): array
     {
         return [
@@ -39,6 +41,7 @@ final class BookingStatisticsService
         ];
     }
 
+    /** Mengambil dataset booking statistics. */
     public function getData(array $filters = []): array
     {
         $bookings = $this->fetchBookings($filters);
@@ -117,6 +120,7 @@ final class BookingStatisticsService
         ];
     }
 
+    /** Mengambil data bookings. */
     private function fetchBookings(array $filters): array
     {
         $where = ['1=1'];
@@ -156,6 +160,7 @@ final class BookingStatisticsService
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /** Menambahkan data period filter. */
     private function addPeriodFilter(array &$where, string $period): void
     {
         if ($period === 'this_month') {
@@ -170,6 +175,7 @@ final class BookingStatisticsService
         }
     }
 
+    /** Mengambil data rooms. */
     private function fetchRooms(): array
     {
         return $this->db->query(
@@ -177,6 +183,7 @@ final class BookingStatisticsService
         )->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /** Menyiapkan room stats. */
     private function initializeRoomStats(array $rooms): array
     {
         $statistics = [];
@@ -198,6 +205,7 @@ final class BookingStatisticsService
         return $statistics;
     }
 
+    /** Menyiapkan monthly map. */
     private function initializeMonthlyMap(): array
     {
         $months = [];
@@ -208,6 +216,7 @@ final class BookingStatisticsService
         return $months;
     }
 
+    /** Menjalankan proses empty month pada booking statistics. */
     private function emptyMonth(string $date): array
     {
         $timestamp = strtotime($date);
@@ -220,6 +229,7 @@ final class BookingStatisticsService
         ];
     }
 
+    /** Menjalankan proses duration minutes pada booking statistics. */
     private function durationMinutes(array $booking): float
     {
         $start = strtotime($booking['date'] . ' ' . $booking['start_time']);
@@ -227,6 +237,7 @@ final class BookingStatisticsService
         return $end > $start ? ($end - $start) / 60 : 0;
     }
 
+    /** Menambahkan data busy hours. */
     private function addBusyHours(array &$hourlyMap, array $booking): void
     {
         $startHour = (int) date('G', strtotime($booking['start_time']));
@@ -237,6 +248,7 @@ final class BookingStatisticsService
         }
     }
 
+    /** Menambahkan data organizer. */
     private function addOrganizer(array &$organizers, array $booking, float $hours): void
     {
         $name = $booking['user_name'] ?: 'Pengguna';
@@ -253,6 +265,7 @@ final class BookingStatisticsService
         $organizers[$key]['total_hours'] += $hours;
     }
 
+    /** Menjalankan proses sort room stats pada booking statistics. */
     private function sortRoomStats(array &$roomStats): void
     {
         uasort($roomStats, function (array $left, array $right): int {
@@ -262,6 +275,7 @@ final class BookingStatisticsService
         });
     }
 
+    /** Menyiapkan kpis. */
     private function buildKpis(
         int $totalBookings,
         int $confirmedCount,
@@ -285,6 +299,7 @@ final class BookingStatisticsService
         ];
     }
 
+    /** Memformat monthly trend. */
     private function formatMonthlyTrend(array $months): array
     {
         ksort($months);
@@ -298,6 +313,7 @@ final class BookingStatisticsService
         return $result;
     }
 
+    /** Memformat room stats. */
     private function formatRoomStats(array $roomStats): array
     {
         foreach ($roomStats as &$room) {
@@ -311,6 +327,7 @@ final class BookingStatisticsService
         return array_values($roomStats);
     }
 
+    /** Memformat departments. */
     private function formatDepartments(array $departments, int $totalBookings): array
     {
         arsort($departments);
@@ -325,6 +342,7 @@ final class BookingStatisticsService
         ];
     }
 
+    /** Memformat hours. */
     private function formatHours(array $hours): array
     {
         $labels = [];

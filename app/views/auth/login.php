@@ -83,6 +83,7 @@
 </div>
 
 <script>
+/** Mengganti tema antarmuka antara mode terang dan gelap. */
 function toggleTheme() {
     if (document.documentElement.classList.contains('dark')) {
         document.documentElement.classList.remove('dark');

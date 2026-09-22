@@ -1,6 +1,7 @@
 (function initializeSiteShell() {
     const config = document.getElementById('meetspaceRuntimeConfig')?.dataset ?? {};
 
+    /** Mengambil referensi elemen antarmuka shell aplikasi. */
     function elements() {
         return {
             drawer: document.getElementById('sidebarDrawer'),
@@ -60,16 +61,19 @@
     if (config.adminUserId && config.adminUserId !== '0') initializeAdminNotifications(config);
     document.addEventListener('DOMContentLoaded', window.updateToggleUI);
 
+    /** Menyiapkan admin notifications. */
     function initializeAdminNotifications(runtime) {
         const storageKey = `adminNotificationUnreadCount_${runtime.adminUserId}`;
         let audioContext = null;
 
+        /** Menyiapkan audio notifikasi setelah interaksi pengguna. */
         function prepareAudio() {
             if (audioContext) return;
             const AudioContextClass = window.AudioContext || window.webkitAudioContext;
             if (AudioContextClass) audioContext = new AudioContextClass();
         }
 
+        /** Memutar suara notifikasi bila diizinkan browser. */
         function playSound() {
             try {
                 prepareAudio();
@@ -93,6 +97,7 @@
             }
         }
 
+        /** Menampilkan atau menutup count. */
         function renderCount(count, shouldPlay = true) {
             const badge = document.getElementById('adminNotificationBadge');
             const bell = document.getElementById('adminNotificationBellIcon');
@@ -110,6 +115,7 @@
             sessionStorage.setItem(storageKey, String(normalized));
         }
 
+        /** Mengambil pembaruan data secara berkala dari server. */
         async function poll() {
             try {
                 const response = await fetch(`api/admin_notifications.php?t=${Date.now()}`, {

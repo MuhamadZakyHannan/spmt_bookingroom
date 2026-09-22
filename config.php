@@ -113,21 +113,25 @@ if (PHP_SAPI !== 'cli' && $pdo && isset($_SESSION['user_id'])) {
 }
 
 // Helper Functions
+/** Memeriksa apakah logged in terpenuhi. */
 function is_logged_in()
 {
     return isset($_SESSION['user_id']);
 }
 
+/** Memeriksa apakah admin terpenuhi. */
 function is_admin()
 {
     return isset($_SESSION['role']) && in_array($_SESSION['role'], ['admin', 'super_admin'], true);
 }
 
+/** Memeriksa apakah super admin terpenuhi. */
 function is_super_admin()
 {
     return isset($_SESSION['role']) && $_SESSION['role'] === 'super_admin';
 }
 
+/** Memvalidasi login. */
 function require_login()
 {
     if (!is_logged_in()) {
@@ -137,6 +141,7 @@ function require_login()
     }
 }
 
+/** Memvalidasi admin. */
 function require_admin()
 {
     require_login();
@@ -147,6 +152,7 @@ function require_admin()
     }
 }
 
+/** Menjalankan proses set flash pada fitur ini. */
 function set_flash($type, $message)
 {
     $_SESSION['flash'] = [
@@ -155,6 +161,7 @@ function set_flash($type, $message)
     ];
 }
 
+/** Menampilkan atau menutup flash. */
 function display_flash()
 {
     if (isset($_SESSION['flash'])) {
@@ -190,6 +197,7 @@ function display_flash()
     }
 }
 
+/** Memformat date. */
 function format_date($date_str)
 {
     if (!$date_str) return '-';
@@ -214,18 +222,21 @@ function format_date($date_str)
     return "$day $month $year";
 }
 
+/** Memformat time. */
 function format_time($time_str)
 {
     if (!$time_str) return '-';
     return date('H:i', strtotime($time_str));
 }
 
+/** Memeriksa apakah booking expired terpenuhi. */
 function is_booking_expired(array $booking): bool
 {
     return ($booking['status'] ?? '') === 'cancelled'
         && ($booking['status_reason'] ?? '') === BookingLifecycleService::REASON_EXPIRED;
 }
 
+/** Menjalankan proses booking status label pada fitur ini. */
 function booking_status_label(array $booking): string
 {
     if (is_booking_expired($booking)) return 'Kedaluwarsa';
@@ -266,11 +277,13 @@ function csrf_token()
     return $_SESSION['csrf_token'];
 }
 
+/** Menjalankan proses csrf field pada fitur ini. */
 function csrf_field()
 {
     return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8') . '">';
 }
 
+/** Memvalidasi csrf token. */
 function verify_csrf_token($token = null)
 {
     if ($token === null) {

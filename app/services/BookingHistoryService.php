@@ -8,6 +8,7 @@
  */
 final class BookingHistoryService
 {
+    /** Menyiapkan dependensi yang dibutuhkan oleh BookingHistoryService. */
     public function __construct(private PDO $db)
     {
     }

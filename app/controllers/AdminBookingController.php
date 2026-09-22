@@ -9,11 +9,13 @@ final class AdminBookingController extends Controller
 {
     private BookingModel $bookings;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh AdminBookingController. */
     public function __construct()
     {
         $this->bookings = $this->model('BookingModel');
     }
 
+    /** Menampilkan halaman utama admin booking. */
     public function index(): void
     {
         $this->requireAdmin();
@@ -32,6 +34,7 @@ final class AdminBookingController extends Controller
         ]);
     }
 
+    /** Menangani proses action. */
     private function handleAction(): void
     {
         $this->validateCsrf('admin_bookings.php');
@@ -68,6 +71,7 @@ final class AdminBookingController extends Controller
             : 'admin_bookings.php');
     }
 
+    /** Menjalankan proses analyze conflicts pada admin booking. */
     private function analyzeConflicts(): array
     {
         $analyses = [];

@@ -5,6 +5,7 @@ class BookingDocumentModel extends BaseModel
 {
     public const TYPE_SUPPORTING_DOCUMENT = 'supporting_document';
 
+    /** Mengambil data for booking. */
     public function getForBooking(int $bookingId, string $documentType = self::TYPE_SUPPORTING_DOCUMENT)
     {
         if (!$this->db || $bookingId <= 0) return false;
@@ -15,6 +16,7 @@ class BookingDocumentModel extends BaseModel
         return $statement->fetch(PDO::FETCH_ASSOC);
     }
 
+    /** Mengambil data by id. */
     public function getById(int $documentId)
     {
         if (!$this->db || $documentId <= 0) return false;

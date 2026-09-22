@@ -16,11 +16,13 @@ class BookingDocumentService
 
     private $storagePath;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh BookingDocumentService. */
     public function __construct(?string $storagePath = null)
     {
         $this->storagePath = rtrim($storagePath ?: BOOKING_DOCUMENT_STORAGE, "\\/");
     }
 
+    /** Memvalidasi data booking document sebelum diproses. */
     public function validate(?array $file): array
     {
         $errorCode = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
@@ -95,6 +97,7 @@ class BookingDocumentService
         ];
     }
 
+    /** Menyimpan data booking document ke penyimpanan. */
     public function store(array $validatedFile): array
     {
         if (empty($validatedFile['provided']) || empty($validatedFile['success'])) {
@@ -117,6 +120,7 @@ class BookingDocumentService
         return ['success' => true, 'stored_name' => $storedName, 'path' => $destination];
     }
 
+    /** Menentukan path. */
     public function resolvePath(string $storedName): ?string
     {
         if (!preg_match('/^[a-f0-9]{48}\.(?:pdf|jpg|png)$/', $storedName)) {
@@ -126,6 +130,7 @@ class BookingDocumentService
         return is_file($path) && is_readable($path) ? $path : null;
     }
 
+    /** Menghapus atau mereset booking document. */
     public function remove(string $storedName): bool
     {
         if (!preg_match('/^[a-f0-9]{48}\.(?:pdf|jpg|png)$/', $storedName)) {
@@ -135,6 +140,7 @@ class BookingDocumentService
         return !is_file($path) || @unlink($path);
     }
 
+    /** Memvalidasi storage directory. */
     private function ensureStorageDirectory(): bool
     {
         if (is_dir($this->storagePath)) {
@@ -143,6 +149,7 @@ class BookingDocumentService
         return @mkdir($this->storagePath, 0700, true) && is_writable($this->storagePath);
     }
 
+    /** Menjalankan proses upload error message pada booking document. */
     private function uploadErrorMessage(int $errorCode): string
     {
         if (in_array($errorCode, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {

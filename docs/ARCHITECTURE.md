@@ -64,6 +64,23 @@ berada di `public/js/site-shell.js`, inisialisasi tema di `theme-init.js`, dan
 escaping/highlight teks di `ui-utils.js`. Data dinamis JavaScript dikirim lewat
 partial `_runtime_config.php`, bukan disisipkan ke source JavaScript global.
 
+`src/input.css` adalah satu-satunya sumber aturan CSS statis. Tailwind membangun
+sumber tersebut menjadi `public/css/tailwind.min.css`; file hasil build tidak
+boleh diedit langsung. Tampilan kalender, kiosk, primitive responsif, dan kelas
+untuk visual berbasis data berada dalam pipeline yang sama. View hanya boleh
+mengirim nilai dinamis melalui CSS custom property yang telah dibatasi.
+
+### Dokumentasi kode
+
+- Setiap fungsi dan metode PHP bernama memiliki PHPDoc singkat mengenai
+  tanggung jawabnya.
+- Setiap function declaration dan named arrow function JavaScript memiliki
+  JSDoc singkat.
+- Callback anonim tetap berada di dalam fungsi pemilik dan tidak diberi
+  dokumentasi terpisah agar komentar tidak mengulang implementasi.
+- `run_function_documentation_tests.php` menjaga aturan ini ketika kode baru
+  ditambahkan.
+
 ## Aturan pengembangan
 
 - Tambahkan perubahan skema sebagai migration baru; jangan mengedit migration
@@ -73,6 +90,8 @@ partial `_runtime_config.php`, bukan disisipkan ke source JavaScript global.
 - Controller tidak boleh berisi SQL atau manipulasi file langsung.
 - Endpoint API wajib memakai `ApiRequest` dan `ApiResponse`.
 - Method publik lama hanya dipertahankan bila masih memiliki pemanggil.
+- Aturan CSS baru masuk melalui `src/input.css`, bukan blok `<style>` pada view.
+- Fungsi baru wajib langsung disertai PHPDoc atau JSDoc singkat.
 - Setiap refactor wajib melewati syntax check dan seluruh test runner.
 
 ## Menambahkan fitur

@@ -1,305 +1,7 @@
-<?php require_once __DIR__ . '/../layouts/header.php'; ?>
+﻿<?php require_once __DIR__ . '/../layouts/header.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/locales-all.global.min.js"></script>
-
-<style>
-    .calendar-shell .fc {
-        --fc-border-color: #e5e7eb;
-        --fc-page-bg-color: transparent;
-        --fc-neutral-bg-color: #f8fafc;
-        --fc-list-event-hover-bg-color: #f8fafc;
-        color: #1f2937;
-        font-size: 0.8125rem;
-    }
-    .calendar-shell .fc-theme-standard td,
-    .calendar-shell .fc-theme-standard th,
-    .calendar-shell .fc-theme-standard .fc-scrollgrid {
-        border-color: var(--fc-border-color);
-    }
-    .calendar-shell .fc-scrollgrid {
-        border-radius: 0 0 1rem 1rem;
-        overflow: hidden;
-    }
-    .calendar-shell .fc-col-header-cell {
-        background: #f8fafc;
-        padding: 0.7rem 0;
-    }
-    .calendar-shell .fc-col-header-cell-cushion {
-        color: #64748b;
-        font-size: 0.6875rem;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-    }
-    .calendar-shell .fc-daygrid-day-frame {
-        min-height: 108px;
-    }
-    .calendar-shell .fc-daygrid-day-number {
-        align-items: center;
-        color: #475569;
-        display: inline-flex;
-        font-size: 0.75rem;
-        font-weight: 600;
-        height: 1.75rem;
-        justify-content: center;
-        margin: 0.25rem;
-        width: 1.75rem;
-    }
-    .calendar-shell .fc-day-today {
-        background: #f8fbff !important;
-    }
-    .calendar-shell .fc-day-today .fc-daygrid-day-number {
-        background: #1a73e8;
-        border-radius: 9999px;
-        color: #fff;
-    }
-    .calendar-shell .fc-day-other .fc-daygrid-day-number {
-        color: #94a3b8;
-    }
-    .calendar-shell .fc-daygrid-event {
-        border: 0 !important;
-        border-radius: 4px;
-        cursor: pointer;
-        margin: 1px 4px;
-        padding: 2px 5px;
-    }
-    .calendar-shell .fc-event-main {
-        min-width: 0;
-    }
-    .calendar-event-content {
-        align-items: center;
-        display: flex;
-        gap: 0.3rem;
-        min-width: 0;
-        overflow: hidden;
-        width: 100%;
-    }
-    .calendar-event-time {
-        flex: 0 0 auto;
-        font-size: 0.625rem;
-        font-weight: 800;
-    }
-    .calendar-event-title {
-        font-size: 0.6875rem;
-        font-weight: 700;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    .calendar-event-details {
-        min-width: 0;
-        overflow: hidden;
-    }
-    .calendar-event-room {
-        display: none;
-    }
-    .calendar-shell .fc-daygrid-more-link {
-        color: #1a73e8;
-        font-size: 0.6875rem;
-        font-weight: 700;
-        margin-left: 5px;
-    }
-    .calendar-shell .fc-more-popover {
-        background: #ffffff;
-        border: 1px solid #dbe2ea;
-        border-radius: 0.75rem;
-        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22);
-        max-width: calc(100vw - 2rem);
-        overflow: hidden;
-        width: 420px;
-        z-index: 60;
-    }
-    .calendar-shell .fc-more-popover .fc-popover-header {
-        align-items: center;
-        background: #f8fafc;
-        border-bottom: 1px solid #e5e7eb;
-        display: flex;
-        font-size: 0.75rem;
-        font-weight: 800;
-        min-height: 2.75rem;
-        padding: 0.625rem 0.75rem;
-    }
-    .calendar-shell .fc-more-popover .fc-popover-body {
-        background: #ffffff;
-        max-height: min(420px, 60vh);
-        overflow-x: hidden;
-        overflow-y: auto;
-        padding: 0.5rem;
-    }
-    .calendar-shell .fc-more-popover .fc-daygrid-event-harness {
-        margin-bottom: 0.35rem;
-        position: relative !important;
-    }
-    .calendar-shell .fc-more-popover .fc-daygrid-event {
-        display: block;
-        margin: 0;
-        min-width: 0;
-        overflow: hidden;
-        padding: 0.45rem 0.55rem;
-        width: 100%;
-    }
-    .calendar-shell .fc-more-popover .calendar-event-content {
-        align-items: start;
-        display: grid;
-        gap: 0.5rem;
-        grid-template-columns: 3rem minmax(0, 1fr);
-        white-space: normal;
-    }
-    .calendar-shell .fc-more-popover .calendar-event-time {
-        display: block;
-        font-size: 0.6875rem;
-        line-height: 1.15rem;
-    }
-    .calendar-shell .fc-more-popover .calendar-event-title {
-        display: block;
-        font-size: 0.75rem;
-        line-height: 1.15rem;
-        overflow-wrap: anywhere;
-        text-overflow: clip;
-        white-space: normal;
-    }
-    .calendar-shell .fc-more-popover .calendar-event-room,
-    .calendar-shell .fc-list .calendar-event-room {
-        display: block;
-        font-size: 0.625rem;
-        font-weight: 600;
-        line-height: 1rem;
-        opacity: 0.82;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    .calendar-shell .fc-list {
-        border: 0;
-        border-radius: 0;
-    }
-    .calendar-shell .fc-list-day-cushion {
-        background: #f8fafc;
-        padding: 0.75rem 1rem;
-    }
-    .calendar-shell .fc-list-day-text,
-    .calendar-shell .fc-list-day-side-text {
-        color: #334155;
-        font-size: 0.75rem;
-        font-weight: 800;
-    }
-    .calendar-shell .fc-list-event-time {
-        color: #475569;
-        font-size: 0.75rem;
-        font-weight: 700;
-    }
-    .calendar-shell .fc-list-event-dot {
-        border-width: 5px;
-    }
-    .calendar-shell .fc-list-empty {
-        background: transparent;
-        color: #94a3b8;
-    }
-    .calendar-event-filtered {
-        display: none !important;
-    }
-    .calendar-view-button.is-active {
-        background: #e8f0fe;
-        color: #1967d2;
-    }
-    .calendar-detail-status[data-status="scheduled"] {
-        background: #dbeafe;
-        color: #1d4ed8;
-    }
-    .calendar-detail-status[data-status="ongoing"] {
-        background: #dcfce7;
-        color: #15803d;
-    }
-    .calendar-detail-status[data-status="completed"] {
-        background: #e2e8f0;
-        color: #475569;
-    }
-    .calendar-detail-status[data-status="no-show"] {
-        background: #ffe4e6;
-        color: #be123c;
-    }
-    .calendar-detail-header {
-        padding-bottom: 1.5rem !important;
-        padding-top: 1.75rem !important;
-    }
-    .calendar-detail-icon {
-        margin-top: 0.125rem;
-    }
-    .dark .calendar-shell .fc {
-        --fc-border-color: #334155;
-        --fc-neutral-bg-color: #0f172a;
-        --fc-list-event-hover-bg-color: #334155;
-        color: #e2e8f0;
-    }
-    .dark .calendar-shell .fc-col-header-cell,
-    .dark .calendar-shell .fc-list-day-cushion,
-    .dark .calendar-shell .fc-more-popover .fc-popover-header {
-        background: #0f172a;
-    }
-    .dark .calendar-shell .fc-more-popover .fc-popover-header {
-        border-bottom-color: #334155;
-    }
-    .dark .calendar-shell .fc-more-popover,
-    .dark .calendar-shell .fc-more-popover .fc-popover-body {
-        background: #1e293b;
-        border-color: #475569;
-    }
-    .dark .calendar-shell .fc-col-header-cell-cushion,
-    .dark .calendar-shell .fc-daygrid-day-number,
-    .dark .calendar-shell .fc-list-day-text,
-    .dark .calendar-shell .fc-list-day-side-text,
-    .dark .calendar-shell .fc-list-event-time {
-        color: #cbd5e1;
-    }
-    .dark .calendar-shell .fc-day-today {
-        background: rgba(30, 64, 175, 0.12) !important;
-    }
-    .dark .calendar-shell .fc-day-today .fc-daygrid-day-number {
-        color: #fff;
-    }
-    .dark .calendar-shell .fc-day-other .fc-daygrid-day-number {
-        color: #64748b;
-    }
-    .dark .calendar-view-button.is-active {
-        background: rgba(37, 99, 235, 0.28);
-        color: #bfdbfe;
-    }
-    .dark .calendar-detail-status[data-status="scheduled"] {
-        background: rgba(37, 99, 235, 0.25);
-        color: #bfdbfe;
-    }
-    .dark .calendar-detail-status[data-status="ongoing"] {
-        background: rgba(22, 163, 74, 0.22);
-        color: #bbf7d0;
-    }
-    .dark .calendar-detail-status[data-status="completed"] {
-        background: #334155;
-        color: #cbd5e1;
-    }
-    .dark .calendar-detail-status[data-status="no-show"] {
-        background: rgba(225, 29, 72, 0.22);
-        color: #fecdd3;
-    }
-    @media (max-width: 640px) {
-        .calendar-shell .fc-daygrid-day-frame {
-            min-height: 78px;
-        }
-        .calendar-shell .fc-daygrid-event {
-            margin-left: 2px;
-            margin-right: 2px;
-            padding-left: 3px;
-            padding-right: 3px;
-        }
-        .calendar-event-time {
-            display: none;
-        }
-        .calendar-shell .fc-more-popover {
-            width: calc(100vw - 2rem);
-        }
-    }
-</style>
 
 <div class="calendar-shell overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
     <header class="border-b border-slate-200 dark:border-slate-700 px-4 py-4 sm:px-5">
@@ -369,7 +71,7 @@
                 <div class="mt-1 space-y-0.5">
                     <?php foreach ($rooms as $room): ?>
                         <a href="calendar.php?room_id=<?php echo (int)$room['id']; ?>" class="flex items-center gap-3 rounded-lg px-2 py-2 text-xs font-semibold transition <?php echo $room_filter === (int)$room['id'] ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/60'; ?>">
-                            <span class="h-3 w-3 shrink-0 rounded-sm" style="background-color: <?php echo htmlspecialchars($room['calendar_color']); ?>"></span>
+                            <span class="data-color-swatch h-3 w-3 shrink-0 rounded-sm" style="--swatch-color: <?php echo htmlspecialchars($room['calendar_color']); ?>"></span>
                             <span class="truncate"><?php echo htmlspecialchars($room['name']); ?></span>
                         </a>
                     <?php endforeach; ?>
@@ -473,6 +175,7 @@
 <script>
     let calendarInstance = null;
 
+    /** Menampilkan atau menutup calendar event modal. */
     function closeCalendarEventModal() {
         const modal = document.getElementById('eventModal');
         modal.classList.add('hidden');
@@ -497,7 +200,9 @@
         const searchClear = document.getElementById('calendarSearchClear');
         let searchQuery = '';
 
+        /** Mengubah huruf pertama teks menjadi kapital. */
         const capitalize = value => value.charAt(0).toUpperCase() + value.slice(1);
+        /** Memeriksa kecocokan agenda terhadap kata pencarian aktif. */
         const matchesSearch = event => {
             if (!searchQuery) return true;
             const props = event.extendedProps || {};
@@ -505,6 +210,7 @@
                 .some(value => String(value || '').toLowerCase().includes(searchQuery));
         };
 
+        /** Memperbarui jumlah agenda yang terlihat pada periode kalender aktif. */
         const updateVisibleEventCount = () => {
             if (!calendarInstance) return;
             const view = calendarInstance.view;
@@ -514,6 +220,7 @@
             eventCount.textContent = total;
         };
 
+        /** Menyelaraskan status tombol dengan mode kalender aktif. */
         const updateViewButtons = viewName => {
             document.querySelectorAll('[data-calendar-view]').forEach(button => {
                 button.classList.toggle('is-active', button.dataset.calendarView === viewName);
@@ -581,7 +288,7 @@
             },
             eventDidMount: args => {
                 const props = args.event.extendedProps;
-                args.el.setAttribute('title', `${props.time} · ${props.room} · ${props.title}`);
+                args.el.setAttribute('title', `${props.time} Â· ${props.room} Â· ${props.title}`);
             },
             dateClick: args => {
                 const today = new Date();
@@ -607,7 +314,7 @@
                 }
 
                 document.getElementById('modalTitle').textContent = props.title;
-                document.getElementById('modalDateTime').textContent = `${props.date_formatted} · ${props.time} WIB`;
+                document.getElementById('modalDateTime').textContent = `${props.date_formatted} Â· ${props.time} WIB`;
                 document.getElementById('modalRoom').textContent = props.room;
                 document.getElementById('modalUser').textContent = props.user;
                 document.getElementById('modalAttendees').textContent = `${props.attendees} peserta`;

@@ -5,6 +5,7 @@
  */
 final class BookingConflictService
 {
+    /** Menyiapkan dependensi yang dibutuhkan oleh BookingConflictService. */
     public function __construct(private PDO $db)
     {
     }

@@ -363,6 +363,7 @@
 
     const { escapeHtml, highlightText } = window.MeetSpaceUI;
 
+    /** Menghapus atau mereset room search. */
     function clearRoomSearch() {
         roomSearchInput.value = '';
         clearRoomSearchBtn.classList.add('hidden');
@@ -371,6 +372,7 @@
         roomSearchInput.focus();
     }
 
+    /** Menerapkan room suggestion. */
     function selectRoomSuggestion(value) {
         roomSearchInput.value = value;
         roomSuggestionsBox.classList.add('hidden');
@@ -378,6 +380,7 @@
         applyLiveRoomFilter();
     }
 
+    /** Memperbarui room suggestions. */
     function updateRoomSuggestions(query) {
         if (!query || query.length < 1) {
             roomSuggestionsBox.innerHTML = '';
@@ -463,6 +466,7 @@
         roomSuggestionsBox.classList.remove('hidden');
     }
 
+    /** Menerapkan live room filter. */
     function applyLiveRoomFilter() {
         const query = roomSearchInput.value.trim();
         const q = query.toLowerCase();
@@ -528,6 +532,7 @@
         renderDashboardRooms(filtered, query);
     }
 
+    /** Menampilkan atau menutup dashboard rooms. */
     function renderDashboardRooms(rooms, highlightQuery = '') {
         if (!rooms || rooms.length === 0) {
             roomCardsContainer.innerHTML = `
@@ -658,6 +663,7 @@
     // ==========================================
     // MODAL POPUP BOOKING LOGIC
     // ==========================================
+    /** Menampilkan atau menutup booking modal. */
     function openBookingModal(roomId = null) {
         const modal = document.getElementById('bookingModal');
         const modalCard = document.getElementById('bookingModalCard');
@@ -681,6 +687,7 @@
         document.body.classList.add('overflow-hidden');
     }
 
+    /** Menampilkan atau menutup booking modal. */
     function closeBookingModal() {
         const modal = document.getElementById('bookingModal');
         const modalCard = document.getElementById('bookingModalCard');
@@ -698,6 +705,7 @@
         }, 300);
     }
 
+    /** Memvalidasi dan mengirim formulir booking dashboard secara asinkron. */
     async function handleBookingSubmit(e) {
         e.preventDefault();
         const form = e.target;

@@ -9,6 +9,7 @@ final class RoomImageService
     private const EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
     private const MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
+    /** Menyimpan data room image ke penyimpanan. */
     public function store(?array $file, string $fallback): string
     {
         if (!$file || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) return $fallback;
@@ -30,6 +31,7 @@ final class RoomImageService
             : $fallback;
     }
 
+    /** Memeriksa apakah allowed mime terpenuhi. */
     private function hasAllowedMime(string $path): bool
     {
         if (!function_exists('finfo_open')) return true;

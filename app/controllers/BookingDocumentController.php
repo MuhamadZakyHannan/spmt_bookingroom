@@ -8,6 +8,7 @@ class BookingDocumentController extends Controller
     private $documentService;
     private $documentManager;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh BookingDocumentController. */
     public function __construct()
     {
         $this->bookingModel = $this->model('BookingModel');
@@ -19,6 +20,7 @@ class BookingDocumentController extends Controller
         );
     }
 
+    /** Menjalankan proses download pada booking document. */
     public function download(): void
     {
         $this->requireAuth();
@@ -54,6 +56,7 @@ class BookingDocumentController extends Controller
         exit;
     }
 
+    /** Menjalankan proses manage pada booking document. */
     public function manage(): void
     {
         $this->requireAuth();
@@ -111,18 +114,21 @@ class BookingDocumentController extends Controller
         ]);
     }
 
+    /** Memeriksa apakah view terpenuhi. */
     private function canView(array $document): bool
     {
         return is_admin()
             || (int) $document['booking_user_id'] === (int) ($_SESSION['user_id'] ?? 0);
     }
 
+    /** Memeriksa apakah manage terpenuhi. */
     private function canManage(array $booking): bool
     {
         return is_admin()
             || (int) $booking['user_id'] === (int) ($_SESSION['user_id'] ?? 0);
     }
 
+    /** Menentukan return url. */
     private function resolveReturnUrl(string $requested): string
     {
         if (is_admin() && $requested === 'admin_bookings.php') {

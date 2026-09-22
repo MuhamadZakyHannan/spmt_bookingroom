@@ -7,6 +7,7 @@ require_once __DIR__ . '/../core/Controller.php';
  */
 final class AdminStatisticsController extends Controller
 {
+    /** Menampilkan halaman utama admin statistics. */
     public function index(): void
     {
         $this->requireAdmin();

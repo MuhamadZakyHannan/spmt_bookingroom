@@ -396,12 +396,14 @@
     const roomDataCount = document.getElementById('roomDataCount');
     const roomsTableBody = document.getElementById('roomsTableBody');
 
+    /** Menjalankan proses toggle add modal pada fitur ini. */
     function toggleAddModal() {
         const modal = document.getElementById('addModal');
         modal.classList.toggle('hidden');
         modal.classList.toggle('flex');
     }
 
+    /** Menampilkan atau menutup edit modal. */
     function openEditModal(room) {
         document.getElementById('editRoomId').value = room.id;
         document.getElementById('editCode').value = room.code;
@@ -421,12 +423,14 @@
         modal.classList.add('flex');
     }
 
+    /** Menampilkan atau menutup edit modal. */
     function closeEditModal() {
         const modal = document.getElementById('editModal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
     }
 
+    /** Menjalankan proses preview image pada fitur ini. */
     function previewImage(input, previewId) {
         const preview = document.getElementById(previewId);
         if (input.files && input.files[0]) {
@@ -440,6 +444,7 @@
 
     const { escapeHtml, highlightText } = window.MeetSpaceUI;
 
+    /** Menghapus atau mereset room search. */
     function clearRoomSearch() {
         roomSearchInput.value = '';
         clearRoomSearchBtn.classList.add('hidden');
@@ -448,6 +453,7 @@
         roomSearchInput.focus();
     }
 
+    /** Menerapkan room suggestion. */
     function selectRoomSuggestion(value) {
         roomSearchInput.value = value;
         roomSuggestionsBox.classList.add('hidden');
@@ -455,6 +461,7 @@
         applyLiveRoomFilter();
     }
 
+    /** Memperbarui room suggestions. */
     function updateRoomSuggestions(query) {
         if (!query || query.length < 1) {
             roomSuggestionsBox.innerHTML = '';
@@ -523,6 +530,7 @@
         roomSuggestionsBox.classList.remove('hidden');
     }
 
+    /** Menerapkan live room filter. */
     function applyLiveRoomFilter() {
         const query = roomSearchInput.value.trim();
         const q = query.toLowerCase();
@@ -578,6 +586,7 @@
         renderRoomsTable(filtered, query);
     }
 
+    /** Menampilkan atau menutup rooms table. */
     function renderRoomsTable(rooms, highlightQuery = '') {
         if (!rooms || rooms.length === 0) {
             roomsTableBody.innerHTML = `

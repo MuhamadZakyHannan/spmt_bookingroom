@@ -224,18 +224,36 @@ Gunakan menu **Riwayat Booking** untuk memfilter data berdasarkan tanggal, ruang
 
 ### Membangun ulang CSS
 
-CSS hasil build sudah tersedia di `public/css/tailwind.min.css`. Jika kelas Tailwind diubah:
+Seluruh aturan CSS statis menggunakan satu sumber utama, yaitu `src/input.css`.
+File tersebut memuat directive Tailwind, primitive responsif, tampilan kalender,
+dan tampilan kiosk. View tidak menyimpan blok `<style>` mandiri. Nilai yang
+berasal dari data, seperti persentase grafik dan warna kalender, diteruskan
+melalui CSS custom property ke kelas bersama.
+
+CSS hasil build tersedia di `public/css/tailwind.min.css`. Jangan mengedit file
+hasil build secara langsung. Jika kelas atau sumber CSS diubah, jalankan:
 
 ```powershell
 npm install
-npm run build:css
+npm.cmd run build:css
 ```
 
 Untuk mode pemantauan selama pengembangan:
 
 ```powershell
-npm run watch:css
+npm.cmd run watch:css
 ```
+
+### Dokumentasi fungsi
+
+Setiap fungsi atau metode PHP bernama wajib memiliki PHPDoc singkat yang
+menjelaskan tanggung jawabnya. Aturan yang sama berlaku untuk function
+declaration dan named arrow function JavaScript pada aset maupun script view.
+Callback anonim tidak diberi komentar satu per satu; tanggung jawabnya
+dijelaskan oleh fungsi pemilik agar dokumentasi tetap ringkas dan terawat.
+
+Audit dokumentasi dapat dijalankan melalui
+`php tests/run_function_documentation_tests.php`.
 
 ### Menjalankan pengujian
 
@@ -260,6 +278,8 @@ php tests/run_presentation_architecture_tests.php
 php tests/run_api_architecture_tests.php
 php tests/run_final_architecture_tests.php
 php tests/run_responsive_ui_tests.php
+php tests/run_css_consolidation_tests.php
+php tests/run_function_documentation_tests.php
 ```
 
 Pengujian membuat data sementara dan membersihkannya kembali setelah selesai.

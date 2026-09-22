@@ -7,6 +7,7 @@ require_once __DIR__ . '/../core/Controller.php';
  */
 final class AdminHistoryController extends Controller
 {
+    /** Menampilkan halaman utama admin history. */
     public function index(): void
     {
         $this->requireAdmin();

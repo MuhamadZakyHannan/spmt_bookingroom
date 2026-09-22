@@ -301,6 +301,7 @@
     const myBookingsCount = document.getElementById('myBookingsCount');
     const myBookingsContainer = document.getElementById('myBookingsContainer');
 
+    /** Menampilkan atau menutup detail modal. */
     function openDetailModal(data) {
         document.getElementById('modalTitle').textContent = data.title;
         document.getElementById('modalPurpose').textContent = data.purpose;
@@ -314,6 +315,7 @@
         modal.classList.add('flex');
     }
 
+    /** Menampilkan atau menutup detail modal. */
     function closeDetailModal() {
         const modal = document.getElementById('detailModal');
         modal.classList.add('hidden');
@@ -322,6 +324,7 @@
 
     const { escapeHtml, highlightText } = window.MeetSpaceUI;
 
+    /** Menghapus atau mereset my booking search. */
     function clearMyBookingSearch() {
         myBookingSearchInput.value = '';
         clearMyBookingSearchBtn.classList.add('hidden');
@@ -330,6 +333,7 @@
         myBookingSearchInput.focus();
     }
 
+    /** Menerapkan my booking suggestion. */
     function selectMyBookingSuggestion(value) {
         myBookingSearchInput.value = value;
         myBookingSuggestionsBox.classList.add('hidden');
@@ -337,6 +341,7 @@
         applyLiveMyBookingFilter();
     }
 
+    /** Memperbarui my booking suggestions. */
     function updateMyBookingSuggestions(query) {
         if (!query || query.length < 1) {
             myBookingSuggestionsBox.innerHTML = '';
@@ -405,6 +410,7 @@
         myBookingSuggestionsBox.classList.remove('hidden');
     }
 
+    /** Menerapkan live my booking filter. */
     function applyLiveMyBookingFilter() {
         const query = myBookingSearchInput.value.trim();
         const q = query.toLowerCase();
@@ -465,6 +471,7 @@
         renderMyBookingsList(filtered, query);
     }
 
+    /** Menampilkan atau menutup my bookings list. */
     function renderMyBookingsList(bookings, highlightQuery = '') {
         if (!bookings || bookings.length === 0) {
             myBookingsContainer.innerHTML = `

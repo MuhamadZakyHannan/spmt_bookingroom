@@ -8,6 +8,7 @@ class BookingController extends Controller {
     private $notificationModel;
     private $documentManager;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh BookingController. */
     public function __construct() {
         $this->roomModel = $this->model('RoomModel');
         $this->bookingModel = $this->model('BookingModel');
@@ -18,6 +19,7 @@ class BookingController extends Controller {
         );
     }
 
+    /** Menampilkan dan memproses pembuatan booking. */
     public function create() {
         $this->requireAuth();
 
@@ -123,6 +125,7 @@ class BookingController extends Controller {
         ]);
     }
 
+    /** Menampilkan dan memproses perubahan booking. */
     public function edit() {
         $this->requireAuth();
 
@@ -234,6 +237,7 @@ class BookingController extends Controller {
         ]);
     }
 
+    /** Menampilkan dan memproses daftar booking milik pengguna. */
     public function myBookings() {
         $this->requireAuth();
 
@@ -257,6 +261,7 @@ class BookingController extends Controller {
         ]);
     }
 
+    /** Menjalankan proses valid requested date pada booking. */
     private function validRequestedDate(string $requestedDate): string {
         return preg_match('/^\d{4}-\d{2}-\d{2}$/', $requestedDate)
             && strtotime($requestedDate) >= strtotime(date('Y-m-d'))
@@ -264,6 +269,7 @@ class BookingController extends Controller {
             : date('Y-m-d');
     }
 
+    /** Mengambil data booking input. */
     private function readBookingInput(array $source): array {
         $activityType = trim((string) ($source['activity_type'] ?? 'internal_divisi'));
         if (!array_key_exists($activityType, SawService::ACTIVITY_TYPES)) {
@@ -284,6 +290,7 @@ class BookingController extends Controller {
         ];
     }
 
+    /** Memvalidasi booking input. */
     private function validateBookingInput(array $input): string {
         if (!$input['room_id'] || $input['title'] === '' || $input['date'] === ''
             || $input['start_time'] === '' || $input['end_time'] === ''
@@ -309,6 +316,7 @@ class BookingController extends Controller {
         return '';
     }
 
+    /** Menjalankan proses booking result error pada booking. */
     private function bookingResultError(array $result): string {
         $reason = $result['reason'] ?? 'database_error';
         if ($reason === 'confirmed_conflict') {
@@ -330,6 +338,7 @@ class BookingController extends Controller {
         return 'Gagal menyimpan perubahan, terjadi kesalahan database.';
     }
 
+    /** Memeriksa apakah edit booking terpenuhi. */
     private function canEditBooking(array $booking): bool {
         $status = (string) ($booking['status'] ?? '');
         if (is_admin()) {
@@ -340,6 +349,7 @@ class BookingController extends Controller {
             && (int) ($booking['user_id'] ?? 0) === (int) $_SESSION['user_id'];
     }
 
+    /** Menentukan edit return url. */
     private function resolveEditReturnUrl(string $requested): string {
         return $requested === 'admin_bookings.php' && is_admin()
             ? 'admin_bookings.php'

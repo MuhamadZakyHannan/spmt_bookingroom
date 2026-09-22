@@ -10,12 +10,14 @@ final class AdminRoomController extends Controller
     private RoomModel $rooms;
     private RoomImageService $images;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh AdminRoomController. */
     public function __construct()
     {
         $this->rooms = $this->model('RoomModel');
         $this->images = new RoomImageService();
     }
 
+    /** Menampilkan halaman utama admin room. */
     public function index(): void
     {
         $this->requireAdmin();
@@ -31,6 +33,7 @@ final class AdminRoomController extends Controller
         ]);
     }
 
+    /** Menangani proses action. */
     private function handleAction(string $action): string
     {
         if ($action === 'add') return $this->add();
@@ -50,6 +53,7 @@ final class AdminRoomController extends Controller
         return '';
     }
 
+    /** Menambahkan data admin room. */
     private function add(): string
     {
         $data = $this->roomInput();
@@ -68,6 +72,7 @@ final class AdminRoomController extends Controller
         $this->redirect('admin_rooms.php');
     }
 
+    /** Menampilkan dan memproses perubahan admin room. */
     private function edit(): string
     {
         $roomId = (int) ($_POST['room_id'] ?? 0);
@@ -91,6 +96,7 @@ final class AdminRoomController extends Controller
         $this->redirect('admin_rooms.php');
     }
 
+    /** Menjalankan proses room input pada admin room. */
     private function roomInput(): array
     {
         $status = (string) ($_POST['status'] ?? 'available');
@@ -108,6 +114,7 @@ final class AdminRoomController extends Controller
         ];
     }
 
+    /** Memvalidasi room input. */
     private function validateRoomInput(array $data): string
     {
         return $data['code'] === '' || $data['name'] === ''

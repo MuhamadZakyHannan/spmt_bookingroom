@@ -3,6 +3,7 @@ require_once __DIR__ . '/../core/BaseModel.php';
 
 class RoomModel extends BaseModel {
 
+    /** Mengambil data all rooms. */
     public function getAllRooms($search = '', $status = '', $minCapacity = 0) {
         if (!$this->db) return [];
 
@@ -29,12 +30,14 @@ class RoomModel extends BaseModel {
         return $stmt->fetchAll();
     }
 
+    /** Mengambil data active rooms. */
     public function getActiveRooms() {
         if (!$this->db) return [];
         $stmt = $this->db->query("SELECT * FROM rooms WHERE status != 'maintenance' ORDER BY name ASC");
         return $stmt->fetchAll();
     }
 
+    /** Mengambil data by id. */
     public function getById($id) {
         if (!$this->db) return false;
         $stmt = $this->db->prepare("SELECT * FROM rooms WHERE id = ?");
@@ -42,6 +45,7 @@ class RoomModel extends BaseModel {
         return $stmt->fetch();
     }
 
+    /** Mengambil data by code. */
     public function getByCode($code) {
         if (!$this->db) return false;
         $stmt = $this->db->prepare("SELECT * FROM rooms WHERE code = ?");
@@ -49,6 +53,7 @@ class RoomModel extends BaseModel {
         return $stmt->fetch();
     }
 
+    /** Membuat data room baru. */
     public function create($data) {
         if (!$this->db) return false;
         $stmt = $this->db->prepare("INSERT INTO rooms (code, name, capacity, location, floor, facilities, description, image, status) 
@@ -66,6 +71,7 @@ class RoomModel extends BaseModel {
         ]);
     }
 
+    /** Memperbarui room. */
     public function update($id, $data) {
         if (!$this->db) return false;
         $sql = "UPDATE rooms SET 
@@ -94,12 +100,14 @@ class RoomModel extends BaseModel {
         ]);
     }
 
+    /** Memperbarui status. */
     public function updateStatus($id, $status) {
         if (!$this->db) return false;
         $stmt = $this->db->prepare("UPDATE rooms SET status = ? WHERE id = ?");
         return $stmt->execute([$status, $id]);
     }
 
+    /** Menghapus data room beserta relasi terkait. */
     public function delete($id) {
         if (!$this->db) return false;
         $documents = [];
@@ -121,11 +129,13 @@ class RoomModel extends BaseModel {
         return $deleted;
     }
 
+    /** Mengambil data total rooms count. */
     public function getTotalRoomsCount() {
         if (!$this->db) return 0;
         return (int)$this->db->query("SELECT COUNT(*) FROM rooms")->fetchColumn();
     }
 
+    /** Mengambil data available rooms count. */
     public function getAvailableRoomsCount() {
         if (!$this->db) return 0;
         return (int)$this->db->query("SELECT COUNT(*) FROM rooms WHERE status = 'available'")->fetchColumn();

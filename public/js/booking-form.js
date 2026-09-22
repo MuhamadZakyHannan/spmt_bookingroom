@@ -3,6 +3,7 @@
 
     const formStates = new WeakMap();
 
+    /** Mengubah teks waktu menjadi nilai menit. */
     function parseTime(value) {
         const parts = String(value || '').split(':');
         if (parts.length !== 2) return null;
@@ -12,6 +13,7 @@
         return (hours * 60) + minutes;
     }
 
+    /** Mengambil tanggal hari ini berdasarkan zona waktu Jakarta. */
     function getTodayInJakarta() {
         try {
             const parts = new Intl.DateTimeFormat('en-CA', {
@@ -26,6 +28,7 @@
         }
     }
 
+    /** Memformat durasi menit menjadi teks yang mudah dibaca. */
     function formatDuration(totalMinutes) {
         const hours = Math.floor(totalMinutes / 60);
         const minutes = totalMinutes % 60;
@@ -35,6 +38,7 @@
         return parts.join(' ') || '0 menit';
     }
 
+    /** Mengambil elemen-elemen yang dimiliki formulir booking. */
     function getElements(form) {
         return {
             room: form.querySelector('[data-booking-room]'),
@@ -55,6 +59,7 @@
         };
     }
 
+    /** Mengambil state internal untuk formulir yang diberikan. */
     function getState(form) {
         if (!formStates.has(form)) {
             formStates.set(form, { timer: null, controller: null, requestNumber: 0 });
@@ -62,6 +67,7 @@
         return formStates.get(form);
     }
 
+    /** Memperbarui room information. */
     function updateRoomInformation(form) {
         const elements = getElements(form);
         if (!elements.room) return;
@@ -81,6 +87,7 @@
         updateCapacity(form);
     }
 
+    /** Memperbarui capacity. */
     function updateCapacity(form) {
         const elements = getElements(form);
         if (!elements.capacityWarning || !elements.room || !elements.attendees) return true;
@@ -101,6 +108,7 @@
         return true;
     }
 
+    /** Memperbarui schedule. */
     function updateSchedule(form) {
         const elements = getElements(form);
         if (!elements.startTime || !elements.endTime) return true;
@@ -127,6 +135,7 @@
         return false;
     }
 
+    /** Menghapus atau mereset room options. */
     function resetRoomOptions(roomSelect) {
         if (!roomSelect) return;
         Array.from(roomSelect.options).forEach(option => {
@@ -137,6 +146,7 @@
         });
     }
 
+    /** Menentukan kelas visual untuk status ketersediaan. */
     function statusStyle(status) {
         const styles = {
             available: {
@@ -159,6 +169,7 @@
         return styles[status] || styles.unavailable;
     }
 
+    /** Menampilkan atau menutup availability cards. */
     function renderAvailabilityCards(form, rooms) {
         const elements = getElements(form);
         if (!elements.availabilityList) return;
@@ -209,6 +220,7 @@
         });
     }
 
+    /** Menerapkan availability. */
     function applyAvailability(form, payload) {
         const elements = getElements(form);
         const roomsById = new Map(payload.rooms.map(room => [String(room.id), room]));
@@ -237,6 +249,7 @@
         }
     }
 
+    /** Memeriksa kelengkapan input sebelum meminta ketersediaan. */
     function availabilityInputIsValid(elements) {
         const attendees = Number.parseInt(elements.attendees?.value || '', 10);
         const start = parseTime(elements.startTime?.value);
@@ -245,6 +258,7 @@
             && start !== null && end !== null && end > start && attendees >= 1 && attendees <= 100);
     }
 
+    /** Meminta status ketersediaan ruangan dari server. */
     async function requestAvailability(form) {
         const elements = getElements(form);
         const state = getState(form);
@@ -288,6 +302,7 @@
         }
     }
 
+    /** Menjadwalkan pemeriksaan ketersediaan dengan debounce. */
     function scheduleAvailability(form, delay = 300) {
         const state = getState(form);
         if (state.controller) {
@@ -299,6 +314,7 @@
         state.timer = window.setTimeout(() => requestAvailability(form), delay);
     }
 
+    /** Menampilkan atau menutup time picker. */
     function closeTimePicker(picker) {
         if (!picker) return;
         const panel = picker.querySelector('[data-time-picker-panel]');
@@ -307,12 +323,14 @@
         if (trigger) trigger.setAttribute('aria-expanded', 'false');
     }
 
+    /** Menampilkan atau menutup other time pickers. */
     function closeOtherTimePickers(activePicker) {
         document.querySelectorAll('[data-time-picker]').forEach(picker => {
             if (picker !== activePicker) closeTimePicker(picker);
         });
     }
 
+    /** Menyiapkan time picker. */
     function initTimePicker(picker) {
         const input = picker.querySelector('input[type="hidden"]');
         const trigger = picker.querySelector('[data-time-picker-trigger]');
@@ -324,6 +342,7 @@
         const closeButton = picker.querySelector('[data-time-picker-close]');
         if (!input || !trigger || !panel || !hourSelect || !minuteSelect) return;
 
+        /** Menyelaraskan pilihan jam dengan nilai input saat ini. */
         function syncSelectors() {
             const parts = String(input.value || '00:00').split(':');
             hourSelect.value = String(parts[0] || '00').padStart(2, '0');
@@ -357,6 +376,7 @@
         if (valueLabel) valueLabel.textContent = input.value;
     }
 
+    /** Memvalidasi format dan ukuran dokumen pendukung. */
     function validateDocumentInput(documentInput) {
         if (!documentInput) return { valid: true, message: '' };
         if (documentInput) documentInput.setCustomValidity('');
@@ -379,6 +399,7 @@
         return { valid: true, message: '' };
     }
 
+    /** Memvalidasi data java script sebelum diproses. */
     function validate(form) {
         const elements = getElements(form);
         const today = getTodayInJakarta();
@@ -403,6 +424,7 @@
         return validateDocumentInput(documentInput);
     }
 
+    /** Memperbarui java script. */
     function refresh(form) {
         const elements = getElements(form);
         if (elements.date) elements.date.min = getTodayInJakarta();
@@ -411,6 +433,7 @@
         scheduleAvailability(form, 0);
     }
 
+    /** Menyiapkan java script. */
     function init(form) {
         if (form.dataset.bookingFormInitialized === '1') return;
         form.dataset.bookingFormInitialized = '1';

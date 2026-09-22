@@ -198,6 +198,7 @@
 </div>
 
 <script>
+/** Menjalankan proses copy to clipboard pada fitur ini. */
 function copyToClipboard(elementId) {
     const copyText = document.getElementById(elementId);
     const fullUrl = window.location.origin + window.location.pathname.replace('admin_displays.php', '') + copyText.value;

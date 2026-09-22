@@ -7,11 +7,13 @@ class AuthController extends Controller {
     private $userModel;
     private $loginThrottle;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh AuthController. */
     public function __construct() {
         $this->userModel = $this->model('UserModel');
         $this->loginThrottle = new LoginThrottleService();
     }
 
+    /** Memproses autentikasi pengguna dan menampilkan formulir masuk. */
     public function login() {
         if (is_logged_in()) {
             $this->redirect('dashboard.php');
@@ -63,6 +65,7 @@ class AuthController extends Controller {
         ]);
     }
 
+    /** Memvalidasi dan membuat akun pengguna baru. */
     public function register() {
         if (!APP_ALLOW_REGISTRATION) {
             set_flash('warning', 'Pendaftaran mandiri dinonaktifkan. Hubungi Administrator untuk pembuatan akun.');
@@ -119,6 +122,7 @@ class AuthController extends Controller {
         ]);
     }
 
+    /** Mengakhiri sesi pengguna dengan aman. */
     public function logout() {
         $_SESSION = [];
         if (ini_get('session.use_cookies')) {

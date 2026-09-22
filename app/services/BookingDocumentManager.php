@@ -8,17 +8,20 @@ class BookingDocumentManager
     private $documentModel;
     private $storageService;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh BookingDocumentManager. */
     public function __construct($documentModel = null, $storageService = null)
     {
         $this->documentModel = $documentModel ?: new BookingDocumentModel();
         $this->storageService = $storageService ?: new BookingDocumentService();
     }
 
+    /** Memvalidasi data booking document sebelum diproses. */
     public function validate(?array $file): array
     {
         return $this->storageService->validate($file);
     }
 
+    /** Menambahkan data validated. */
     public function storeValidated(int $bookingId, int $uploadedBy, array $validatedUpload): array
     {
         $stored = $this->storageService->store($validatedUpload);

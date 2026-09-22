@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id" class="h-full">
 <head>
     <meta charset="UTF-8">
@@ -9,30 +9,6 @@
     <script src="public/js/ui-utils.js?v=<?php echo asset_version('public/js/ui-utils.js'); ?>"></script>
     <!-- Font Awesome 6 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-    <style>
-        /* Hide scrollbars in kiosk mode */
-        html, body {
-            height: 100%;
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-        }
-        @keyframes pulse-glow {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(1.08); }
-        }
-        .pulse-glow {
-            animation: pulse-glow 2s infinite ease-in-out;
-        }
-        /* When in fullscreen, hide any top controls */
-        :fullscreen #outsideFullscreenBar {
-            display: none !important;
-        }
-        :-webkit-full-screen #outsideFullscreenBar {
-            display: none !important;
-        }
-    </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen sm:h-screen flex flex-col p-2.5 sm:p-4 lg:p-5 font-sans select-none overflow-x-hidden">
 
@@ -160,6 +136,7 @@
     <script>
         const escapeHtml = window.MeetSpaceUI.escapeHtml;
 
+        /** Menampilkan atau menutup schedule rows. */
         function renderScheduleRows() {
             const tableBody = document.getElementById('scheduleTableBody');
             if (!tableBody) return;
@@ -248,7 +225,7 @@
                                     ${escapeHtml(b.room_name || 'Ruang Rapat')}
                                 </div>
                                 <div class="text-[11px] whitespace-normal break-words leading-tight mt-0.5 font-medium ${isNow ? 'text-emerald-800/90 font-semibold' : 'text-slate-500'}">
-                                    ${escapeHtml(b.room_floor || 'Gedung Utama')} • Kap. ${escapeHtml(b.attendees_count || '10')} orang
+                                    ${escapeHtml(b.room_floor || 'Gedung Utama')} â€¢ Kap. ${escapeHtml(b.attendees_count || '10')} orang
                                 </div>
                             </td>
 
@@ -316,6 +293,7 @@
         }
 
         // Silent Background Fetching (TIDAK ADA RELOAD HALAMAN = 100% AMAN FULLSCREEN)
+        /** Mengambil jadwal lobby terbaru tanpa memuat ulang display. */
         async function fetchLobbyDataSilently() {
             try {
                 const res = await fetch('api/lobby_status.php?t=' + Date.now());
@@ -338,6 +316,7 @@
         // Polling background data diam-diam setiap 5 detik tanpa merusak Fullscreen
         setInterval(fetchLobbyDataSilently, 5000);
 
+        /** Mengaktifkan atau menutup mode layar penuh. */
         function toggleFullScreen() {
             if (!document.fullscreenElement) {
                 document.documentElement.requestFullscreen().catch(() => {});

@@ -3,6 +3,7 @@ require_once __DIR__ . '/../core/BaseModel.php';
 
 class UserModel extends BaseModel {
 
+    /** Mengambil data by username. */
     public function findByUsername($username) {
         if (!$this->db) return false;
         $stmt = $this->db->prepare("SELECT * FROM users WHERE username = ?");
@@ -10,10 +11,12 @@ class UserModel extends BaseModel {
         return $stmt->fetch();
     }
 
+    /** Mengambil data by username. */
     public function getByUsername($username) {
         return $this->findByUsername($username);
     }
 
+    /** Mengambil data by id. */
     public function findById($id) {
         if (!$this->db) return false;
         $stmt = $this->db->prepare("SELECT * FROM users WHERE id = ?");
@@ -21,10 +24,12 @@ class UserModel extends BaseModel {
         return $stmt->fetch();
     }
 
+    /** Mengambil data by id. */
     public function getById($id) {
         return $this->findById($id);
     }
 
+    /** Menjalankan proses username exists for other user pada user. */
     public function usernameExistsForOtherUser($username, $userId) {
         if (!$this->db) return false;
         $stmt = $this->db->prepare("SELECT COUNT(*) FROM users WHERE username = ? AND id != ?");
@@ -32,6 +37,7 @@ class UserModel extends BaseModel {
         return (int)$stmt->fetchColumn() > 0;
     }
 
+    /** Membuat data user baru. */
     public function create($nameOrData, $email = '', $password = '', $role = 'user') {
         if (!$this->db) return false;
 
@@ -56,16 +62,19 @@ class UserModel extends BaseModel {
         return $stmt->execute([$name, $email, $email, $department, $hash, $avatar, $role]);
     }
 
+    /** Mengambil data all users. */
     public function getAllUsers() {
         if (!$this->db) return [];
         $stmt = $this->db->query("SELECT * FROM users ORDER BY created_at DESC");
         return $stmt->fetchAll();
     }
 
+    /** Mengambil seluruh data user. */
     public function getAll() {
         return $this->getAllUsers();
     }
 
+    /** Memperbarui role. */
     public function updateRole($userId, $role) {
         if (!$this->db) return false;
         if (!in_array($role, ['user', 'admin', 'super_admin'], true)) return false;
@@ -73,6 +82,7 @@ class UserModel extends BaseModel {
         return $stmt->execute([$role, $userId]);
     }
 
+    /** Memperbarui account. */
     public function updateAccount($userId, array $data) {
         if (!$this->db) return false;
 
@@ -107,6 +117,7 @@ class UserModel extends BaseModel {
         return $stmt->execute([$data['name'], $username, $username, $department, $role, $userId]);
     }
 
+    /** Menghapus data user beserta relasi terkait. */
     public function delete($userId) {
         if (!$this->db) return false;
         $documents = $this->documentFilesForUser((int) $userId);
@@ -116,6 +127,7 @@ class UserModel extends BaseModel {
         return $deleted;
     }
 
+    /** Menjalankan proses document files for user pada user. */
     private function documentFilesForUser(int $userId): array {
         if ($userId <= 0) return [];
         try {
@@ -130,12 +142,14 @@ class UserModel extends BaseModel {
         }
     }
 
+    /** Menghapus atau mereset document files. */
     private function removeDocumentFiles(array $storedNames): void {
         if (!$storedNames) return;
         $service = new BookingDocumentService();
         foreach ($storedNames as $storedName) $service->remove((string) $storedName);
     }
 
+    /** Mengambil data total count. */
     public function getTotalCount() {
         if (!$this->db) return 0;
         return (int)$this->db->query("SELECT COUNT(*) FROM users")->fetchColumn();

@@ -13,6 +13,7 @@ abstract class BaseModel
 {
     protected ?PDO $db;
 
+    /** Menyiapkan dependensi yang dibutuhkan oleh BaseModel. */
     public function __construct(?PDO $connection = null)
     {
         $this->db = $connection ?? Database::getInstance()->getConnection();
