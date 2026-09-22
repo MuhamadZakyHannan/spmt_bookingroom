@@ -54,5 +54,5 @@
     </div>
 </div>
 
-<script src="public/js/booking-form.js"></script>
+<script src="public/js/booking-form.js?v=<?php echo asset_version('public/js/booking-form.js'); ?>"></script>
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>

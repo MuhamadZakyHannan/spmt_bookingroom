@@ -8,7 +8,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MeetSpace - Sistem Pemesanan Ruang Rapat Perusahaan (MVC)</title>
     <!-- Tailwind CSS (Local Compiled Standalone) -->
-    <link rel="stylesheet" href="public/css/tailwind.min.css">
+    <link rel="stylesheet" href="public/css/tailwind.min.css?v=<?php echo asset_version('public/css/tailwind.min.css'); ?>">
     <!-- Dark Mode Immediate Detector Script -->
     <script>
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {

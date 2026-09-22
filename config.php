@@ -155,6 +155,22 @@ function format_time($time_str) {
 }
 
 /**
+ * Menghasilkan versi aset dari waktu modifikasi file agar browser tidak
+ * memakai CSS atau JavaScript lama setelah aplikasi diperbarui.
+ */
+function asset_version($relative_path) {
+    $relative_path = ltrim(str_replace('\\', '/', (string) $relative_path), '/');
+    if ($relative_path === '' || strpos($relative_path, '..') !== false) {
+        return '1';
+    }
+
+    $absolute_path = __DIR__ . DIRECTORY_SEPARATOR
+        . str_replace('/', DIRECTORY_SEPARATOR, $relative_path);
+
+    return is_file($absolute_path) ? (string) filemtime($absolute_path) : '1';
+}
+
+/**
  * CSRF Protection Helper Functions
  */
 function csrf_token() {

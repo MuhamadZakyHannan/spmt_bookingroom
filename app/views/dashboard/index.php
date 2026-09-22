@@ -335,7 +335,7 @@
     </div>
 </div>
 
-<script src="public/js/booking-form.js"></script>
+<script src="public/js/booking-form.js?v=<?php echo asset_version('public/js/booking-form.js'); ?>"></script>
 <script>
     // All rooms in-memory data for instant client-side filtering & re-ranking
     const rawDashboardRooms = <?php echo json_encode(array_map(function ($r) {
