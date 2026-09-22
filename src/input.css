@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -104,7 +104,7 @@ html, body {
 }
 .calendar-shell .fc-scrollgrid {
     border-radius: 0 0 1rem 1rem;
-    overflow: hidden;
+    overflow: visible;
 }
 .calendar-shell .fc-col-header-cell {
     background: #f8fafc;
@@ -192,9 +192,12 @@ html, body {
     border-radius: 0.75rem;
     box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22);
     max-width: calc(100vw - 2rem);
-    overflow: hidden;
     width: 420px;
     z-index: 60;
+    display: flex !important;
+    flex-direction: column !important;
+    max-height: min(340px, calc(100vh - 4rem)) !important;
+    overflow: hidden;
 }
 .calendar-shell .fc-more-popover .fc-popover-header {
     align-items: center;
@@ -205,13 +208,32 @@ html, body {
     font-weight: 800;
     min-height: 2.75rem;
     padding: 0.625rem 0.75rem;
+    flex-shrink: 0;
 }
 .calendar-shell .fc-more-popover .fc-popover-body {
     background: #ffffff;
-    max-height: min(420px, 60vh);
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 240px;
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: auto !important;
     padding: 0.5rem;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+}
+.calendar-shell .fc-more-popover .fc-popover-body::-webkit-scrollbar {
+    width: 6px;
+}
+.calendar-shell .fc-more-popover .fc-popover-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+.calendar-shell .fc-more-popover .fc-popover-body::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 9999px;
+}
+.dark .calendar-shell .fc-more-popover .fc-popover-body::-webkit-scrollbar-thumb {
+    background-color: #475569;
 }
 .calendar-shell .fc-more-popover .fc-daygrid-event-harness {
     margin-bottom: 0.35rem;
@@ -391,21 +413,71 @@ html, body {
     margin: 0.8cm;
 }
 @media print {
+    .no-print,
     .booking-report-page .no-print {
         display: none !important;
     }
     html,
-    .booking-report-page {
+    body,
+    body.booking-report-page {
         background: white !important;
         color: black !important;
-        font-size: 11px;
+        font-size: 11px !important;
         margin: 0 !important;
         padding: 0 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        overflow: visible !important;
+        overflow-x: visible !important;
+        overflow-y: visible !important;
+        width: 100% !important;
     }
-    .booking-report-page .page-break {
-        page-break-after: always;
+    .booking-report-page,
+    .booking-report-page * {
+        overflow: visible !important;
+        overflow-x: visible !important;
+        overflow-y: visible !important;
+        max-height: none !important;
+        scrollbar-width: none !important;
+    }
+    .booking-report-page *::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+    .booking-report-page .max-w-6xl {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
     }
     .booking-report-page table {
-        font-size: 10px;
+        font-size: 10px !important;
+        width: 100% !important;
+        border-collapse: collapse !important;
+        page-break-inside: auto !important;
+    }
+    .booking-report-page thead {
+        display: table-header-group !important;
+    }
+    .booking-report-page tbody {
+        display: table-row-group !important;
+    }
+    .booking-report-page tr {
+        page-break-inside: avoid !important;
+        page-break-after: auto !important;
+        break-inside: avoid !important;
+    }
+    .booking-report-page td,
+    .booking-report-page th {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+    .booking-report-page .page-break {
+        page-break-after: always !important;
+        break-after: page !important;
     }
 }

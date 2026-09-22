@@ -1,7 +1,6 @@
 <?php
 /**
  * Real-time Live Polling API Endpoint for Admin Bookings
- * PT Pelabuhan Indonesia (Persero)
  */
 
 require_once __DIR__ . '/../config.php';

@@ -6,7 +6,7 @@
     <title>Laporan Pemesanan Ruangan</title>
     <link rel="stylesheet" href="public/css/tailwind.min.css?v=<?php echo asset_version('public/css/tailwind.min.css'); ?>">
 </head>
-<body class="booking-report-page bg-slate-100 min-h-screen text-slate-800 p-4 sm:p-8 font-sans">
+<body class="booking-report-page bg-slate-100 min-h-screen print:min-h-0 print:h-auto print:bg-white text-slate-800 p-4 sm:p-8 print:p-0 font-sans">
 
     <!-- Action Toolbar (Hidden in Print) -->
     <div class="max-w-6xl mx-auto mb-6 bg-white p-4 rounded-xl shadow border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 no-print">
@@ -30,7 +30,7 @@
     </div>
 
     <!-- Official Report Paper (A4 Landscape Formatted) -->
-    <div class="max-w-6xl mx-auto bg-white p-8 sm:p-10 rounded-2xl shadow-lg border border-slate-200 print:shadow-none print:border-none print:p-0">
+    <div class="max-w-6xl mx-auto bg-white p-8 sm:p-10 rounded-2xl shadow-lg border border-slate-200 print:shadow-none print:border-none print:p-0 print:m-0 print:max-w-none print:w-full">
         
         <!-- Official Letterhead Header -->
         <div class="flex items-center justify-between pb-4 border-b-2 border-slate-800 mb-6">
@@ -86,7 +86,7 @@
         </div>
 
         <!-- Table Data -->
-        <div class="overflow-x-auto mb-8">
+        <div class="overflow-x-auto print:overflow-visible mb-8">
             <table class="w-full text-left border-collapse text-[11px]">
                 <thead>
                     <tr class="bg-slate-100 border-y border-slate-300 text-slate-700 font-bold uppercase tracking-wider">
@@ -159,7 +159,7 @@
         </div>
 
         <!-- Official Signatures (Document Validation) -->
-        <div class="grid grid-cols-2 gap-8 pt-4 border-t border-slate-200 text-xs">
+        <div class="grid grid-cols-2 gap-8 pt-4 border-t border-slate-200 text-xs print:break-inside-avoid">
             <div>
                 <div class="text-slate-500 font-semibold mb-1">Catatan Sistem:</div>
                 <div class="text-[10px] text-slate-400 leading-relaxed">

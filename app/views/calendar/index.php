@@ -1,9 +1,9 @@
-﻿<?php require_once __DIR__ . '/../layouts/header.php'; ?>
+<?php require_once __DIR__ . '/../layouts/header.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/locales-all.global.min.js"></script>
 
-<div class="calendar-shell overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+<div class="calendar-shell rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
     <header class="border-b border-slate-200 dark:border-slate-700 px-4 py-4 sm:px-5">
         <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div class="flex min-w-0 flex-wrap items-center gap-2">
@@ -288,7 +288,7 @@
             },
             eventDidMount: args => {
                 const props = args.event.extendedProps;
-                args.el.setAttribute('title', `${props.time} Â· ${props.room} Â· ${props.title}`);
+                args.el.setAttribute('title', `${props.time} · ${props.room} · ${props.title}`);
             },
             dateClick: args => {
                 const today = new Date();
@@ -314,7 +314,7 @@
                 }
 
                 document.getElementById('modalTitle').textContent = props.title;
-                document.getElementById('modalDateTime').textContent = `${props.date_formatted} Â· ${props.time} WIB`;
+                document.getElementById('modalDateTime').textContent = `${props.date_formatted} · ${props.time} WIB`;
                 document.getElementById('modalRoom').textContent = props.room;
                 document.getElementById('modalUser').textContent = props.user;
                 document.getElementById('modalAttendees').textContent = `${props.attendees} peserta`;
@@ -344,6 +344,50 @@
                 }
             }
         });
+
+        /** Menyesuaikan posisi dan scroll popover kalender agar tidak terpotong tepi layar. */
+        const adjustPopoverPosition = popover => {
+            if (!popover) return;
+            requestAnimationFrame(() => {
+                const rect = popover.getBoundingClientRect();
+                const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+                const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+                const margin = 12;
+
+                if (rect.bottom > viewportHeight - margin) {
+                    const overflowY = rect.bottom - (viewportHeight - margin);
+                    const currentTop = parseFloat(popover.style.top) || 0;
+                    popover.style.top = Math.max(margin, currentTop - overflowY) + 'px';
+                }
+
+                if (rect.right > viewportWidth - margin) {
+                    const overflowX = rect.right - (viewportWidth - margin);
+                    const currentLeft = parseFloat(popover.style.left) || 0;
+                    popover.style.left = Math.max(margin, currentLeft - overflowX) + 'px';
+                }
+
+                const body = popover.querySelector('.fc-popover-body');
+                if (body) {
+                    body.style.overflowY = 'auto';
+                }
+            });
+        };
+
+        const popoverObserver = new MutationObserver(mutations => {
+            for (const mutation of mutations) {
+                for (const node of mutation.addedNodes) {
+                    if (node.nodeType === 1) {
+                        if (node.classList?.contains('fc-popover')) {
+                            adjustPopoverPosition(node);
+                        } else {
+                            const foundPopover = node.querySelector?.('.fc-popover');
+                            if (foundPopover) adjustPopoverPosition(foundPopover);
+                        }
+                    }
+                }
+            }
+        });
+        popoverObserver.observe(calendarElement, { childList: true, subtree: true });
 
         calendarInstance.render();
 

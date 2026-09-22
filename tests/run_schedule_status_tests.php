@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/bootstrap.php';
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../app/models/BookingModel.php';
 require_once __DIR__ . '/../app/models/DisplayModel.php';
@@ -55,4 +56,3 @@ try {
 }
 
 echo PHP_EOL.'Hasil: 4 lulus, 0 gagal.'.PHP_EOL;
-    
