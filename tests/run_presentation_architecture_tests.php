@@ -38,13 +38,13 @@ expectPresentation(
 );
 expectPresentation(
     str_contains($header, 'class="w-full px-3 sm:px-4 lg:px-6"')
-        && str_contains($header, 'grid-cols-[1fr_auto_1fr]')
-        && str_contains($header, 'justify-self-center')
-        && str_contains($header, 'col-start-3 flex shrink-0')
+        && str_contains($header, 'absolute left-1/2 flex -translate-x-1/2')
+        && str_contains($header, 'max-w-[4.5rem]')
+        && str_contains($header, 'ml-auto flex shrink-0')
         && substr_count($header, 'aria-label="Ke dashboard"') === 1
-        && str_contains($header, 'theme-toggle-button flex h-10 w-10')
+        && str_contains($header, 'theme-toggle-button flex h-9 w-9')
         && str_contains($shell, "button.setAttribute('aria-label', label)"),
-    'Navbar seimbang, bebas tabrakan mobile, dan memiliki kontrol tema berupa ikon aksesibel.'
+    'Navbar menampilkan logo tengah adaptif dan kontrol tema berupa ikon aksesibel tanpa tabrakan mobile.'
 );
 
 $sharedUtilityViews = [
