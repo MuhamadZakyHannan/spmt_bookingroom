@@ -253,11 +253,7 @@
     const editPasswordPopover = document.getElementById('editPasswordPopover');
     const editPasswordRequirementSummary = document.getElementById('editPasswordRequirementSummary');
 
-    function escapeHtml(text) {
-        if (!text) return '';
-        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-        return text.toString().replace(/[&<>"']/g, m => map[m]);
-    }
+    const escapeHtml = window.MeetSpaceUI.escapeHtml;
 
     function validateEditPassword(showPopover = false) {
         if (!editUserPassword) return true;
@@ -334,13 +330,7 @@
         document.body.classList.remove('overflow-hidden');
     }
 
-    function highlightText(text, query) {
-        if (!query || !text) return escapeHtml(text);
-        const safeText = escapeHtml(text);
-        const safeQuery = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`(${safeQuery})`, 'gi');
-        return safeText.replace(regex, `<mark class="bg-amber-200 dark:bg-amber-800 text-slate-900 dark:text-white rounded px-0.5 font-bold">$1</mark>`);
-    }
+    const highlightText = window.MeetSpaceUI.highlightText;
 
     function clearUserSearch() {
         userSearchInput.value = '';

@@ -320,19 +320,7 @@
         modal.classList.remove('flex');
     }
 
-    function escapeHtml(text) {
-        if (!text) return '';
-        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-        return text.toString().replace(/[&<>"']/g, m => map[m]);
-    }
-
-    function highlightText(text, query) {
-        if (!query || !text) return escapeHtml(text);
-        const safeText = escapeHtml(text);
-        const safeQuery = escapeHtml(query).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`(${safeQuery})`, 'gi');
-        return safeText.replace(regex, `<mark class="bg-amber-200 dark:bg-amber-800 text-slate-900 dark:text-white rounded px-0.5 font-bold">$1</mark>`);
-    }
+    const { escapeHtml, highlightText } = window.MeetSpaceUI;
 
     function clearMyBookingSearch() {
         myBookingSearchInput.value = '';

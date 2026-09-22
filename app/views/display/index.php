@@ -35,6 +35,7 @@ $totalActiveSesi = count($activeList);
     <title><?php echo htmlspecialchars($room['name']); ?> - Monitor Pintu</title>
     <!-- Tailwind CSS (Local Compiled Standalone) -->
     <link rel="stylesheet" href="public/css/tailwind.min.css">
+    <script src="public/js/ui-utils.js?v=<?php echo asset_version('public/js/ui-utils.js'); ?>"></script>
     <!-- Font Awesome 6 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <style>
@@ -208,15 +209,7 @@ $totalActiveSesi = count($activeList);
 
     <!-- Seamless In-Place DOM Update Script (No Fullscreen Exit / No Page Reloads) -->
     <script>
-        function escapeHtml(str) {
-            if (!str) return '';
-            return String(str)
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
-        }
+        const escapeHtml = window.MeetSpaceUI.escapeHtml;
 
         function renderRoomSchedule() {
             const tableBody = document.getElementById('scheduleTableBody');

@@ -14,7 +14,8 @@ perilaku aplikasi serta melewati seluruh regression test sebelum dilanjutkan.
    display, dan statistik dari `AdminController`. Status: selesai;
    `AdminController` menjadi facade kompatibilitas.
 4. **Presentasi** — pindahkan JavaScript besar dari view ke modul dalam
-   `public/js` dan pecah partial UI yang digunakan ulang.
+   `public/js` dan pecah partial UI yang digunakan ulang. Status: selesai;
+   shell global, tema, notifikasi, dan utility escaping sudah dimodulkan.
 5. **Endpoint API** — seragamkan validasi request, response JSON, status HTTP,
    autentikasi, dan penanganan error.
 6. **Finalisasi** — hapus kompatibilitas yang tidak lagi digunakan, lengkapi
