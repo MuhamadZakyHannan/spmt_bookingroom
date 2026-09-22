@@ -1,6 +1,7 @@
 <?php require_once __DIR__ . '/../layouts/header.php'; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/locales-all.global.min.js"></script>
 
 <style>
     .calendar-shell .fc {
@@ -94,9 +95,6 @@
     .calendar-event-room {
         display: none;
     }
-    .calendar-event-date {
-        display: none;
-    }
     .calendar-shell .fc-daygrid-more-link {
         color: #1a73e8;
         font-size: 0.6875rem;
@@ -172,14 +170,6 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-    }
-    .calendar-shell .fc-list .calendar-event-date {
-        color: #64748b;
-        display: block;
-        font-size: 0.625rem;
-        font-weight: 700;
-        line-height: 1rem;
-        margin-top: 0.125rem;
     }
     .calendar-shell .fc-list {
         border: 0;
@@ -262,9 +252,6 @@
     .dark .calendar-shell .fc-list-day-side-text,
     .dark .calendar-shell .fc-list-event-time {
         color: #cbd5e1;
-    }
-    .dark .calendar-shell .fc-list .calendar-event-date {
-        color: #94a3b8;
     }
     .dark .calendar-shell .fc-day-today {
         background: rgba(30, 64, 175, 0.12) !important;
@@ -536,6 +523,7 @@
 
         calendarInstance = new FullCalendar.Calendar(calendarElement, {
             initialView: 'dayGridMonth',
+            locale: 'id',
             headerToolbar: false,
             firstDay: 1,
             fixedWeekCount: false,
@@ -543,8 +531,8 @@
             dayMaxEvents: 4,
             displayEventEnd: false,
             eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
-            listDayFormat: { day: '2-digit', month: 'long', year: 'numeric' },
-            listDaySideFormat: { weekday: 'long' },
+            listDayFormat: { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' },
+            listDaySideFormat: false,
             events: 'api/get_events.php?room_id=<?php echo (int)$room_filter; ?>',
             eventSourceFailure: () => {
                 loadingElement.classList.add('hidden');
@@ -575,14 +563,9 @@
                 room.className = 'calendar-event-room';
                 room.textContent = args.event.extendedProps.room || '';
 
-                const date = document.createElement('span');
-                date.className = 'calendar-event-date';
-                date.textContent = `Tanggal: ${args.event.extendedProps.date_formatted || ''}`;
-
                 if (args.timeText) wrapper.appendChild(time);
                 details.appendChild(title);
                 details.appendChild(room);
-                details.appendChild(date);
                 wrapper.appendChild(details);
                 return { domNodes: [wrapper] };
             },

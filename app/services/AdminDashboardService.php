@@ -45,6 +45,8 @@ class AdminDashboardService {
                     b.id, b.title, b.date, b.start_time, b.end_time,
                     IFNULL(b.user_name, u.name) AS user_name,
                     r.name AS room_name,
+                    d.id AS document_id,
+                    d.original_name AS document_name,
                     EXISTS (
                         SELECT 1 FROM bookings other
                         WHERE other.id <> b.id
@@ -57,6 +59,8 @@ class AdminDashboardService {
                 FROM bookings b
                 JOIN rooms r ON r.id = b.room_id
                 LEFT JOIN users u ON u.id = b.user_id
+                LEFT JOIN booking_documents d
+                  ON d.booking_id = b.id AND d.document_type = 'request_letter'
                 WHERE b.status = 'pending' AND b.date >= CURDATE()
                 ORDER BY b.date ASC, b.start_time ASC, b.created_at ASC
                 LIMIT {$limit}";

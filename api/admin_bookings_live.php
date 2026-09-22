@@ -60,6 +60,8 @@ foreach ($bookings as $b) {
         'attendees_count' => (int)$b['attendees_count'],
         'status' => $b['status'],
         'activity_type_label' => $actLabel,
+        'document_id' => (int)($b['document_id'] ?? 0),
+        'document_name' => $b['document_name'] ?? '',
         'is_conflict' => isset($conflictBookingIds[$b['id']])
     ];
 }

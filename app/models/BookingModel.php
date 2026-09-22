@@ -380,10 +380,13 @@ class BookingModel {
         $sql = "SELECT b.*, r.name as room_name, r.code as room_code, r.capacity as room_capacity, r.location as room_location,
                        IFNULL(b.user_name, u.name) as user_name, 
                        u.email as user_email,
-                       IFNULL(b.user_dept, 'Internal') as user_dept 
+                       IFNULL(b.user_dept, 'Internal') as user_dept,
+                       d.id AS document_id, d.original_name AS document_name
                 FROM bookings b 
                 JOIN rooms r ON b.room_id = r.id 
-                LEFT JOIN users u ON b.user_id = u.id 
+                LEFT JOIN users u ON b.user_id = u.id
+                LEFT JOIN booking_documents d
+                  ON d.booking_id = b.id AND d.document_type = 'request_letter'
                 WHERE b.status IN ('pending', 'confirmed') 
                 ORDER BY b.date ASC, b.room_id ASC, b.start_time ASC";
         $stmt = $this->db->query($sql);
@@ -498,9 +501,13 @@ class BookingModel {
 
     public function getByUserId($userId) {
         if (!$this->db) return [];
-        $stmt = $this->db->prepare("SELECT b.*, r.name as room_name, r.code as room_code, r.location 
+        $stmt = $this->db->prepare("SELECT b.*, r.name as room_name, r.code as room_code, r.location,
+                                           d.id AS document_id, d.original_name AS document_name,
+                                           d.mime_type AS document_mime_type, d.size_bytes AS document_size_bytes
                                     FROM bookings b 
                                     JOIN rooms r ON b.room_id = r.id 
+                                    LEFT JOIN booking_documents d
+                                      ON d.booking_id = b.id AND d.document_type = 'request_letter'
                                     WHERE b.user_id = ? 
                                     ORDER BY CASE WHEN b.status = 'pending' THEN 0 ELSE 1 END, b.id DESC");
         $stmt->execute([$userId]);
@@ -512,10 +519,14 @@ class BookingModel {
         $stmt = $this->db->prepare(
             "SELECT b.*, r.name AS room_name, r.code AS room_code, r.location,
                     IFNULL(b.user_name, u.name) AS requester_name,
-                    IFNULL(b.user_dept, u.department) AS requester_department
+                    IFNULL(b.user_dept, u.department) AS requester_department,
+                    d.id AS document_id, d.original_name AS document_name,
+                    d.mime_type AS document_mime_type, d.size_bytes AS document_size_bytes
              FROM bookings b
              JOIN rooms r ON r.id = b.room_id
              JOIN users u ON u.id = b.user_id
+             LEFT JOIN booking_documents d
+               ON d.booking_id = b.id AND d.document_type = 'request_letter'
              WHERE b.id = ?
              LIMIT 1"
         );
@@ -539,10 +550,14 @@ class BookingModel {
         $sql = "SELECT b.*, r.name as room_name, r.code as room_code, 
                        IFNULL(b.user_name, u.name) as user_name, 
                        u.email as user_email,
-                       IFNULL(b.user_dept, 'Internal') as user_dept 
+                       IFNULL(b.user_dept, 'Internal') as user_dept,
+                       d.id AS document_id, d.original_name AS document_name,
+                       d.mime_type AS document_mime_type, d.size_bytes AS document_size_bytes
                 FROM bookings b 
                 JOIN rooms r ON b.room_id = r.id 
                 JOIN users u ON b.user_id = u.id 
+                LEFT JOIN booking_documents d
+                  ON d.booking_id = b.id AND d.document_type = 'request_letter'
                 WHERE 1=1";
         $params = [];
 
@@ -578,8 +593,33 @@ class BookingModel {
 
     public function delete($bookingId) {
         if (!$this->db) return false;
+        $documents = $this->documentFilesForBooking((int) $bookingId);
         $stmt = $this->db->prepare("DELETE FROM bookings WHERE id = ?");
-        return $stmt->execute([$bookingId]);
+        $deleted = $stmt->execute([$bookingId]);
+        if ($deleted) {
+            $this->removeDocumentFiles($documents);
+        }
+        return $deleted;
+    }
+
+    private function documentFilesForBooking(int $bookingId): array {
+        if ($bookingId <= 0) return [];
+        try {
+            $statement = $this->db->prepare('SELECT stored_name FROM booking_documents WHERE booking_id = ?');
+            $statement->execute([$bookingId]);
+            return $statement->fetchAll(PDO::FETCH_COLUMN);
+        } catch (Throwable $exception) {
+            error_log('Gagal membaca file dokumen booking: ' . $exception->getMessage());
+            return [];
+        }
+    }
+
+    private function removeDocumentFiles(array $storedNames): void {
+        if (!$storedNames) return;
+        $service = new BookingDocumentService();
+        foreach ($storedNames as $storedName) {
+            $service->remove((string) $storedName);
+        }
     }
 
     public function getCalendarEvents($roomId = 0) {

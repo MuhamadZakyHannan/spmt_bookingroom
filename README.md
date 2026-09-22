@@ -8,6 +8,7 @@ MeetSpace adalah aplikasi pemesanan ruang rapat berbasis PHP dan MySQL untuk pen
 - Pemeriksa ketersediaan ruangan secara langsung berdasarkan tanggal, waktu, dan jumlah peserta.
 - Approval booking oleh administrator.
 - Edit pengajuan dengan aturan akses berdasarkan pemilik, role, dan status booking.
+- Lampiran surat pengajuan PDF/JPG/PNG dengan penyimpanan privat dan akses terotorisasi.
 - Analisis prioritas ketika jadwal bentrok menggunakan metode SAW.
 - Status rapat pada monitor dihitung otomatis berdasarkan waktu jadwal.
 - Notifikasi booking untuk administrator.
@@ -37,7 +38,13 @@ C:\xampp\htdocs\Room_Booking_System
 1. Jalankan Apache dan MySQL dari XAMPP Control Panel.
 2. Buka `http://localhost/phpmyadmin/`.
 3. Import skema utama `C:\xampp\private\Room_Booking_System\database.sql` ke MySQL.
-4. Import file SQL pada folder `migrations/` sesuai urutan nama file.
+4. Terapkan migrasi database melalui terminal dari direktori proyek:
+
+```powershell
+php scripts/apply_migrations.php
+```
+
+Runner mencatat migrasi yang sudah dijalankan sehingga aman dipanggil kembali.
 5. Pastikan database bernama `meetspace_db`, atau sesuaikan `DB_NAME` pada `.env`.
 
 Skema utama sengaja disimpan di luar `htdocs` agar tidak dapat diunduh melalui web server.
@@ -51,6 +58,7 @@ DB_HOST="localhost"
 DB_USER="root"
 DB_PASS=""
 DB_NAME="meetspace_db"
+BOOKING_DOCUMENT_STORAGE="C:/xampp/private/Room_Booking_System/booking-documents"
 ```
 
 File `.env` tidak disimpan ke Git.
@@ -90,10 +98,13 @@ Gunakan password yang panjang dan mengandung kombinasi huruf besar, huruf kecil,
    - **Merah — Sudah terkonfirmasi:** ada booking confirmed dan ruangan tidak dapat dipilih;
    - **Abu-abu — Tidak memenuhi:** ruangan sedang dirawat atau kapasitasnya tidak cukup.
 4. Isi jenis kegiatan dan agenda, lalu kirim pengajuan.
-5. Booking dari user berstatus `pending` sampai disetujui admin. Booking yang dibuat admin dan tidak bentrok langsung terkonfirmasi.
-6. Pantau status melalui **Booking Saya** atau **Kalender Jadwal**.
+5. Jika rapat memerlukan surat resmi, unggah pada bagian **Dokumen Pendukung**. Format yang didukung adalah PDF, JPG, dan PNG dengan ukuran maksimal 5 MB.
+6. Booking dari user berstatus `pending` sampai disetujui admin. Booking yang dibuat admin dan tidak bentrok langsung terkonfirmasi.
+7. Pantau status melalui **Booking Saya** atau **Kalender Jadwal**.
 
 Pengajuan berstatus `pending` dapat diedit oleh pemiliknya melalui tombol **Edit Pengajuan** pada **Booking Saya**. Setelah disimpan, status tetap `pending` dan jadwal diperiksa ulang. Pemilik tidak dapat mengedit booking yang sudah `confirmed`; perubahan booking `pending` atau `confirmed` tersebut hanya dapat dilakukan Admin atau Super Admin.
+
+Dokumen dapat dilihat oleh pemilik booking, Admin, dan Super Admin melalui tautan **Surat Pengajuan**. Mengunggah file baru saat mengedit akan mengganti dokumen lama. File fisik disimpan di direktori `BOOKING_DOCUMENT_STORAGE` di luar `htdocs`; database hanya menyimpan metadata, checksum, dan nama file acak.
 
 Jika beberapa pengajuan `pending` menginginkan ruangan dan waktu yang beririsan, Administrator akan meninjau dan menentukan prioritasnya. Jadwal yang sudah `confirmed` diblokir sejak form dan diperiksa ulang oleh server saat penyimpanan.
 
@@ -103,6 +114,8 @@ Menu **Kalender Jadwal** menyediakan dua tampilan tanpa mode mingguan:
 
 - **Bulan** untuk melihat jadwal dalam grid kalender;
 - **Agenda** untuk melihat daftar jadwal pada bulan aktif.
+
+Pada tampilan Agenda, nama hari dan tanggal ditampilkan dalam satu header lengkap, misalnya **Selasa, 22 September 2026**.
 
 Gunakan tombol **Hari ini**, panah sebelumnya/berikutnya, pencarian agenda, dan filter ruangan untuk mempersempit jadwal. Klik sebuah agenda untuk membuka detail. Klik tanggal hari ini atau tanggal mendatang yang masih kosong untuk membuka form booking dengan tanggal tersebut terisi otomatis.
 
@@ -198,6 +211,8 @@ php tests/run_schedule_status_tests.php
 php tests/run_admin_dashboard_tests.php
 php tests/run_room_availability_tests.php
 php tests/run_booking_edit_tests.php
+php tests/run_booking_document_tests.php
+php tests/run_booking_document_http_tests.php
 php tests/run_calendar_ui_tests.php
 php tests/run_role_hierarchy_tests.php
 php tests/run_user_account_tests.php

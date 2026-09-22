@@ -37,6 +37,13 @@ if (!defined('DB_HOST')) define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
 if (!defined('DB_USER')) define('DB_USER', getenv('DB_USER') ?: 'root');
 if (!defined('DB_PASS')) define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : '');
 if (!defined('DB_NAME')) define('DB_NAME', getenv('DB_NAME') ?: 'meetspace_db');
+if (!defined('BOOKING_DOCUMENT_STORAGE')) {
+    $defaultDocumentStorage = dirname(__DIR__, 2)
+        . DIRECTORY_SEPARATOR . 'private'
+        . DIRECTORY_SEPARATOR . 'Room_Booking_System'
+        . DIRECTORY_SEPARATOR . 'booking-documents';
+    define('BOOKING_DOCUMENT_STORAGE', getenv('BOOKING_DOCUMENT_STORAGE') ?: $defaultDocumentStorage);
+}
 
 // Secure Session Initialization
 if (PHP_SAPI !== 'cli' && session_status() === PHP_SESSION_NONE) {

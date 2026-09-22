@@ -39,6 +39,7 @@ $statusClass = $isConfirmed
 
         <form
             method="POST"
+            enctype="multipart/form-data"
             action="edit_booking.php?id=<?php echo (int) $booking['id']; ?>"
             class="space-y-6"
             data-booking-form
@@ -53,6 +54,7 @@ $statusClass = $isConfirmed
             $bookingFormRooms = $rooms;
             $bookingFormSelectedRoomId = (int) $values['room_id'];
             $bookingFormValues = $values;
+            $bookingFormCurrentDocument = $current_document;
             $bookingFormInfoText = $isConfirmed
                 ? 'Booking ini sudah terkonfirmasi. Hanya Administrator yang dapat menyimpan perubahan, dan bentrok dengan jadwal terkonfirmasi lain tetap ditolak.'
                 : 'Status tetap menunggu persetujuan setelah diedit. Jika beririsan dengan pengajuan lain, Administrator akan meninjau dan menentukan prioritasnya.';

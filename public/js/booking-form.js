@@ -360,6 +360,8 @@
     function validate(form) {
         const elements = getElements(form);
         const today = getTodayInJakarta();
+        const documentInput = form.querySelector('input[name="request_letter"]');
+        if (documentInput) documentInput.setCustomValidity('');
         if (!form.checkValidity()) {
             form.reportValidity();
             return { valid: false, message: 'Mohon lengkapi seluruh kolom wajib.' };
@@ -375,6 +377,22 @@
         const selectedOption = elements.room?.options[elements.room.selectedIndex];
         if (selectedOption?.dataset.availabilitySelectable === '0' || selectedOption?.disabled) {
             return { valid: false, message: 'Ruangan tidak tersedia untuk jadwal atau jumlah peserta yang dipilih.' };
+        }
+        if (documentInput?.files?.length) {
+            const file = documentInput.files[0];
+            const extension = String(file.name || '').split('.').pop().toLowerCase();
+            const allowedExtensions = ['pdf', 'jpg', 'jpeg', 'png'];
+            const allowedMimes = ['application/pdf', 'image/jpeg', 'image/png'];
+            if (file.size > 5 * 1024 * 1024) {
+                documentInput.setCustomValidity('Ukuran dokumen maksimal 5 MB.');
+                documentInput.reportValidity();
+                return { valid: false, message: 'Ukuran dokumen maksimal 5 MB.' };
+            }
+            if (!allowedExtensions.includes(extension) || (file.type && !allowedMimes.includes(file.type))) {
+                documentInput.setCustomValidity('Format dokumen harus PDF, JPG, atau PNG.');
+                documentInput.reportValidity();
+                return { valid: false, message: 'Format dokumen harus PDF, JPG, atau PNG.' };
+            }
         }
         return { valid: true, message: '' };
     }
@@ -402,6 +420,8 @@
         if (elements.date) elements.date.addEventListener('change', () => scheduleAvailability(form));
         if (elements.startTime) elements.startTime.addEventListener('change', () => { updateSchedule(form); scheduleAvailability(form); });
         if (elements.endTime) elements.endTime.addEventListener('change', () => { updateSchedule(form); scheduleAvailability(form); });
+        const documentInput = form.querySelector('input[name="request_letter"]');
+        if (documentInput) documentInput.addEventListener('change', () => documentInput.setCustomValidity(''));
         form.querySelectorAll('[data-time-picker]').forEach(picker => initTimePicker(picker));
         form.addEventListener('submit', event => {
             const result = validate(form);

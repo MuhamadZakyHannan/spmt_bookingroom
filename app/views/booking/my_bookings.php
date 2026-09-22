@@ -138,6 +138,11 @@
                                     <i class="fas fa-users text-brand-500"></i>
                                     <span><?php echo $b['attendees_count']; ?> Peserta</span>
                                 </div>
+                                <?php if (!empty($b['document_id'])): ?>
+                                    <a href="booking_document.php?id=<?php echo (int) $b['document_id']; ?>" target="_blank" rel="noopener" class="px-2.5 py-1 bg-violet-50 dark:bg-violet-950/40 rounded-lg border border-violet-200 dark:border-violet-800 text-xs font-semibold text-violet-700 dark:text-violet-300 flex items-center gap-1.5 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition" title="<?php echo htmlspecialchars($b['document_name']); ?>">
+                                        <i class="fas fa-file-lines"></i><span>Surat Pengajuan</span>
+                                    </a>
+                                <?php endif; ?>
                             </div>
 
                             <!-- Catatan Agenda with Baca Selengkapnya -->
@@ -272,7 +277,9 @@
             'formatted_time' => format_time($b['start_time']) . ' - ' . format_time($b['end_time']),
             'attendees_count' => (int)$b['attendees_count'],
             'purpose' => $purpose,
-            'status' => $b['status']
+            'status' => $b['status'],
+            'document_id' => (int)($b['document_id'] ?? 0),
+            'document_name' => $b['document_name'] ?? ''
         ];
     }, $my_bookings)); ?>;
 
@@ -584,6 +591,11 @@
                                     <i class="fas fa-users text-brand-500"></i>
                                     <span>${b.attendees_count} Peserta</span>
                                 </div>
+                                ${b.document_id ? `
+                                    <a href="booking_document.php?id=${b.document_id}" target="_blank" rel="noopener" class="px-2.5 py-1 bg-violet-50 dark:bg-violet-950/40 rounded-lg border border-violet-200 dark:border-violet-800 text-xs font-semibold text-violet-700 dark:text-violet-300 flex items-center gap-1.5 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition" title="${escapeHtml(b.document_name)}">
+                                        <i class="fas fa-file-lines"></i><span>Surat Pengajuan</span>
+                                    </a>
+                                ` : ''}
                             </div>
 
                             ${b.purpose ? `

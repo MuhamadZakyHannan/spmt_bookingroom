@@ -24,7 +24,7 @@
             </div>
         <?php endif; ?>
 
-        <form method="POST" action="booking.php" class="space-y-6" data-booking-form data-availability-url="api/room_availability.php">
+        <form method="POST" action="booking.php" enctype="multipart/form-data" class="space-y-6" data-booking-form data-availability-url="api/room_availability.php">
             <?php echo csrf_field(); ?>
             <?php
             $bookingFormPrefix = 'pageBooking';

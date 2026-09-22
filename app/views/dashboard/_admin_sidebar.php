@@ -78,6 +78,12 @@ $displayStatusMeta = [
                             <i class="fas fa-user w-4 shrink-0 text-center text-slate-400"></i>
                             <span class="truncate"><?php echo htmlspecialchars($request['user_name']); ?></span>
                         </span>
+                        <?php if (!empty($request['document_id'])): ?>
+                            <a href="booking_document.php?id=<?php echo (int) $request['document_id']; ?>" target="_blank" rel="noopener" class="flex min-w-0 items-center gap-2 rounded-md bg-violet-50 dark:bg-violet-950/40 px-2 py-1.5 font-bold text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition" title="<?php echo htmlspecialchars($request['document_name']); ?>">
+                                <i class="fas fa-file-lines w-4 shrink-0 text-center"></i>
+                                <span class="truncate">Lihat Surat Pengajuan</span>
+                            </a>
+                        <?php endif; ?>
                     </div>
 
                     <div class="mt-4 flex items-center gap-3 border-t border-slate-200/70 dark:border-slate-700 pt-4">

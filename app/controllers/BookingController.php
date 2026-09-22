@@ -6,11 +6,15 @@ class BookingController extends Controller {
     private $roomModel;
     private $bookingModel;
     private $notificationModel;
+    private $documentModel;
+    private $documentService;
 
     public function __construct() {
         $this->roomModel = $this->model('RoomModel');
         $this->bookingModel = $this->model('BookingModel');
         $this->notificationModel = $this->model('NotificationModel');
+        $this->documentModel = $this->model('BookingDocumentModel');
+        $this->documentService = new BookingDocumentService();
     }
 
     public function create() {
@@ -36,6 +40,10 @@ class BookingController extends Controller {
             $values = $this->readBookingInput($_POST);
             $selectedRoomId = $values['room_id'];
             $error = $this->validateBookingInput($values);
+            $documentUpload = $this->documentService->validate($_FILES['request_letter'] ?? null);
+            if ($error === '' && empty($documentUpload['success'])) {
+                $error = $documentUpload['error'];
+            }
 
             if ($error === '') {
                 $isAdmin = is_admin();
@@ -45,31 +53,47 @@ class BookingController extends Controller {
                 );
 
                 if (!empty($result['success'])) {
-                    $status = $result['status'];
-                    if (!empty($result['pending_conflict'])) {
-                        $message = 'Pengajuan berhasil dicatat sebagai Pending. Ada pengajuan lain pada jadwal yang sama; Administrator akan meninjau dan menentukan prioritasnya.';
+                    $bookingId = (int) $result['booking_id'];
+                    if (!empty($documentUpload['provided'])) {
+                        $documentResult = $this->storeBookingDocument($bookingId, $documentUpload);
+                        if (empty($documentResult['success'])) {
+                            // Pengajuan baru dan dokumennya diperlakukan sebagai satu operasi.
+                            $this->bookingModel->delete($bookingId);
+                            $error = $documentResult['error'];
+                        }
+                    }
+
+                    if ($error !== '') {
+                        if ($this->isAjax()) {
+                            $this->jsonResponse(['success' => false, 'error' => $error], 422);
+                        }
                     } else {
-                        $message = $status === 'confirmed'
-                            ? 'Pemesanan ruangan oleh Admin berhasil dibuat dan langsung terkonfirmasi ke jadwal!'
-                            : 'Pengajuan booking berhasil dikirim! Status saat ini menunggu persetujuan Administrator.';
-                    }
+                        $status = $result['status'];
+                        if (!empty($result['pending_conflict'])) {
+                            $message = 'Pengajuan berhasil dicatat sebagai Pending. Ada pengajuan lain pada jadwal yang sama; Administrator akan meninjau dan menentukan prioritasnya.';
+                        } else {
+                            $message = $status === 'confirmed'
+                                ? 'Pemesanan ruangan oleh Admin berhasil dibuat dan langsung terkonfirmasi ke jadwal!'
+                                : 'Pengajuan booking berhasil dikirim! Status saat ini menunggu persetujuan Administrator.';
+                        }
 
-                    if ($status === 'pending') {
-                        $this->notificationModel->createForPendingBooking((int) $result['booking_id']);
-                    }
-                    set_flash('success', $message);
+                        if ($status === 'pending') {
+                            $this->notificationModel->createForPendingBooking($bookingId);
+                        }
+                        set_flash('success', $message);
 
-                    if ($this->isAjax()) {
-                        $this->jsonResponse([
-                            'success' => true,
-                            'message' => $message,
-                            'redirect' => 'my_bookings.php',
-                        ]);
+                        if ($this->isAjax()) {
+                            $this->jsonResponse([
+                                'success' => true,
+                                'message' => $message,
+                                'redirect' => 'my_bookings.php',
+                            ]);
+                        }
+                        $this->redirect('my_bookings.php');
                     }
-                    $this->redirect('my_bookings.php');
+                } else {
+                    $error = $this->bookingResultError($result);
                 }
-
-                $error = $this->bookingResultError($result);
             }
 
             if ($this->isAjax() && $error !== '') {
@@ -141,6 +165,10 @@ class BookingController extends Controller {
             $this->validateCsrf($csrfFallback);
             $values = $this->readBookingInput($_POST);
             $error = $this->validateBookingInput($values);
+            $documentUpload = $this->documentService->validate($_FILES['request_letter'] ?? null);
+            if ($error === '' && empty($documentUpload['success'])) {
+                $error = $documentUpload['error'];
+            }
 
             if ($error === '') {
                 $result = $this->bookingModel->updateWithSchedulePolicy(
@@ -151,6 +179,13 @@ class BookingController extends Controller {
                 );
 
                 if (!empty($result['success'])) {
+                    $documentWarning = '';
+                    if (!empty($documentUpload['provided'])) {
+                        $documentResult = $this->storeBookingDocument((int) $bookingId, $documentUpload);
+                        if (empty($documentResult['success'])) {
+                            $documentWarning = ' Data booking tersimpan, tetapi dokumen gagal diperbarui: ' . $documentResult['error'];
+                        }
+                    }
                     if (($result['status'] ?? '') === 'pending') {
                         $this->notificationModel->refreshForPendingBooking((int) $bookingId);
                     }
@@ -161,7 +196,7 @@ class BookingController extends Controller {
                     } else {
                         $message = 'Booking berhasil diperbarui.';
                     }
-                    set_flash('success', $message);
+                    set_flash($documentWarning === '' ? 'success' : 'warning', $message . $documentWarning);
                     $this->redirect($returnTo);
                 }
 
@@ -179,6 +214,12 @@ class BookingController extends Controller {
             'rooms' => $this->roomModel->getAllRooms(),
             'values' => $values,
             'activity_types' => SawService::ACTIVITY_TYPES,
+            'current_document' => !empty($booking['document_id']) ? [
+                'id' => (int) $booking['document_id'],
+                'original_name' => $booking['document_name'],
+                'mime_type' => $booking['document_mime_type'],
+                'size_bytes' => (int) $booking['document_size_bytes'],
+            ] : null,
             'return_to' => $returnTo,
             'error' => $error,
         ]);
@@ -294,5 +335,34 @@ class BookingController extends Controller {
         return $requested === 'admin_bookings.php' && is_admin()
             ? 'admin_bookings.php'
             : 'my_bookings.php';
+    }
+
+    private function storeBookingDocument(int $bookingId, array $validatedUpload): array {
+        $stored = $this->documentService->store($validatedUpload);
+        if (empty($stored['success'])) {
+            return $stored;
+        }
+
+        $metadata = [
+            'original_name' => $validatedUpload['original_name'],
+            'stored_name' => $stored['stored_name'],
+            'mime_type' => $validatedUpload['mime_type'],
+            'size_bytes' => $validatedUpload['size_bytes'],
+            'sha256' => $validatedUpload['sha256'],
+        ];
+        $saved = $this->documentModel->replace(
+            $bookingId,
+            (int) $_SESSION['user_id'],
+            $metadata
+        );
+        if (empty($saved['success'])) {
+            $this->documentService->remove($stored['stored_name']);
+            return ['success' => false, 'error' => 'Metadata dokumen gagal disimpan.'];
+        }
+
+        if (!empty($saved['old_stored_name']) && $saved['old_stored_name'] !== $stored['stored_name']) {
+            $this->documentService->remove($saved['old_stored_name']);
+        }
+        return ['success' => true, 'document_id' => $saved['document_id']];
     }
 }

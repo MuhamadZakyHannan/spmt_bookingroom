@@ -14,14 +14,15 @@ $bookingForm = file_get_contents(__DIR__ . '/../app/views/booking/_form_fields.p
 $bookingScript = file_get_contents(__DIR__ . '/../public/js/booking-form.js');
 
 expectCalendarUi(
-    str_contains($calendarView, "listDayFormat: { day: '2-digit', month: 'long', year: 'numeric' }")
-        && str_contains($calendarView, "listDaySideFormat: { weekday: 'long' }"),
-    'Header Agenda menampilkan tanggal lengkap dan nama hari.'
+    str_contains($calendarView, "listDayFormat: { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }")
+        && str_contains($calendarView, 'listDaySideFormat: false')
+        && str_contains($calendarView, "locale: 'id'")
+        && str_contains($calendarView, '@fullcalendar/core@6.1.8/locales-all.global.min.js'),
+    'Header Agenda menyatukan nama hari dan tanggal lengkap dalam bahasa Indonesia.'
 );
 expectCalendarUi(
-    str_contains($calendarView, 'calendar-event-date')
-        && str_contains($calendarView, 'extendedProps.date_formatted'),
-    'Setiap baris Agenda menampilkan tanggal lengkap.'
+    !str_contains($calendarView, 'calendar-event-date'),
+    'Tanggal tidak diulang pada setiap baris Agenda.'
 );
 expectCalendarUi(
     str_contains($calendarController, "'date_formatted' => format_date(\$b['date'])"),

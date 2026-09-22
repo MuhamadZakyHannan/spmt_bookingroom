@@ -224,6 +224,11 @@
                                         <div class="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
                                             <strong><?php echo htmlspecialchars($b['user_name']); ?></strong> • <?php echo htmlspecialchars($b['user_dept'] ?? '-'); ?>
                                         </div>
+                                        <?php if (!empty($b['document_id'])): ?>
+                                            <a href="booking_document.php?id=<?php echo (int) $b['document_id']; ?>" target="_blank" rel="noopener" class="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 hover:bg-violet-100 transition" title="<?php echo htmlspecialchars($b['document_name']); ?>">
+                                                <i class="fas fa-file-lines"></i> Surat Pengajuan
+                                            </a>
+                                        <?php endif; ?>
                                     </td>
 
                                     <!-- Jam -->
@@ -494,6 +499,12 @@
                                     <i class="fas fa-tag text-[9px] text-amber-500"></i> <?php echo htmlspecialchars($actInfo['label']); ?>
                                 </span>
 
+                                <?php if (!empty($b['document_id'])): ?>
+                                    <a href="booking_document.php?id=<?php echo (int) $b['document_id']; ?>" target="_blank" rel="noopener" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 hover:bg-violet-100 transition" title="<?php echo htmlspecialchars($b['document_name']); ?>">
+                                        <i class="fas fa-file-lines"></i> Surat Pengajuan
+                                    </a>
+                                <?php endif; ?>
+
                                 <?php if (isset($conflict_booking_ids[$b['id']])): ?>
                                     <button type="button" onclick="switchBookingTab('conflicts')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 hover:bg-rose-200 transition shadow-xs cursor-pointer" title="Jadwal ini bertabrakan! Klik untuk membuka analisis SAW.">
                                         <i class="fas fa-exclamation-triangle text-rose-600 animate-pulse"></i> Bentrok Jadwal (SPK SAW)
@@ -734,6 +745,8 @@
             'attendees_count' => (int)$b['attendees_count'],
             'status' => $b['status'],
             'activity_type_label' => $actLabel,
+            'document_id' => (int)($b['document_id'] ?? 0),
+            'document_name' => $b['document_name'] ?? '',
             'is_conflict' => isset($conflict_booking_ids[$b['id']])
         ];
     }, $bookings)); ?>;
@@ -1104,6 +1117,11 @@
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200">
                                     <i class="fas fa-tag text-[9px] text-amber-500"></i> ${escapeHtml(b.activity_type_label)}
                                 </span>
+                            ` : ''}
+                            ${b.document_id ? `
+                                <a href="booking_document.php?id=${b.document_id}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 hover:bg-violet-100 transition" title="${escapeHtml(b.document_name || '')}">
+                                    <i class="fas fa-file-lines"></i> Surat Pengajuan
+                                </a>
                             ` : ''}
                             ${b.is_conflict ? `
                                 <button type="button" onclick="switchBookingTab('conflicts')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 hover:bg-rose-200 transition shadow-xs cursor-pointer" title="Jadwal ini bertabrakan! Klik untuk membuka analisis SAW.">

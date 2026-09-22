@@ -111,8 +111,31 @@ class UserModel {
 
     public function delete($userId) {
         if (!$this->db) return false;
+        $documents = $this->documentFilesForUser((int) $userId);
         $stmt = $this->db->prepare("DELETE FROM users WHERE id = ?");
-        return $stmt->execute([$userId]);
+        $deleted = $stmt->execute([$userId]);
+        if ($deleted) $this->removeDocumentFiles($documents);
+        return $deleted;
+    }
+
+    private function documentFilesForUser(int $userId): array {
+        if ($userId <= 0) return [];
+        try {
+            $statement = $this->db->prepare(
+                'SELECT d.stored_name FROM booking_documents d JOIN bookings b ON b.id = d.booking_id WHERE b.user_id = ?'
+            );
+            $statement->execute([$userId]);
+            return $statement->fetchAll(PDO::FETCH_COLUMN);
+        } catch (Throwable $exception) {
+            error_log('Gagal membaca dokumen pengguna: ' . $exception->getMessage());
+            return [];
+        }
+    }
+
+    private function removeDocumentFiles(array $storedNames): void {
+        if (!$storedNames) return;
+        $service = new BookingDocumentService();
+        foreach ($storedNames as $storedName) $service->remove((string) $storedName);
     }
 
     public function getTotalCount() {
