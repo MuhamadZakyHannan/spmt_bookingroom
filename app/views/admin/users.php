@@ -193,12 +193,12 @@
                 <div>
                     <label for="editUserPassword" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">Password Baru <span class="font-normal text-slate-400">(opsional)</span></label>
                     <div class="relative">
-                        <input type="password" name="password" id="editUserPassword" minlength="10" autocomplete="new-password" aria-describedby="editPasswordRequirements" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white" placeholder="Kosongkan jika tidak diubah">
+                    <input type="password" name="password" id="editUserPassword" minlength="8" autocomplete="new-password" aria-describedby="editPasswordRequirements" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white" placeholder="Kosongkan jika tidak diubah">
                         <div id="editPasswordPopover" class="pointer-events-none absolute left-0 right-0 top-full z-30 mt-2 hidden rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-600 dark:bg-slate-900" role="status" aria-live="polite">
                             <div class="absolute -top-1.5 left-5 h-3 w-3 rotate-45 border-l border-t border-slate-200 bg-white dark:border-slate-600 dark:bg-slate-900"></div>
                             <p id="editPasswordRequirementSummary" class="relative mb-2 text-[11px] font-bold text-rose-600 dark:text-rose-400">Password belum memenuhi kriteria:</p>
                             <ul id="editPasswordRequirements" class="relative grid grid-cols-1 gap-1 text-[10px] sm:grid-cols-2">
-                                <li data-password-rule="length" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Minimal 10 karakter</li>
+                                <li data-password-rule="length" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Minimal 8 karakter</li>
                                 <li data-password-rule="uppercase" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Huruf besar</li>
                                 <li data-password-rule="lowercase" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Huruf kecil</li>
                                 <li data-password-rule="number" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Angka</li>
@@ -206,7 +206,7 @@
                             </ul>
                         </div>
                     </div>
-                    <p class="mt-1.5 text-[10px] text-slate-500 dark:text-slate-400">Minimal 10 karakter: huruf besar, kecil, angka, dan simbol.</p>
+                    <p class="mt-1.5 text-[10px] text-slate-500 dark:text-slate-400">Minimal 8 karakter: huruf besar, kecil, angka, dan simbol.</p>
                 </div>
             </div>
 
@@ -263,7 +263,7 @@
         if (!editUserPassword) return true;
         const value = editUserPassword.value;
         const checks = {
-            length: value.length >= 10,
+            length: value.length >= 8,
             uppercase: /[A-Z]/.test(value),
             lowercase: /[a-z]/.test(value),
             number: /\d/.test(value),

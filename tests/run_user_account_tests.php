@@ -14,8 +14,8 @@ function expectAccount(bool $condition, string $message): void
     echo '[PASS] ' . $message . PHP_EOL;
 }
 
-expectAccount(PasswordPolicy::validationError('password') !== null, 'Password lemah ditolak oleh kebijakan keamanan.');
-expectAccount(PasswordPolicy::validationError('Aman#Untuk9') === null, 'Password dengan huruf besar, kecil, angka, dan simbol diterima.');
+expectAccount(PasswordPolicy::validationError('Aa1#abc') !== null, 'Password tujuh karakter ditolak oleh kebijakan keamanan.');
+expectAccount(PasswordPolicy::validationError('Aa1#abcd') === null, 'Password delapan karakter dengan seluruh kriteria diterima.');
 expectAccount(Organization::isValidDepartment('SPMT - Teknik & IT'), 'Divisi resmi dikenali oleh sumber data organisasi.');
 expectAccount(! Organization::isValidDepartment('Divisi Tidak Resmi'), 'Divisi di luar daftar resmi ditolak.');
 

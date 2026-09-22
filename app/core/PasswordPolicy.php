@@ -2,7 +2,7 @@
 
 final class PasswordPolicy
 {
-    public const MIN_LENGTH = 10;
+    public const MIN_LENGTH = 8;
 
     public static function validationError(string $password): ?string
     {
@@ -14,6 +14,6 @@ final class PasswordPolicy
 
         return $isValid
             ? null
-            : 'Password minimal 10 karakter dan wajib mengandung huruf besar, huruf kecil, angka, serta simbol unik.';
+            : 'Password minimal 8 karakter dan wajib mengandung huruf besar, huruf kecil, angka, serta simbol unik.';
     }
 }
