@@ -23,8 +23,22 @@ PDO tunggal -> MariaDB
 ```
 
 Entry point pada root hanya melakukan bootstrap dan memanggil controller.
-Direktori internal `app`, `database`, `docs`, `migrations`, `scripts`, `src`, dan
-`tests` tidak dapat diakses melalui Apache.
+Direktori internal `app`, `bootstrap`, `config`, `database`, `docs`,
+`migrations`, `scripts`, `src`, dan `tests` tidak dapat diakses melalui Apache.
+
+### Bootstrap dan konfigurasi
+
+`config.php` dipertahankan sebagai pintu bootstrap kompatibel agar URL serta
+entry point lama tidak berubah. Pekerjaan bootstrap sebenarnya dipisahkan ke:
+
+- `bootstrap/app.php` untuk urutan inisialisasi aplikasi;
+- `config/app.php` dan `config/database.php` untuk konstanta berbasis environment;
+- `ApplicationBootstrap` untuk error handling, header keamanan, sesi, dan
+  sinkronisasi identitas pengguna;
+- `autoload.php` dan `helpers.php` untuk autoload class serta helper global.
+
+Dengan pembagian ini, konfigurasi tidak lagi bercampur dengan lifecycle sesi
+atau presentasi dan setiap bagian dapat diuji secara terpisah.
 
 ## Lapisan aplikasi
 
@@ -51,6 +65,7 @@ Domain booking dibagi berdasarkan tanggung jawab:
 - `BookingCommandService`: pembatalan, perubahan status, dan penghapusan.
 - `BookingConflictService`: kelompok konflik serta keputusan administrator.
 - `BookingHistoryService`: riwayat dan ringkasan laporan.
+- `BookingReportService`: normalisasi filter serta dataset export CSV/PDF.
 - `BookingStatisticsService`: KPI dan dataset grafik.
 - `BookingLifecycleService`: kedaluwarsa otomatis booking pending.
 
@@ -63,6 +78,11 @@ View hanya menerima data yang sudah disiapkan controller. Interaksi global
 berada di `public/js/site-shell.js`, inisialisasi tema di `theme-init.js`, dan
 escaping/highlight teks di `ui-utils.js`. Data dinamis JavaScript dikirim lewat
 partial `_runtime_config.php`, bukan disisipkan ke source JavaScript global.
+
+Export laporan menggunakan `BookingExportController`. File
+`export_bookings_csv.php` dan `export_bookings_pdf.php` hanya menjadi entry
+point kompatibel. CSV melindungi nilai dari formula injection spreadsheet,
+sedangkan layout cetak PDF berada di `views/admin/booking_report_pdf.php`.
 
 `src/input.css` adalah satu-satunya sumber aturan CSS statis. Tailwind membangun
 sumber tersebut menjadi `public/css/tailwind.min.css`; file hasil build tidak

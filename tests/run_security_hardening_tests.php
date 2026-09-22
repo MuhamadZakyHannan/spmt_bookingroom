@@ -56,7 +56,8 @@ try {
 
 expectSecurity(APP_ALLOW_REGISTRATION === false, 'Pendaftaran mandiri nonaktif secara default.');
 
-$configSource = file_get_contents(__DIR__ . '/../config.php');
+$configSource = file_get_contents(__DIR__ . '/../config.php')
+    . file_get_contents(__DIR__ . '/../app/core/ApplicationBootstrap.php');
 expectSecurity(
     str_contains($configSource, "session_name('MEETSPACESESSID')")
         && str_contains($configSource, "'path' => SESSION_COOKIE_PATH")
@@ -66,7 +67,8 @@ expectSecurity(
 
 $htaccess = file_get_contents(__DIR__ . '/../.htaccess');
 expectSecurity(
-    str_contains($htaccess, 'node_modules|scripts|src|tests'),
+    str_contains($htaccess, 'bootstrap|config')
+        && str_contains($htaccess, 'node_modules|scripts|src|tests'),
     'Folder internal diblokir oleh konfigurasi Apache.'
 );
 

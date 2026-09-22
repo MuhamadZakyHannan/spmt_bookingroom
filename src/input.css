@@ -384,3 +384,28 @@ html, body {
         width: calc(100vw - 2rem);
     }
 }
+
+/* Printable booking report */
+@page {
+    size: A4 landscape;
+    margin: 0.8cm;
+}
+@media print {
+    .booking-report-page .no-print {
+        display: none !important;
+    }
+    html,
+    .booking-report-page {
+        background: white !important;
+        color: black !important;
+        font-size: 11px;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .booking-report-page .page-break {
+        page-break-after: always;
+    }
+    .booking-report-page table {
+        font-size: 10px;
+    }
+}

@@ -6,7 +6,7 @@ Options -Indexes
 # available to CLI/Git but are deliberately hidden from HTTP clients.
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule ^(?:app|database|docs|migrations|node_modules|scripts|src|tests)(?:/|$) - [R=404,L,NC]
+    RewriteRule ^(?:app|database|docs|bootstrap|config|migrations|node_modules|scripts|src|tests)(?:/|$) - [R=404,L,NC]
 </IfModule>
 
 # Block files that must never be served directly by the web server.
