@@ -1,7 +1,7 @@
 <?php require_once __DIR__ . '/../layouts/header.php'; ?>
 
 <!-- Welcome Banner -->
-<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 sm:mb-8">
     <div>
         <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Dashboard Ruangan</h1>
         <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Kelola dan pesan ruang rapat perusahaan dengan cepat dan mudah.</p>
@@ -22,7 +22,7 @@
 </div>
 
 <!-- Statistics Cards Grid -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
     <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700/80 shadow-sm flex items-center justify-between">
         <div>
             <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-400">Total Ruangan</span>
@@ -64,7 +64,7 @@
     </div>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-8">
     <!-- Main Section: Room Directory -->
     <div class="lg:col-span-2 space-y-6">
         <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm p-6">
@@ -271,11 +271,11 @@
 </div>
 
 <!-- Modal Popup Booking Ruangan -->
-<div id="bookingModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
-    <div id="bookingModalCard" class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700/80 w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col transform scale-95 transition-transform duration-300">
+<div id="bookingModal" class="responsive-modal fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+    <div id="bookingModalCard" class="responsive-modal-panel bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700/80 w-full max-w-4xl overflow-hidden flex flex-col transform scale-95 transition-transform duration-300">
         
         <!-- Modal Header -->
-        <div class="flex items-center justify-between p-6 border-b border-slate-100 dark:border-slate-700/80 bg-gradient-to-r from-sky-50/50 via-white to-sky-50/30 dark:from-slate-800 dark:to-slate-800">
+        <div class="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100 dark:border-slate-700/80 bg-gradient-to-r from-sky-50/50 via-white to-sky-50/30 dark:from-slate-800 dark:to-slate-800">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 rounded-xl flex items-center justify-center text-lg font-bold">
                     <i class="fas fa-calendar-plus"></i>
@@ -291,7 +291,7 @@
         </div>
 
         <!-- Modal Body (Scrollable) -->
-        <div class="p-6 sm:p-8 overflow-y-auto flex-1">
+        <div class="p-4 sm:p-8 overflow-y-auto flex-1">
             <!-- Dynamic Error Alert inside Modal -->
             <div id="modalBookingError" class="hidden p-4 mb-6 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-300 text-sm flex items-start gap-3">
                 <i class="fas fa-exclamation-triangle text-rose-500 text-lg mt-0.5"></i>
@@ -321,11 +321,11 @@
                 ?>
 
                 <!-- Modal Footer Actions -->
-                <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
-                    <button type="button" onclick="closeBookingModal()" class="py-2.5 px-5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-sm transition">
+                <div class="flex flex-col-reverse gap-3 pt-4 border-t border-slate-100 dark:border-slate-700 sm:flex-row sm:items-center sm:justify-end">
+                    <button type="button" onclick="closeBookingModal()" class="w-full py-2.5 px-5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-sm transition sm:w-auto">
                         Batal
                     </button>
-                    <button type="submit" id="modalSubmitBtn" class="py-2.5 px-6 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-lg shadow-brand-500/20 transition text-sm flex items-center gap-2">
+                    <button type="submit" id="modalSubmitBtn" class="w-full py-2.5 px-6 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-lg shadow-brand-500/20 transition text-sm flex items-center justify-center gap-2 sm:w-auto">
                         <i class="fas fa-check-circle"></i>
                         <span>Konfirmasi Booking</span>
                     </button>

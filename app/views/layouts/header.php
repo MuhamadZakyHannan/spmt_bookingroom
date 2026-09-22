@@ -14,27 +14,27 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <!-- Font Awesome 6 -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans min-h-screen flex flex-col antialiased transition-colors duration-200">
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-sans min-h-screen flex flex-col overflow-x-hidden antialiased transition-colors duration-200">
     <?php require __DIR__ . '/_runtime_config.php'; ?>
 
     <!-- Header Navbar -->
     <nav class="bg-gradient-to-r from-white via-sky-50 to-blue-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 text-slate-800 dark:text-white shadow-sm sticky top-0 z-40 border-b border-sky-200/80 dark:border-slate-700/80 transition-colors backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <!-- Brand & Sidebar Toggle (Navigasi terpusat di Sidebar) -->
-                <div class="flex items-center gap-4">
+                <div class="flex min-w-0 items-center gap-2 sm:gap-4">
                     <button onclick="toggleSidebar()" class="p-2 rounded-xl bg-sky-100/80 hover:bg-sky-200/80 text-sky-900 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white focus:outline-none transition flex items-center gap-2 text-xs font-semibold border border-sky-200/60 dark:border-transparent" title="Buka Sidebar">
                         <i class="fas fa-bars text-sm text-sky-700 dark:text-sky-300"></i>
                         <span class="hidden sm:inline">Menu</span>
                     </button>
 
                     <a href="dashboard.php" class="flex items-center gap-2 text-xl font-bold tracking-tight hover:opacity-90 transition">
-                        <img src="public/logo.png" onerror="this.src='public/logo.svg'" alt="Logo" class="h-8 w-auto object-contain" />
+                        <img src="public/logo.png" onerror="this.src='public/logo.svg'" alt="Logo" class="h-7 w-auto max-w-32 object-contain sm:h-8 sm:max-w-none" />
                     </a>
                 </div>
 
                 <!-- Right Actions -->
-                <div class="flex items-center gap-3">
+                <div class="flex shrink-0 items-center gap-2 sm:gap-3">
                     <button onclick="toggleTheme()" class="p-2 rounded-xl bg-sky-100/80 hover:bg-sky-200/80 text-slate-700 dark:bg-white/10 dark:hover:bg-white/20 dark:text-white transition flex items-center gap-2 text-xs font-semibold focus:outline-none border border-sky-200/60 dark:border-transparent" title="Beralih Mode Terang / Gelap">
                         <i class="theme-toggle-icon fas fa-moon text-sky-700 dark:text-amber-300"></i>
                         <span class="hidden lg:inline theme-toggle-text">Mode Gelap</span>
@@ -87,8 +87,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         </div>
                     </div>
                     <?php else: ?>
-                    <div class="flex gap-2">
-                        <a href="login.php" class="px-4 py-2 rounded-lg text-sm font-medium bg-sky-100/80 hover:bg-sky-200 text-sky-900 dark:bg-white/10 dark:text-white transition">Masuk</a>
+                    <div class="flex gap-1.5 sm:gap-2">
+                        <a href="login.php" class="px-3 sm:px-4 py-2 rounded-lg text-sm font-medium bg-sky-100/80 hover:bg-sky-200 text-sky-900 dark:bg-white/10 dark:text-white transition">Masuk</a>
                         <?php if (APP_ALLOW_REGISTRATION): ?>
                             <a href="register.php" class="px-4 py-2 rounded-lg text-sm font-bold bg-sky-600 hover:bg-sky-700 text-white shadow transition">Daftar</a>
                         <?php endif; ?>
@@ -102,7 +102,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <!-- Slide-over Sidebar Drawer -->
     <div id="sidebarBackdrop" onclick="closeSidebar()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300"></div>
     
-    <aside id="sidebarDrawer" class="fixed top-0 left-0 bottom-0 w-80 bg-white dark:bg-slate-800 shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col border-r border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100">
+    <aside id="sidebarDrawer" class="fixed top-0 left-0 bottom-0 w-[min(20rem,calc(100vw-1rem))] bg-white dark:bg-slate-800 shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col border-r border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100">
         <div class="p-5 border-b border-sky-100 dark:border-slate-700 flex items-center justify-between bg-gradient-to-r from-white via-sky-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 text-slate-800 dark:text-white">
             <a href="dashboard.php" class="flex items-center gap-2">
                 <img src="public/logo.png" onerror="this.src='public/logo.svg'" alt="Logo" class="h-8 w-auto object-contain" />
@@ -220,7 +220,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <?php endif; ?>
     </aside>
 
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-3 py-4 sm:px-6 sm:py-8 lg:px-8">
         <?php display_flash(); ?>
 
     <script src="public/js/site-shell.js?v=<?php echo asset_version('public/js/site-shell.js'); ?>"></script>

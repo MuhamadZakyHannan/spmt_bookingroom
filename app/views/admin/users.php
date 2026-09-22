@@ -57,7 +57,7 @@
 
 <!-- Table of Users -->
 <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm overflow-hidden mb-8">
-    <div class="overflow-x-auto">
+    <div class="responsive-table-shell">
         <table class="w-full text-left border-collapse text-xs">
             <thead>
                 <tr class="bg-slate-50/80 dark:bg-slate-900/60 border-b border-slate-200/80 dark:border-slate-700 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
@@ -141,8 +141,8 @@
 </div>
 
 <?php if (is_super_admin()): ?>
-<div id="editUserModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="editUserModalTitle">
-    <div class="relative w-full max-w-xl rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800">
+<div id="editUserModal" class="responsive-modal fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="editUserModalTitle">
+    <div class="responsive-modal-panel relative w-full max-w-xl rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800">
         <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
             <div class="flex items-center gap-3">
                 <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300"><i class="fas fa-user-pen"></i></span>
@@ -154,7 +154,7 @@
             <button type="button" onclick="closeEditUserModal()" class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-white" aria-label="Tutup modal"><i class="fas fa-times"></i></button>
         </div>
 
-        <form method="POST" action="admin_users.php" class="space-y-4 p-5" id="editUserForm">
+        <form method="POST" action="admin_users.php" class="space-y-4 p-4 sm:p-5" id="editUserForm">
             <?php echo csrf_field(); ?>
             <input type="hidden" name="action" value="edit">
             <input type="hidden" name="user_id" id="editUserId">
@@ -210,9 +210,9 @@
                 </div>
             </div>
 
-            <div class="flex justify-end gap-2 border-t border-slate-200 pt-4 dark:border-slate-700">
-                <button type="button" onclick="closeEditUserModal()" class="rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600">Batal</button>
-                <button type="submit" class="rounded-xl bg-brand-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-brand-500/20 hover:bg-brand-700"><i class="fas fa-save mr-1.5"></i>Simpan Perubahan</button>
+            <div class="flex flex-col-reverse gap-2 border-t border-slate-200 pt-4 dark:border-slate-700 sm:flex-row sm:justify-end">
+                <button type="button" onclick="closeEditUserModal()" class="w-full rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 sm:w-auto">Batal</button>
+                <button type="submit" class="w-full rounded-xl bg-brand-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-brand-500/20 hover:bg-brand-700 sm:w-auto"><i class="fas fa-save mr-1.5"></i>Simpan Perubahan</button>
             </div>
         </form>
     </div>

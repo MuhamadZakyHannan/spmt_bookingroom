@@ -35,7 +35,7 @@
             <h2 class="text-base font-bold text-slate-800 dark:text-slate-100">Daftar Monitor Ruangan Aktif (<?php echo count($displays); ?>)</h2>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="responsive-table-shell">
             <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                 <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 uppercase text-[11px] font-bold tracking-wider border-b border-slate-100 dark:border-slate-700/80">
                     <tr>
@@ -144,8 +144,8 @@
 </div>
 
 <!-- Modal Add Display -->
-<div id="modalAddDisplay" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 dark:border-slate-700 space-y-5 animate-in fade-in zoom-in duration-200 transition-colors">
+<div id="modalAddDisplay" class="responsive-modal fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center hidden">
+    <div class="responsive-modal-panel bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-4 sm:p-6 shadow-2xl border border-slate-100 dark:border-slate-700 space-y-5 animate-in fade-in zoom-in duration-200 transition-colors">
         <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
             <div class="flex items-center gap-2">
                 <div class="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold">

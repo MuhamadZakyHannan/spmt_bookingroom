@@ -3,6 +3,40 @@
 @tailwind utilities;
 
 @layer components {
+    /*
+     * Shared responsive primitives. Views opt in through semantic classes so
+     * behavior stays consistent without duplicating breakpoint rules.
+     */
+    .responsive-table-shell {
+        @apply overflow-x-auto overscroll-x-contain;
+        scrollbar-gutter: stable;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .responsive-table-shell > table {
+        @apply min-w-[720px];
+    }
+
+    .responsive-modal {
+        @apply overflow-y-auto p-3 sm:p-4;
+    }
+
+    .responsive-modal-panel {
+        @apply max-h-[calc(100dvh-1.5rem)] overflow-y-auto sm:max-h-[calc(100dvh-2rem)];
+    }
+
+    .responsive-modal-grid {
+        @apply grid grid-cols-1 gap-2.5 sm:grid-cols-2;
+    }
+
+    @media (max-width: 639px) {
+        input:not([type='checkbox']):not([type='radio']),
+        select,
+        textarea {
+            font-size: 16px;
+        }
+    }
+
     .booking-date-input {
         color-scheme: light;
     }

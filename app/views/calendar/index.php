@@ -381,12 +381,12 @@
             </div>
         </aside>
 
-        <section class="min-w-0 flex-1 p-3 sm:p-5" aria-label="Kalender jadwal rapat">
-            <div class="relative min-h-[520px]">
+        <section class="min-w-0 flex-1 p-2 sm:p-5" aria-label="Kalender jadwal rapat">
+            <div class="relative min-h-[460px] sm:min-h-[520px]">
                 <div id="calendarLoading" class="absolute inset-0 z-10 flex items-center justify-center bg-white/90 dark:bg-slate-800/90 text-sm text-slate-400">
                     <i class="fas fa-circle-notch fa-spin mr-2 text-brand-500"></i> Memuat kalender...
                 </div>
-                <div id="calendar" class="min-h-[520px] opacity-0 transition-opacity"></div>
+                <div id="calendar" class="min-h-[460px] opacity-0 transition-opacity sm:min-h-[520px]"></div>
                 <div id="calendarLoadError" class="absolute inset-0 hidden items-center justify-center bg-white dark:bg-slate-800 text-center">
                     <div>
                         <i class="fas fa-calendar-times mb-3 text-4xl text-slate-300"></i>
@@ -399,8 +399,8 @@
     </div>
 </div>
 
-<div id="eventModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="relative w-full max-w-xl overflow-hidden rounded-3xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl shadow-slate-950/20">
+<div id="eventModal" class="responsive-modal fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/55 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="responsive-modal-panel relative w-full max-w-xl overflow-hidden rounded-3xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-2xl shadow-slate-950/20">
         <div id="modalAccent" class="absolute inset-x-0 top-0 z-10 h-1 bg-brand-600"></div>
         <div class="calendar-detail-header flex items-start justify-between border-b border-slate-100 dark:border-slate-700 bg-gradient-to-r from-brand-50 via-white to-sky-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 px-5 sm:px-7">
             <div class="flex min-w-0 items-start gap-3.5">
@@ -522,13 +522,13 @@
         };
 
         calendarInstance = new FullCalendar.Calendar(calendarElement, {
-            initialView: 'dayGridMonth',
+            initialView: window.matchMedia('(max-width: 639px)').matches ? 'listMonth' : 'dayGridMonth',
             locale: 'id',
             headerToolbar: false,
             firstDay: 1,
             fixedWeekCount: false,
             height: 'auto',
-            dayMaxEvents: 4,
+            dayMaxEvents: window.matchMedia('(max-width: 639px)').matches ? 2 : 4,
             displayEventEnd: false,
             eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
             listDayFormat: { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' },

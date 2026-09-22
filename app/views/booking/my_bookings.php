@@ -221,8 +221,8 @@
 </div>
 
 <!-- Modal Baca Selengkapnya / Detail Meeting Modal -->
-<div id="detailModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-150 space-y-4">
+<div id="detailModal" class="responsive-modal fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center">
+    <div class="responsive-modal-panel bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-150 space-y-4">
         <div class="flex items-start justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
             <div>
                 <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
@@ -243,7 +243,7 @@
             </div>
 
             <!-- Grid Details -->
-            <div class="grid grid-cols-2 gap-2.5">
+            <div class="responsive-modal-grid">
                 <div class="p-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800">
                     <span class="text-[10px] text-slate-400 block font-medium">Ruang Rapat:</span>
                     <span id="modalRoom" class="font-bold text-slate-800 dark:text-slate-200"></span>

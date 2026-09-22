@@ -11,7 +11,7 @@
     </div>
     
     <!-- Real-time Live Status Badge & Indicator -->
-    <div class="flex items-center gap-2.5">
+    <div class="flex flex-wrap items-center gap-2.5">
         <div id="liveSyncBadge" class="flex items-center gap-2 px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs font-semibold shadow-sm transition">
             <span class="relative flex h-2 w-2">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -33,13 +33,13 @@
 ?>
 
 <!-- Tab Navigation Bar: Pemisah Konflik SAW vs Semua Booking -->
-<div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 mb-6">
+<div class="flex items-center gap-2 overflow-x-auto border-b border-slate-200 dark:border-slate-700 mb-6">
     <!-- Tab 1: SPK SAW Konflik Jadwal -->
     <button 
         type="button" 
         id="tabBtnConflicts" 
         onclick="switchBookingTab('conflicts')" 
-        class="px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition flex items-center gap-2 -mb-px <?php echo $hasConflicts ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-950/30 rounded-t-xl' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400'; ?>"
+        class="shrink-0 px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition flex items-center gap-2 -mb-px <?php echo $hasConflicts ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-950/30 rounded-t-xl' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400'; ?>"
     >
         <i class="fas fa-balance-scale <?php echo $hasConflicts ? 'text-amber-500 animate-pulse' : ''; ?>"></i>
         <span>Konflik Jadwal & SPK SAW</span>
@@ -59,7 +59,7 @@
         type="button" 
         id="tabBtnAll" 
         onclick="switchBookingTab('all')" 
-        class="px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition flex items-center gap-2 -mb-px <?php echo !$hasConflicts ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-950/30 rounded-t-xl' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400'; ?>"
+        class="shrink-0 px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition flex items-center gap-2 -mb-px <?php echo !$hasConflicts ? 'border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-50/60 dark:bg-amber-950/30 rounded-t-xl' : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400'; ?>"
     >
         <i class="fas fa-list"></i>
         <span>Semua Pemesanan (Reguler)</span>
@@ -185,7 +185,7 @@
                 </div>
 
                 <!-- Matrix Calculation Table -->
-                <div class="overflow-x-auto">
+                <div class="responsive-table-shell">
                     <table class="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr class="bg-slate-100/90 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 uppercase font-bold text-[11px] tracking-wider">
@@ -424,7 +424,7 @@
 
 <!-- Table Container -->
 <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm overflow-hidden mb-8">
-    <div class="overflow-x-auto">
+    <div class="responsive-table-shell">
         <table class="w-full text-left border-collapse text-xs table-fixed min-w-[900px]">
             <colgroup>
                 <col class="w-[26%]">
@@ -640,8 +640,8 @@
 <div id="liveToastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
 <!-- Modal Detail Agenda Pertemuan -->
-<div id="detailModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-150 space-y-4">
+<div id="detailModal" class="responsive-modal fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center">
+    <div class="responsive-modal-panel bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-150 space-y-4">
         <div class="flex items-start justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
             <div>
                 <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
@@ -660,7 +660,7 @@
                 <div id="modalPurpose" class="text-xs text-slate-800 dark:text-slate-200 leading-relaxed break-words break-all whitespace-pre-wrap font-medium"></div>
             </div>
 
-            <div class="grid grid-cols-2 gap-2.5">
+            <div class="responsive-modal-grid">
                 <div class="p-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800">
                     <span class="text-[10px] text-slate-400 block font-medium">Pemesan (PIC):</span>
                     <span id="modalUser" class="font-bold text-slate-800 dark:text-slate-200 block"></span>

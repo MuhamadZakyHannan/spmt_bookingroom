@@ -5,7 +5,7 @@
 
 <div class="space-y-6">
     <!-- Header Section -->
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
         <div>
             <div class="flex items-center gap-2 text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1">
                 <i class="fas fa-chart-pie"></i> Executive Analytics & Insights
@@ -51,8 +51,8 @@
             </div>
 
             <!-- Custom Date Range & Room Filter -->
-            <div class="flex flex-wrap items-center gap-2.5">
-                <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+            <div class="grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2 lg:flex lg:w-auto lg:flex-wrap lg:items-center">
+                <div class="flex w-full items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 lg:w-auto">
                     <span class="text-[11px] font-bold text-slate-400 uppercase">Dari:</span>
                     <input 
                         type="date" 
@@ -61,7 +61,7 @@
                         class="bg-transparent text-xs text-slate-700 dark:text-slate-200 focus:outline-none">
                 </div>
 
-                <div class="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div class="flex w-full items-center gap-1.5 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 lg:w-auto">
                     <span class="text-[11px] font-bold text-slate-400 uppercase">Sampai:</span>
                     <input 
                         type="date" 
@@ -70,7 +70,7 @@
                         class="bg-transparent text-xs text-slate-700 dark:text-slate-200 focus:outline-none">
                 </div>
 
-                <div class="w-44">
+                <div class="w-full lg:w-44">
                     <select name="room_id" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer">
                         <option value="0">-- Semua Ruangan --</option>
                         <?php foreach ($rooms as $r): ?>
@@ -81,7 +81,7 @@
                     </select>
                 </div>
 
-                <button type="submit" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-sm">
+                <button type="submit" class="w-full px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-sm lg:w-auto">
                     <i class="fas fa-filter"></i>
                     <span>Terapkan</span>
                 </button>
@@ -96,7 +96,7 @@
     </form>
 
     <!-- Top KPI Cards Grid -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div class="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         <!-- KPI 1: Total Bookings -->
         <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm transition-colors">
             <div class="flex items-center justify-between text-slate-400 mb-2">
@@ -276,7 +276,7 @@
                 <p class="text-xs text-slate-400 mt-0.5">Perbandingan beban agenda ruang rapat dari hari Senin hingga Minggu.</p>
             </div>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-7 gap-2.5">
+        <div class="grid grid-cols-2 min-[480px]:grid-cols-4 sm:grid-cols-7 gap-2.5">
             <?php 
                 $maxDayCount = max(1, ...($stats['day_distribution']['data'] ?: [1]));
                 foreach ($stats['day_distribution']['labels'] as $idx => $dName): 
@@ -309,7 +309,7 @@
             </span>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="responsive-table-shell">
             <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
                 <thead class="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 uppercase text-[11px] font-bold tracking-wider border-b border-slate-100 dark:border-slate-700/80">
                     <tr>

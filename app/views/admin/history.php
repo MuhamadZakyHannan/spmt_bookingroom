@@ -33,7 +33,7 @@
 </div>
 
 <!-- Summary Metric Cards -->
-<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+<div class="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
     <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/80 shadow-sm flex items-center gap-3.5">
         <div class="w-11 h-11 rounded-xl bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
             <i class="fas fa-calendar-check text-lg"></i>
@@ -171,7 +171,7 @@
         </div>
     </div>
 
-    <div class="overflow-x-auto">
+    <div class="responsive-table-shell">
         <table class="w-full text-left border-collapse text-xs table-fixed min-w-[900px]">
             <colgroup>
                 <col class="w-[26%]">
@@ -329,8 +329,8 @@
 </div>
 
 <!-- Modal Detail Agenda Pertemuan -->
-<div id="historyModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-150 space-y-4">
+<div id="historyModal" class="responsive-modal fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center">
+    <div class="responsive-modal-panel bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-150 space-y-4">
         <div class="flex items-start justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
             <div>
                 <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
@@ -351,7 +351,7 @@
             </div>
 
             <!-- Grid Details -->
-            <div class="grid grid-cols-2 gap-2.5">
+            <div class="responsive-modal-grid">
                 <div class="p-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800">
                     <span class="text-[10px] text-slate-400 block font-medium">Pemesan (PIC):</span>
                     <span id="histUser" class="font-bold text-slate-800 dark:text-slate-200 block"></span>
@@ -364,7 +364,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-2.5">
+            <div class="responsive-modal-grid">
                 <div class="p-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800">
                     <span class="text-[10px] text-slate-400 block font-medium">Waktu & Tanggal:</span>
                     <span id="histSchedule" class="font-bold text-slate-800 dark:text-slate-200 block"></span>

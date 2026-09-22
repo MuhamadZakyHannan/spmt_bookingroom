@@ -136,6 +136,10 @@ Menu **Kalender Jadwal** menyediakan dua tampilan tanpa mode mingguan:
 - **Bulan** untuk melihat jadwal dalam grid kalender;
 - **Agenda** untuk melihat daftar jadwal pada bulan aktif.
 
+Pada layar ponsel kalender otomatis membuka **Agenda** agar judul, waktu, dan
+ruangan tetap terbaca. Tampilan **Bulan** tetap dapat dipilih. Pada tablet dan
+desktop, tampilan awal tetap **Bulan**.
+
 Pada tampilan Agenda, nama hari dan tanggal ditampilkan dalam satu header lengkap, misalnya **Selasa, 22 September 2026**.
 
 Gunakan tombol **Hari ini**, panah sebelumnya/berikutnya, pencarian agenda, dan filter ruangan untuk mempersempit jadwal. Klik sebuah agenda untuk membuka detail. Klik tanggal hari ini atau tanggal mendatang yang masih kosong untuk membuka form booking dengan tanggal tersebut terisi otomatis.
@@ -255,6 +259,7 @@ php tests/run_booking_domain_refactor_tests.php
 php tests/run_presentation_architecture_tests.php
 php tests/run_api_architecture_tests.php
 php tests/run_final_architecture_tests.php
+php tests/run_responsive_ui_tests.php
 ```
 
 Pengujian membuat data sementara dan membersihkannya kembali setelah selesai.

@@ -9,7 +9,7 @@ $statusClass = $isConfirmed
 ?>
 
 <div class="max-w-4xl mx-auto">
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700/80 p-6 sm:p-8">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700/80 p-4 sm:p-8">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-700 mb-6">
             <div class="flex items-center gap-3 min-w-0">
                 <div class="w-10 h-10 bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 rounded-xl flex items-center justify-center text-lg font-bold shrink-0">
