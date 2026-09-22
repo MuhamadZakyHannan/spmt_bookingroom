@@ -11,7 +11,8 @@ perilaku aplikasi serta melewati seluruh regression test sebelum dilanjutkan.
    jadwal, penyelesaian konflik, dan laporan tanpa mengubah API controller.
    Status: selesai; `BookingModel` menjadi facade kompatibilitas.
 3. **Controller admin** — pisahkan pengelolaan ruangan, booking, pengguna,
-   display, dan statistik dari `AdminController`.
+   display, dan statistik dari `AdminController`. Status: selesai;
+   `AdminController` menjadi facade kompatibilitas.
 4. **Presentasi** — pindahkan JavaScript besar dari view ke modul dalam
    `public/js` dan pecah partial UI yang digunakan ulang.
 5. **Endpoint API** — seragamkan validasi request, response JSON, status HTTP,
