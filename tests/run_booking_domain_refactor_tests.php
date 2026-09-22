@@ -20,6 +20,7 @@ $filters = [
 ];
 $service = new BookingHistoryService($pdo);
 $conflictService = new BookingConflictService($pdo);
+$statisticsService = new BookingStatisticsService($pdo);
 $model = new BookingModel($pdo);
 
 expectBookingDomain(
@@ -33,8 +34,8 @@ expectBookingDomain(
 
 $modelSource = (string) file_get_contents(__DIR__ . '/../app/models/BookingModel.php');
 expectBookingDomain(
-    str_contains($modelSource, 'bookingHistoryService()->getHistory')
-        && str_contains($modelSource, 'bookingHistoryService()->getSummary')
+    str_contains($modelSource, 'history()->getHistory')
+        && str_contains($modelSource, 'history()->getSummary')
         && (new ReflectionClass(BookingHistoryService::class))->isFinal(),
     'Query dan agregasi riwayat didelegasikan ke service khusus.'
 );
@@ -43,9 +44,23 @@ expectBookingDomain(
     'Deteksi kelompok konflik mempertahankan hasil setelah diekstrak.'
 );
 expectBookingDomain(
-    str_contains($modelSource, 'bookingConflictService()->getGroups')
-        && str_contains($modelSource, 'bookingConflictService()->resolve'),
+    str_contains($modelSource, 'conflicts()->getGroups')
+        && str_contains($modelSource, 'conflicts()->resolve'),
     'BookingModel mendelegasikan analisis dan penyelesaian konflik.'
 );
+expectBookingDomain(
+    $model->getStatisticsData($filters) === $statisticsService->getData($filters),
+    'Dataset statistik mempertahankan kontrak setelah diekstrak.'
+);
+expectBookingDomain(
+    str_contains($modelSource, 'schedules()->createWithPolicy')
+        && str_contains($modelSource, 'queries()->getAll')
+        && str_contains($modelSource, 'commands()->updateStatus'),
+    'Penjadwalan, query, dan command didelegasikan ke service khusus.'
+);
+expectBookingDomain(
+    substr_count($modelSource, PHP_EOL) < 250,
+    'BookingModel menjadi facade ringkas di bawah 250 baris.'
+);
 
-echo PHP_EOL . 'Hasil: 5 lulus, 0 gagal.' . PHP_EOL;
+echo PHP_EOL . 'Hasil: 8 lulus, 0 gagal.' . PHP_EOL;

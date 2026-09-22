@@ -23,7 +23,8 @@ $lateUploadView = file_get_contents(__DIR__ . '/../app/views/booking/document_up
 $myBookingsView = file_get_contents(__DIR__ . '/../app/views/booking/my_bookings.php');
 $adminBookingsView = file_get_contents(__DIR__ . '/../app/views/admin/bookings.php');
 $downloadController = file_get_contents(__DIR__ . '/../app/controllers/BookingDocumentController.php');
-$bookingModelSource = file_get_contents(__DIR__ . '/../app/models/BookingModel.php');
+$bookingQuerySource = file_get_contents(__DIR__ . '/../app/services/BookingQueryService.php');
+$bookingConflictSource = file_get_contents(__DIR__ . '/../app/services/BookingConflictService.php');
 $bookingScript = file_get_contents(__DIR__ . '/../public/js/booking-form.js');
 
 expectDocument(
@@ -48,7 +49,7 @@ expectDocument(
     'Browser memberi peringatan sebelum dokumen yang terlalu besar atau salah format dikirim.'
 );
 expectDocument(
-    str_contains($bookingModelSource, 'd.id AS document_id, d.original_name AS document_name')
+    str_contains($bookingQuerySource . $bookingConflictSource, 'd.id AS document_id, d.original_name AS document_name')
         && str_contains($adminBookingsView, 'Surat Pendukung'),
     'Dokumen tersedia untuk peninjauan Administrator, termasuk pada analisis konflik jadwal.'
 );
