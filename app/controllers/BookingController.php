@@ -6,15 +6,16 @@ class BookingController extends Controller {
     private $roomModel;
     private $bookingModel;
     private $notificationModel;
-    private $documentModel;
-    private $documentService;
+    private $documentManager;
 
     public function __construct() {
         $this->roomModel = $this->model('RoomModel');
         $this->bookingModel = $this->model('BookingModel');
         $this->notificationModel = $this->model('NotificationModel');
-        $this->documentModel = $this->model('BookingDocumentModel');
-        $this->documentService = new BookingDocumentService();
+        $this->documentManager = new BookingDocumentManager(
+            $this->model('BookingDocumentModel'),
+            new BookingDocumentService()
+        );
     }
 
     public function create() {
@@ -40,7 +41,7 @@ class BookingController extends Controller {
             $values = $this->readBookingInput($_POST);
             $selectedRoomId = $values['room_id'];
             $error = $this->validateBookingInput($values);
-            $documentUpload = $this->documentService->validate($_FILES['request_letter'] ?? null);
+            $documentUpload = $this->documentManager->validate($_FILES['supporting_document'] ?? null);
             if ($error === '' && empty($documentUpload['success'])) {
                 $error = $documentUpload['error'];
             }
@@ -55,7 +56,11 @@ class BookingController extends Controller {
                 if (!empty($result['success'])) {
                     $bookingId = (int) $result['booking_id'];
                     if (!empty($documentUpload['provided'])) {
-                        $documentResult = $this->storeBookingDocument($bookingId, $documentUpload);
+                        $documentResult = $this->documentManager->storeValidated(
+                            $bookingId,
+                            (int) $_SESSION['user_id'],
+                            $documentUpload
+                        );
                         if (empty($documentResult['success'])) {
                             // Pengajuan baru dan dokumennya diperlakukan sebagai satu operasi.
                             $this->bookingModel->delete($bookingId);
@@ -165,7 +170,7 @@ class BookingController extends Controller {
             $this->validateCsrf($csrfFallback);
             $values = $this->readBookingInput($_POST);
             $error = $this->validateBookingInput($values);
-            $documentUpload = $this->documentService->validate($_FILES['request_letter'] ?? null);
+            $documentUpload = $this->documentManager->validate($_FILES['supporting_document'] ?? null);
             if ($error === '' && empty($documentUpload['success'])) {
                 $error = $documentUpload['error'];
             }
@@ -181,7 +186,11 @@ class BookingController extends Controller {
                 if (!empty($result['success'])) {
                     $documentWarning = '';
                     if (!empty($documentUpload['provided'])) {
-                        $documentResult = $this->storeBookingDocument((int) $bookingId, $documentUpload);
+                        $documentResult = $this->documentManager->storeValidated(
+                            (int) $bookingId,
+                            (int) $_SESSION['user_id'],
+                            $documentUpload
+                        );
                         if (empty($documentResult['success'])) {
                             $documentWarning = ' Data booking tersimpan, tetapi dokumen gagal diperbarui: ' . $documentResult['error'];
                         }
@@ -337,32 +346,4 @@ class BookingController extends Controller {
             : 'my_bookings.php';
     }
 
-    private function storeBookingDocument(int $bookingId, array $validatedUpload): array {
-        $stored = $this->documentService->store($validatedUpload);
-        if (empty($stored['success'])) {
-            return $stored;
-        }
-
-        $metadata = [
-            'original_name' => $validatedUpload['original_name'],
-            'stored_name' => $stored['stored_name'],
-            'mime_type' => $validatedUpload['mime_type'],
-            'size_bytes' => $validatedUpload['size_bytes'],
-            'sha256' => $validatedUpload['sha256'],
-        ];
-        $saved = $this->documentModel->replace(
-            $bookingId,
-            (int) $_SESSION['user_id'],
-            $metadata
-        );
-        if (empty($saved['success'])) {
-            $this->documentService->remove($stored['stored_name']);
-            return ['success' => false, 'error' => 'Metadata dokumen gagal disimpan.'];
-        }
-
-        if (!empty($saved['old_stored_name']) && $saved['old_stored_name'] !== $stored['stored_name']) {
-            $this->documentService->remove($saved['old_stored_name']);
-        }
-        return ['success' => true, 'document_id' => $saved['document_id']];
-    }
 }

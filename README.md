@@ -8,7 +8,7 @@ MeetSpace adalah aplikasi pemesanan ruang rapat berbasis PHP dan MySQL untuk pen
 - Pemeriksa ketersediaan ruangan secara langsung berdasarkan tanggal, waktu, dan jumlah peserta.
 - Approval booking oleh administrator.
 - Edit pengajuan dengan aturan akses berdasarkan pemilik, role, dan status booking.
-- Lampiran surat pengajuan PDF/JPG/PNG dengan penyimpanan privat dan akses terotorisasi.
+- Lampiran surat pendukung PDF/JPG/PNG dengan penyimpanan privat dan akses terotorisasi.
 - Analisis prioritas ketika jadwal bentrok menggunakan metode SAW.
 - Status rapat pada monitor dihitung otomatis berdasarkan waktu jadwal.
 - Notifikasi booking untuk administrator.
@@ -104,7 +104,7 @@ Gunakan password yang panjang dan mengandung kombinasi huruf besar, huruf kecil,
 
 Pengajuan berstatus `pending` dapat diedit oleh pemiliknya melalui tombol **Edit Pengajuan** pada **Booking Saya**. Setelah disimpan, status tetap `pending` dan jadwal diperiksa ulang. Pemilik tidak dapat mengedit booking yang sudah `confirmed`; perubahan booking `pending` atau `confirmed` tersebut hanya dapat dilakukan Admin atau Super Admin.
 
-Dokumen dapat dilihat oleh pemilik booking, Admin, dan Super Admin melalui tautan **Surat Pengajuan**. Mengunggah file baru saat mengedit akan mengganti dokumen lama. File fisik disimpan di direktori `BOOKING_DOCUMENT_STORAGE` di luar `htdocs`; database hanya menyimpan metadata, checksum, dan nama file acak.
+Dokumen dapat dilihat oleh pemilik booking, Admin, dan Super Admin melalui tautan **Surat Pendukung**. Jika dokumen belum tersedia ketika booking dibuat, gunakan tombol **Tambah Surat Pendukung** pada menu **Booking Saya** selama status masih `pending` atau `confirmed`. Alur ini hanya mengunggah dokumen dan tidak mengubah jadwal maupun status booking. Tombol berubah menjadi **Ganti Surat Pendukung** setelah dokumen tersedia. File fisik disimpan di direktori `BOOKING_DOCUMENT_STORAGE` di luar `htdocs`; database hanya menyimpan metadata, checksum, dan nama file acak.
 
 Jika beberapa pengajuan `pending` menginginkan ruangan dan waktu yang beririsan, Administrator akan meninjau dan menentukan prioritasnya. Jadwal yang sudah `confirmed` diblokir sejak form dan diperiksa ulang oleh server saat penyimpanan.
 

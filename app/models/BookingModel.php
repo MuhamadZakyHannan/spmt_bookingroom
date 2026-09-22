@@ -386,7 +386,7 @@ class BookingModel {
                 JOIN rooms r ON b.room_id = r.id 
                 LEFT JOIN users u ON b.user_id = u.id
                 LEFT JOIN booking_documents d
-                  ON d.booking_id = b.id AND d.document_type = 'request_letter'
+                  ON d.booking_id = b.id AND d.document_type = 'supporting_document'
                 WHERE b.status IN ('pending', 'confirmed') 
                 ORDER BY b.date ASC, b.room_id ASC, b.start_time ASC";
         $stmt = $this->db->query($sql);
@@ -507,7 +507,7 @@ class BookingModel {
                                     FROM bookings b 
                                     JOIN rooms r ON b.room_id = r.id 
                                     LEFT JOIN booking_documents d
-                                      ON d.booking_id = b.id AND d.document_type = 'request_letter'
+                                      ON d.booking_id = b.id AND d.document_type = 'supporting_document'
                                     WHERE b.user_id = ? 
                                     ORDER BY CASE WHEN b.status = 'pending' THEN 0 ELSE 1 END, b.id DESC");
         $stmt->execute([$userId]);
@@ -526,7 +526,7 @@ class BookingModel {
              JOIN rooms r ON r.id = b.room_id
              JOIN users u ON u.id = b.user_id
              LEFT JOIN booking_documents d
-               ON d.booking_id = b.id AND d.document_type = 'request_letter'
+               ON d.booking_id = b.id AND d.document_type = 'supporting_document'
              WHERE b.id = ?
              LIMIT 1"
         );
@@ -557,7 +557,7 @@ class BookingModel {
                 JOIN rooms r ON b.room_id = r.id 
                 JOIN users u ON b.user_id = u.id 
                 LEFT JOIN booking_documents d
-                  ON d.booking_id = b.id AND d.document_type = 'request_letter'
+                  ON d.booking_id = b.id AND d.document_type = 'supporting_document'
                 WHERE 1=1";
         $params = [];
 

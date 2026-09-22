@@ -542,7 +542,17 @@
             },
             noEventsContent: 'Tidak ada jadwal pada periode ini.',
             moreLinkContent: args => `+${args.num} lainnya`,
-            dayHeaderContent: args => ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'][args.date.getDay()],
+            dayHeaderContent: args => {
+                if (args.view.type.startsWith('list')) {
+                    return capitalize(new Intl.DateTimeFormat('id-ID', {
+                        weekday: 'long',
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric'
+                    }).format(args.date));
+                }
+                return ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'][args.date.getDay()];
+            },
             eventClassNames: args => matchesSearch(args.event) ? [] : ['calendar-event-filtered'],
             eventContent: args => {
                 const wrapper = document.createElement('div');

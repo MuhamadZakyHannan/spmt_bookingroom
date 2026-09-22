@@ -81,7 +81,7 @@ $displayStatusMeta = [
                         <?php if (!empty($request['document_id'])): ?>
                             <a href="booking_document.php?id=<?php echo (int) $request['document_id']; ?>" target="_blank" rel="noopener" class="flex min-w-0 items-center gap-2 rounded-md bg-violet-50 dark:bg-violet-950/40 px-2 py-1.5 font-bold text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition" title="<?php echo htmlspecialchars($request['document_name']); ?>">
                                 <i class="fas fa-file-lines w-4 shrink-0 text-center"></i>
-                                <span class="truncate">Lihat Surat Pengajuan</span>
+                                <span class="truncate">Lihat Surat Pendukung</span>
                             </a>
                         <?php endif; ?>
                     </div>

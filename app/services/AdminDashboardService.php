@@ -60,7 +60,7 @@ class AdminDashboardService {
                 JOIN rooms r ON r.id = b.room_id
                 LEFT JOIN users u ON u.id = b.user_id
                 LEFT JOIN booking_documents d
-                  ON d.booking_id = b.id AND d.document_type = 'request_letter'
+                  ON d.booking_id = b.id AND d.document_type = 'supporting_document'
                 WHERE b.status = 'pending' AND b.date >= CURDATE()
                 ORDER BY b.date ASC, b.start_time ASC, b.created_at ASC
                 LIMIT {$limit}";

@@ -4,7 +4,7 @@
 CREATE TABLE IF NOT EXISTS booking_documents (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     booking_id INT NOT NULL,
-    document_type VARCHAR(50) NOT NULL DEFAULT 'request_letter',
+    document_type VARCHAR(50) NOT NULL DEFAULT 'supporting_document',
     original_name VARCHAR(255) NOT NULL,
     stored_name VARCHAR(100) NOT NULL,
     mime_type VARCHAR(100) NOT NULL,

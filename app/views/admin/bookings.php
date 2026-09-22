@@ -226,7 +226,7 @@
                                         </div>
                                         <?php if (!empty($b['document_id'])): ?>
                                             <a href="booking_document.php?id=<?php echo (int) $b['document_id']; ?>" target="_blank" rel="noopener" class="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 hover:bg-violet-100 transition" title="<?php echo htmlspecialchars($b['document_name']); ?>">
-                                                <i class="fas fa-file-lines"></i> Surat Pengajuan
+                                                <i class="fas fa-file-lines"></i> Surat Pendukung
                                             </a>
                                         <?php endif; ?>
                                     </td>
@@ -501,7 +501,7 @@
 
                                 <?php if (!empty($b['document_id'])): ?>
                                     <a href="booking_document.php?id=<?php echo (int) $b['document_id']; ?>" target="_blank" rel="noopener" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 hover:bg-violet-100 transition" title="<?php echo htmlspecialchars($b['document_name']); ?>">
-                                        <i class="fas fa-file-lines"></i> Surat Pengajuan
+                                        <i class="fas fa-file-lines"></i> Surat Pendukung
                                     </a>
                                 <?php endif; ?>
 
@@ -1120,7 +1120,7 @@
                             ` : ''}
                             ${b.document_id ? `
                                 <a href="booking_document.php?id=${b.document_id}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-violet-50 dark:bg-violet-950/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 hover:bg-violet-100 transition" title="${escapeHtml(b.document_name || '')}">
-                                    <i class="fas fa-file-lines"></i> Surat Pengajuan
+                                    <i class="fas fa-file-lines"></i> Surat Pendukung
                                 </a>
                             ` : ''}
                             ${b.is_conflict ? `

@@ -140,7 +140,7 @@
                                 </div>
                                 <?php if (!empty($b['document_id'])): ?>
                                     <a href="booking_document.php?id=<?php echo (int) $b['document_id']; ?>" target="_blank" rel="noopener" class="px-2.5 py-1 bg-violet-50 dark:bg-violet-950/40 rounded-lg border border-violet-200 dark:border-violet-800 text-xs font-semibold text-violet-700 dark:text-violet-300 flex items-center gap-1.5 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition" title="<?php echo htmlspecialchars($b['document_name']); ?>">
-                                        <i class="fas fa-file-lines"></i><span>Surat Pengajuan</span>
+                                        <i class="fas fa-file-lines"></i><span>Surat Pendukung</span>
                                     </a>
                                 <?php endif; ?>
                             </div>
@@ -190,6 +190,9 @@
                                 </a>
                             <?php endif; ?>
                             <?php if ($isPending || $isConfirmed): ?>
+                                <a href="booking_document_upload.php?booking_id=<?php echo (int) $b['id']; ?>" class="w-full sm:w-auto px-3.5 py-2 bg-violet-50 hover:bg-violet-100 dark:bg-violet-950/40 dark:hover:bg-violet-900/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                                    <i class="fas fa-file-arrow-up"></i> <?php echo empty($b['document_id']) ? 'Tambah' : 'Ganti'; ?> Surat Pendukung
+                                </a>
                                 <form method="POST" action="my_bookings.php" class="w-full sm:w-auto" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pemesanan ini?')">
                                     <?php echo csrf_field(); ?>
                                     <input type="hidden" name="action" value="cancel">
@@ -544,6 +547,11 @@
             }
             if (isPending || isConfirmed) {
                 actionHtml += `
+                    <a href="booking_document_upload.php?booking_id=${b.id}" class="w-full sm:w-auto px-3.5 py-2 bg-violet-50 hover:bg-violet-100 dark:bg-violet-950/40 dark:hover:bg-violet-900/50 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                        <i class="fas fa-file-arrow-up"></i> ${b.document_id ? 'Ganti' : 'Tambah'} Surat Pendukung
+                    </a>
+                `;
+                actionHtml += `
                     <form method="POST" action="my_bookings.php" class="w-full sm:w-auto" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pemesanan ini?')">
                         ${csrfHiddenField}
                         <input type="hidden" name="action" value="cancel">
@@ -593,7 +601,7 @@
                                 </div>
                                 ${b.document_id ? `
                                     <a href="booking_document.php?id=${b.document_id}" target="_blank" rel="noopener" class="px-2.5 py-1 bg-violet-50 dark:bg-violet-950/40 rounded-lg border border-violet-200 dark:border-violet-800 text-xs font-semibold text-violet-700 dark:text-violet-300 flex items-center gap-1.5 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition" title="${escapeHtml(b.document_name)}">
-                                        <i class="fas fa-file-lines"></i><span>Surat Pengajuan</span>
+                                        <i class="fas fa-file-lines"></i><span>Surat Pendukung</span>
                                     </a>
                                 ` : ''}
                             </div>

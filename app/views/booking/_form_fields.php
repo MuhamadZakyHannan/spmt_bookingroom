@@ -246,7 +246,7 @@ $bookingFormCurrentDocument = $bookingFormCurrentDocument ?? null;
             <span class="w-7 h-7 rounded-lg bg-brand-100 dark:bg-brand-900/50 text-brand-700 dark:text-brand-300 flex items-center justify-center text-xs font-bold">4</span>
             <div>
                 <h3 class="text-sm font-bold text-slate-900 dark:text-white">Dokumen Pendukung</h3>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400">Lampirkan surat pengajuan rapat jika diperlukan.</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400">Lampirkan surat pendukung jika sudah tersedia.</p>
             </div>
         </div>
 
@@ -268,17 +268,17 @@ $bookingFormCurrentDocument = $bookingFormCurrentDocument ?? null;
         <?php endif; ?>
 
         <label for="<?php echo $bookingFormPrefix; ?>RequestLetter" class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">
-            <?php echo $bookingFormCurrentDocument ? 'Ganti Surat Pengajuan' : 'Surat Pengajuan'; ?> <span class="font-normal text-slate-400">(opsional)</span>
+            <?php echo $bookingFormCurrentDocument ? 'Ganti Surat Pendukung' : 'Surat Pendukung'; ?> <span class="font-normal text-slate-400">(opsional)</span>
         </label>
         <input
             type="file"
-            name="request_letter"
+            name="supporting_document"
             id="<?php echo $bookingFormPrefix; ?>RequestLetter"
             accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
             class="block w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-600 dark:text-slate-300 file:mr-4 file:border-0 file:border-r file:border-slate-200 dark:file:border-slate-700 file:bg-brand-50 dark:file:bg-brand-950/50 file:px-4 file:py-3 file:text-xs file:font-bold file:text-brand-700 dark:file:text-brand-300 hover:file:bg-brand-100 dark:hover:file:bg-brand-900/50 cursor-pointer"
         >
         <p class="mt-2 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-            Format PDF, JPG, atau PNG, maksimal 5 MB. Dokumen disimpan secara privat dan hanya dapat dibuka oleh pemilik booking serta Administrator.
+            Format PDF, JPG, atau PNG, maksimal 5 MB. Jika belum tersedia, dokumen dapat ditambahkan kemudian dari menu Booking Saya, termasuk setelah booking terkonfirmasi. Dokumen disimpan secara privat dan hanya dapat dibuka oleh pemilik booking serta Administrator.
             <?php if ($bookingFormCurrentDocument): ?>Unggah file baru hanya jika ingin mengganti dokumen saat ini.<?php endif; ?>
         </p>
     </section>

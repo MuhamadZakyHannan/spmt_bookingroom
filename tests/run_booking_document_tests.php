@@ -18,13 +18,15 @@ $service = new BookingDocumentService(sys_get_temp_dir() . DIRECTORY_SEPARATOR .
 $formPartial = file_get_contents(__DIR__ . '/../app/views/booking/_form_fields.php');
 $createView = file_get_contents(__DIR__ . '/../app/views/booking/create.php');
 $editView = file_get_contents(__DIR__ . '/../app/views/booking/edit.php');
+$lateUploadView = file_get_contents(__DIR__ . '/../app/views/booking/document_upload.php');
+$myBookingsView = file_get_contents(__DIR__ . '/../app/views/booking/my_bookings.php');
 $adminBookingsView = file_get_contents(__DIR__ . '/../app/views/admin/bookings.php');
 $downloadController = file_get_contents(__DIR__ . '/../app/controllers/BookingDocumentController.php');
 $bookingModelSource = file_get_contents(__DIR__ . '/../app/models/BookingModel.php');
 $bookingScript = file_get_contents(__DIR__ . '/../public/js/booking-form.js');
 
 expectDocument(
-    str_contains($formPartial, 'name="request_letter"')
+    str_contains($formPartial, 'name="supporting_document"')
         && str_contains($formPartial, 'application/pdf,image/jpeg,image/png'),
     'Form booking menyediakan input dokumen dengan format yang dibatasi.'
 );
@@ -46,8 +48,14 @@ expectDocument(
 );
 expectDocument(
     str_contains($bookingModelSource, 'd.id AS document_id, d.original_name AS document_name')
-        && str_contains($adminBookingsView, 'Surat Pengajuan'),
+        && str_contains($adminBookingsView, 'Surat Pendukung'),
     'Dokumen tersedia untuk peninjauan Administrator, termasuk pada analisis konflik jadwal.'
+);
+expectDocument(
+    str_contains($lateUploadView, 'data-supporting-document-form')
+        && str_contains($myBookingsView, 'Tambah')
+        && str_contains($myBookingsView, 'booking_document_upload.php?booking_id='),
+    'Pemilik dapat menyusulkan surat pendukung tanpa mengubah data jadwal booking.'
 );
 
 $noFile = $service->validate(null);
@@ -60,7 +68,7 @@ file_put_contents($largePath, str_repeat('A', BookingDocumentService::MAX_SIZE_B
 
 try {
     $validPdf = $service->validate([
-        'name' => 'surat-pengajuan.pdf',
+        'name' => 'surat-pendukung.pdf',
         'tmp_name' => $pdfPath,
         'error' => UPLOAD_ERR_OK,
         'size' => filesize($pdfPath),
@@ -68,7 +76,7 @@ try {
     expectDocument($validPdf['success'] === true && $validPdf['mime_type'] === 'application/pdf', 'PDF yang valid diterima berdasarkan MIME dan signature.');
 
     $wrongExtension = $service->validate([
-        'name' => 'surat-pengajuan.exe',
+        'name' => 'surat-pendukung.exe',
         'tmp_name' => $pdfPath,
         'error' => UPLOAD_ERR_OK,
         'size' => filesize($pdfPath),
@@ -136,4 +144,4 @@ try {
     @unlink($largePath);
 }
 
-echo PHP_EOL . 'Hasil: 15 lulus, 0 gagal.' . PHP_EOL;
+echo PHP_EOL . 'Hasil: 16 lulus, 0 gagal.' . PHP_EOL;

@@ -88,9 +88,31 @@ try {
         'activity_type' => 'internal_divisi',
         'attendees_count' => '1',
         'purpose' => 'Pengujian upload HTTP',
-        'request_letter' => new CURLFile($pdfPath, 'application/pdf', 'surat-pengajuan.pdf'),
     ]);
-    expectDocumentHttp($booking['status'] === 302, 'Booking beserta dokumen dapat dikirim melalui multipart HTTP.');
+    expectDocumentHttp($booking['status'] === 302, 'Booking dapat dibuat tanpa surat pendukung terlebih dahulu.');
+
+    $findBooking = $pdo->prepare(
+        "SELECT b.id AS booking_id
+         FROM bookings b
+         LEFT JOIN booking_documents d ON d.booking_id = b.id
+         WHERE b.title = ? AND d.id IS NULL
+         LIMIT 1"
+    );
+    $findBooking->execute([$title]);
+    $bookingId = (int) $findBooking->fetchColumn();
+    expectDocumentHttp($bookingId > 0, 'Booking tanpa surat pendukung tersimpan dengan benar.');
+
+    $uploadPage = httpRequest($baseUrl . '/booking_document_upload.php?booking_id=' . $bookingId, $cookieJar);
+    $uploadToken = csrfFromHtml($uploadPage['body']);
+    expectDocumentHttp($uploadPage['status'] === 200, 'Halaman untuk menyusulkan surat pendukung dapat diakses pemilik booking.');
+
+    $uploaded = httpRequest($baseUrl . '/booking_document_upload.php', $cookieJar, [
+        'csrf_token' => $uploadToken,
+        'booking_id' => (string) $bookingId,
+        'return_to' => 'my_bookings.php',
+        'supporting_document' => new CURLFile($pdfPath, 'application/pdf', 'surat-pendukung.pdf'),
+    ]);
+    expectDocumentHttp($uploaded['status'] === 302, 'Surat pendukung dapat diunggah menyusul tanpa mengedit jadwal booking.');
 
     $find = $pdo->prepare(
         "SELECT b.id AS booking_id, d.id AS document_id, d.stored_name
@@ -133,4 +155,4 @@ try {
     @unlink($pdfPath);
 }
 
-echo PHP_EOL . 'Hasil: 6 lulus, 0 gagal.' . PHP_EOL;
+echo PHP_EOL . 'Hasil: 9 lulus, 0 gagal.' . PHP_EOL;

@@ -3,7 +3,7 @@ require_once __DIR__ . '/../core/Database.php';
 
 class BookingDocumentModel
 {
-    public const TYPE_REQUEST_LETTER = 'request_letter';
+    public const TYPE_SUPPORTING_DOCUMENT = 'supporting_document';
 
     private $db;
 
@@ -12,7 +12,7 @@ class BookingDocumentModel
         $this->db = $connection ?: Database::getInstance()->getConnection();
     }
 
-    public function getForBooking(int $bookingId, string $documentType = self::TYPE_REQUEST_LETTER)
+    public function getForBooking(int $bookingId, string $documentType = self::TYPE_SUPPORTING_DOCUMENT)
     {
         if (!$this->db || $bookingId <= 0) return false;
         $statement = $this->db->prepare(
@@ -48,7 +48,7 @@ class BookingDocumentModel
             $currentStatement = $this->db->prepare(
                 'SELECT id, stored_name FROM booking_documents WHERE booking_id = ? AND document_type = ? FOR UPDATE'
             );
-            $currentStatement->execute([$bookingId, self::TYPE_REQUEST_LETTER]);
+            $currentStatement->execute([$bookingId, self::TYPE_SUPPORTING_DOCUMENT]);
             $current = $currentStatement->fetch(PDO::FETCH_ASSOC);
 
             $statement = $this->db->prepare(
@@ -66,7 +66,7 @@ class BookingDocumentModel
             );
             $statement->execute([
                 $bookingId,
-                self::TYPE_REQUEST_LETTER,
+                self::TYPE_SUPPORTING_DOCUMENT,
                 $metadata['original_name'],
                 $metadata['stored_name'],
                 $metadata['mime_type'],

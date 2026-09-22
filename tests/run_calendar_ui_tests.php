@@ -16,9 +16,11 @@ $bookingScript = file_get_contents(__DIR__ . '/../public/js/booking-form.js');
 expectCalendarUi(
     str_contains($calendarView, "listDayFormat: { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }")
         && str_contains($calendarView, 'listDaySideFormat: false')
+        && str_contains($calendarView, "args.view.type.startsWith('list')")
+        && str_contains($calendarView, "new Intl.DateTimeFormat('id-ID'")
         && str_contains($calendarView, "locale: 'id'")
         && str_contains($calendarView, '@fullcalendar/core@6.1.8/locales-all.global.min.js'),
-    'Header Agenda menyatukan nama hari dan tanggal lengkap dalam bahasa Indonesia.'
+    'Header Agenda merender nama hari dan tanggal lengkap secara eksplisit dalam bahasa Indonesia.'
 );
 expectCalendarUi(
     !str_contains($calendarView, 'calendar-event-date'),
