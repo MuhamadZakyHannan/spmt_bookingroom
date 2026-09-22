@@ -268,6 +268,9 @@
             date: elements.date.value, start_time: elements.startTime.value,
             end_time: elements.endTime.value, attendees_count: elements.attendees.value
         });
+        if (form.dataset.excludeBookingId) {
+            query.set('exclude_booking_id', form.dataset.excludeBookingId);
+        }
 
         try {
             const response = await fetch(`${endpoint}?${query.toString()}`, {

@@ -179,6 +179,11 @@
 
                         <!-- Actions -->
                         <div class="flex sm:flex-row lg:flex-col gap-2 items-stretch lg:items-end justify-end border-t lg:border-t-0 pt-3 lg:pt-0 shrink-0">
+                            <?php if ($isPending): ?>
+                                <a href="edit_booking.php?id=<?php echo (int) $b['id']; ?>" class="w-full sm:w-auto px-3.5 py-2 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/40 dark:hover:bg-brand-900/50 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                                    <i class="fas fa-pen-to-square"></i> Edit Pengajuan
+                                </a>
+                            <?php endif; ?>
                             <?php if ($isPending || $isConfirmed): ?>
                                 <form method="POST" action="my_bookings.php" class="w-full sm:w-auto" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pemesanan ini?')">
                                     <?php echo csrf_field(); ?>
@@ -523,9 +528,15 @@
             }));
 
             let actionHtml = '';
+            if (isPending) {
+                actionHtml += `
+                    <a href="edit_booking.php?id=${b.id}" class="w-full sm:w-auto px-3.5 py-2 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/40 dark:hover:bg-brand-900/50 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 rounded-xl font-bold transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                        <i class="fas fa-pen-to-square"></i> Edit Pengajuan
+                    </a>
+                `;
+            }
             if (isPending || isConfirmed) {
-                actionHtml = `
-                    ${actionHtml}
+                actionHtml += `
                     <form method="POST" action="my_bookings.php" class="w-full sm:w-auto" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pemesanan ini?')">
                         ${csrfHiddenField}
                         <input type="hidden" name="action" value="cancel">

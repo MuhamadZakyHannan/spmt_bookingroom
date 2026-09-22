@@ -21,6 +21,8 @@ $bookingFormDepartments = Organization::DEPARTMENTS;
 $bookingFormActivityTypes = $activity_types ?? SawService::ACTIVITY_TYPES;
 $bookingFormStartTime = substr((string)$bookingFormValues['start_time'], 0, 5);
 $bookingFormEndTime = substr((string)$bookingFormValues['end_time'], 0, 5);
+$bookingFormInfoText = $bookingFormInfoText
+    ?? 'Jadwal yang sudah terkonfirmasi tidak dapat dipilih. Pengajuan yang hanya beririsan dengan pengajuan Pending tetap dapat dikirim dan akan dianalisis Administrator menggunakan metode SAW.';
 ?>
 
 <div class="space-y-5">
@@ -240,6 +242,6 @@ $bookingFormEndTime = substr((string)$bookingFormValues['end_time'], 0, 5);
 
     <div class="p-3.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60 text-sky-900 dark:text-sky-300 text-xs flex items-start gap-2.5">
         <i class="fas fa-info-circle text-sky-600 dark:text-sky-400 text-sm mt-0.5 shrink-0"></i>
-        <p class="leading-relaxed"><strong>Informasi:</strong> Jadwal yang sudah terkonfirmasi tidak dapat dipilih. Pengajuan yang hanya beririsan dengan pengajuan <em>Pending</em> tetap dapat dikirim dan akan dianalisis Administrator menggunakan metode SAW.</p>
+        <p class="leading-relaxed"><strong>Informasi:</strong> <?php echo htmlspecialchars($bookingFormInfoText); ?></p>
     </div>
 </div>

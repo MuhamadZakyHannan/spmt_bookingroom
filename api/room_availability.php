@@ -2,6 +2,7 @@
 
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../app/services/RoomAvailabilityService.php';
+require_once __DIR__ . '/../app/models/BookingModel.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate');
@@ -28,6 +29,26 @@ $endTime = trim((string) ($_GET['end_time'] ?? ''));
 $attendeesCount = filter_var($_GET['attendees_count'] ?? null, FILTER_VALIDATE_INT, [
     'options' => ['min_range' => 1, 'max_range' => 100],
 ]);
+$excludeBookingId = 0;
+if (isset($_GET['exclude_booking_id']) && $_GET['exclude_booking_id'] !== '') {
+    $validatedExcludeId = filter_var($_GET['exclude_booking_id'], FILTER_VALIDATE_INT, [
+        'options' => ['min_range' => 1],
+    ]);
+    if ($validatedExcludeId === false) {
+        availabilityResponse(422, ['success' => false, 'error' => 'Booking pengecualian tidak valid.']);
+    }
+
+    $excludedBooking = (new BookingModel())->getById((int) $validatedExcludeId);
+    $canExclude = $excludedBooking && (
+        (is_admin() && in_array($excludedBooking['status'], ['pending', 'confirmed'], true))
+        || ($excludedBooking['status'] === 'pending'
+            && (int) $excludedBooking['user_id'] === (int) $_SESSION['user_id'])
+    );
+    if (!$canExclude) {
+        availabilityResponse(403, ['success' => false, 'error' => 'Anda tidak memiliki izin untuk mengecualikan booking ini.']);
+    }
+    $excludeBookingId = (int) $validatedExcludeId;
+}
 
 $dateValue = DateTimeImmutable::createFromFormat('!Y-m-d', $date);
 $dateIsValid = $dateValue && $dateValue->format('Y-m-d') === $date;
@@ -47,7 +68,13 @@ if ($attendeesCount === false) {
 
 try {
     $service = new RoomAvailabilityService();
-    $availability = $service->getAvailability($date, $startTime, $endTime, (int) $attendeesCount);
+    $availability = $service->getAvailability(
+        $date,
+        $startTime,
+        $endTime,
+        (int) $attendeesCount,
+        $excludeBookingId
+    );
     availabilityResponse(200, array_merge(['success' => true], $availability));
 } catch (Throwable $exception) {
     error_log('Room availability error: ' . $exception->getMessage());

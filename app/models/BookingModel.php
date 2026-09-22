@@ -138,6 +138,131 @@ class BookingModel {
         }
     }
 
+    /**
+     * Memperbarui booking dengan aturan otorisasi dan jadwal dalam satu transaksi.
+     *
+     * Pemilik hanya boleh mengubah booking pending miliknya. Administrator dapat
+     * mengubah booking pending maupun confirmed. Status booking tidak berubah
+     * selama proses edit; persetujuan tetap melalui alur administrasi yang ada.
+     */
+    public function updateWithSchedulePolicy(int $bookingId, array $data, int $actorUserId, bool $isAdmin): array {
+        if (!$this->db) {
+            return ['success' => false, 'reason' => 'database_unavailable'];
+        }
+
+        try {
+            $this->db->beginTransaction();
+
+            // Pastikan booking ada sebelum mengambil lock ruangan tujuan. Urutan lock
+            // ruangan -> booking sama dengan alur create agar transaksi paralel aman.
+            $snapshotStatement = $this->db->prepare(
+                'SELECT id FROM bookings WHERE id = ?'
+            );
+            $snapshotStatement->execute([$bookingId]);
+            $snapshot = $snapshotStatement->fetch(PDO::FETCH_ASSOC);
+            if (!$snapshot) {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'booking_not_found'];
+            }
+
+            $roomStatement = $this->db->prepare(
+                'SELECT id, name, capacity, status FROM rooms WHERE id = ? FOR UPDATE'
+            );
+            $roomStatement->execute([(int) $data['room_id']]);
+            $room = $roomStatement->fetch(PDO::FETCH_ASSOC);
+
+            $bookingStatement = $this->db->prepare(
+                'SELECT id, user_id, room_id, status FROM bookings WHERE id = ? FOR UPDATE'
+            );
+            $bookingStatement->execute([$bookingId]);
+            $booking = $bookingStatement->fetch(PDO::FETCH_ASSOC);
+            if (!$booking) {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'booking_not_found'];
+            }
+
+            $status = (string) $booking['status'];
+            $isOwnerPending = (int) $booking['user_id'] === $actorUserId && $status === 'pending';
+            $isAdminEditable = $isAdmin && in_array($status, ['pending', 'confirmed'], true);
+            if (!$isOwnerPending && !$isAdminEditable) {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'forbidden', 'status' => $status];
+            }
+
+            if (!$room) {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'room_not_found'];
+            }
+            if (($room['status'] ?? 'available') === 'maintenance') {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'maintenance', 'room' => $room];
+            }
+            if ((int) $data['attendees_count'] > (int) $room['capacity']) {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'insufficient_capacity', 'room' => $room];
+            }
+
+            $conflictStatement = $this->db->prepare(
+                "SELECT id, status, start_time, end_time
+                 FROM bookings
+                 WHERE room_id = ?
+                   AND date = ?
+                   AND id != ?
+                   AND status IN ('confirmed', 'pending')
+                   AND start_time < ?
+                   AND end_time > ?
+                 ORDER BY CASE WHEN status = 'confirmed' THEN 0 ELSE 1 END, start_time ASC
+                 FOR UPDATE"
+            );
+            $conflictStatement->execute([
+                (int) $data['room_id'],
+                $data['date'],
+                $bookingId,
+                $data['end_time'],
+                $data['start_time'],
+            ]);
+            $conflicts = $conflictStatement->fetchAll(PDO::FETCH_ASSOC);
+
+            $confirmedConflict = null;
+            $hasPendingConflict = false;
+            foreach ($conflicts as $conflict) {
+                if ($conflict['status'] === 'confirmed') {
+                    $confirmedConflict = $conflict;
+                    break;
+                }
+                $hasPendingConflict = true;
+            }
+
+            if ($confirmedConflict) {
+                $this->db->rollBack();
+                return [
+                    'success' => false,
+                    'reason' => 'confirmed_conflict',
+                    'conflict' => $confirmedConflict,
+                    'room' => $room,
+                ];
+            }
+
+            if (!$this->updateBookingData($bookingId, $data)) {
+                throw new RuntimeException('Gagal memperbarui booking.');
+            }
+
+            $this->db->commit();
+            return [
+                'success' => true,
+                'status' => $status,
+                'pending_conflict' => $hasPendingConflict,
+                'booking_id' => $bookingId,
+            ];
+        } catch (Throwable $exception) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log('Booking update transaction error: ' . $exception->getMessage());
+            return ['success' => false, 'reason' => 'database_error'];
+        }
+    }
+
     public function create($data) {
         if (!$this->db) return false;
 
@@ -193,6 +318,40 @@ class BookingModel {
                 $this->lastInsertId = (int)$this->db->lastInsertId();
             }
             return $success;
+        }
+    }
+
+    private function updateBookingData(int $bookingId, array $data): bool {
+        $activityType = $data['activity_type'] ?? 'internal_divisi';
+
+        try {
+            $statement = $this->db->prepare(
+                'UPDATE bookings
+                 SET room_id = ?, title = ?, date = ?, start_time = ?, end_time = ?,
+                     purpose = ?, activity_type = ?, attendees_count = ?, user_name = ?, user_dept = ?
+                 WHERE id = ?'
+            );
+            return $statement->execute([
+                $data['room_id'], $data['title'], $data['date'], $data['start_time'],
+                $data['end_time'], $data['purpose'], $activityType, $data['attendees_count'],
+                $data['user_name'] ?? null, $data['user_dept'] ?? null, $bookingId,
+            ]);
+        } catch (PDOException $exception) {
+            if ($exception->getCode() !== '42S22' && (int) ($exception->errorInfo[1] ?? 0) !== 1054) {
+                throw $exception;
+            }
+
+            $statement = $this->db->prepare(
+                'UPDATE bookings
+                 SET room_id = ?, title = ?, date = ?, start_time = ?, end_time = ?,
+                     purpose = ?, attendees_count = ?, user_name = ?, user_dept = ?
+                 WHERE id = ?'
+            );
+            return $statement->execute([
+                $data['room_id'], $data['title'], $data['date'], $data['start_time'],
+                $data['end_time'], $data['purpose'], $data['attendees_count'],
+                $data['user_name'] ?? null, $data['user_dept'] ?? null, $bookingId,
+            ]);
         }
     }
 
@@ -346,6 +505,22 @@ class BookingModel {
                                     ORDER BY CASE WHEN b.status = 'pending' THEN 0 ELSE 1 END, b.id DESC");
         $stmt->execute([$userId]);
         return $stmt->fetchAll();
+    }
+
+    public function getById(int $bookingId) {
+        if (!$this->db || $bookingId <= 0) return false;
+        $stmt = $this->db->prepare(
+            "SELECT b.*, r.name AS room_name, r.code AS room_code, r.location,
+                    IFNULL(b.user_name, u.name) AS requester_name,
+                    IFNULL(b.user_dept, u.department) AS requester_department
+             FROM bookings b
+             JOIN rooms r ON r.id = b.room_id
+             JOIN users u ON u.id = b.user_id
+             WHERE b.id = ?
+             LIMIT 1"
+        );
+        $stmt->execute([$bookingId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function cancel($bookingId, $userId, $isAdmin = false) {

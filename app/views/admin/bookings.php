@@ -572,6 +572,11 @@
                         <!-- 7. Aksi -->
                         <td class="py-3.5 px-4 text-center whitespace-nowrap overflow-hidden">
                             <div class="flex items-center justify-center gap-1.5">
+                                <?php if (in_array($b['status'], ['pending', 'confirmed'], true)): ?>
+                                    <a href="edit_booking.php?id=<?php echo (int) $b['id']; ?>&amp;return_to=admin_bookings.php" class="p-1.5 px-2.5 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/40 dark:hover:bg-brand-900/50 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-bold rounded-lg transition text-xs flex items-center gap-1 cursor-pointer" title="Edit Booking">
+                                        <i class="fas fa-pen-to-square"></i>
+                                    </a>
+                                <?php endif; ?>
                                 <?php if ($b['status'] === 'pending'): ?>
                                     <!-- Aksi TERIMA -->
                                     <form method="POST" action="admin_bookings.php" class="inline-block">
@@ -1036,9 +1041,15 @@
             }
 
             let actionHtml = '';
+            const editAction = (b.status === 'pending' || b.status === 'confirmed') ? `
+                <a href="edit_booking.php?id=${b.id}&amp;return_to=admin_bookings.php" class="p-1.5 px-2.5 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/40 dark:hover:bg-brand-900/50 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 font-bold rounded-lg transition text-xs flex items-center gap-1" title="Edit Booking">
+                    <i class="fas fa-pen-to-square"></i>
+                </a>
+            ` : '';
             if (isPending) {
                 actionHtml = `
                     <div class="flex items-center justify-center gap-1.5">
+                        ${editAction}
                         <form method="POST" action="admin_bookings.php" class="inline-block">
                             ${csrfHiddenField}
                             <input type="hidden" name="action" value="update_status">
@@ -1061,6 +1072,7 @@
             } else {
                 actionHtml = `
                     <div class="flex items-center justify-center gap-1.5">
+                        ${editAction}
                         <form method="POST" action="admin_bookings.php" class="inline-block" onsubmit="return confirm('Hapus permanen data pemesanan ini?')">
                             ${csrfHiddenField}
                             <input type="hidden" name="action" value="delete">

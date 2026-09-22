@@ -16,81 +16,40 @@ class BookingController extends Controller {
     public function create() {
         $this->requireAuth();
 
-        $selected_room_id = (int)($_GET['room_id'] ?? 0);
-        $user_name = $_SESSION['user_name'] ?? '';
-        $user_dept = $_SESSION['department'] ?? '';
-        $title = '';
-        $requestedDate = trim($_GET['date'] ?? '');
-        $date = preg_match('/^\d{4}-\d{2}-\d{2}$/', $requestedDate)
-            && strtotime($requestedDate) >= strtotime(date('Y-m-d'))
-            ? $requestedDate
-            : date('Y-m-d');
-        $start_time = '09:00';
-        $end_time = '10:00';
-        $purpose = '';
-        $attendees_count = 1;
+        $selectedRoomId = (int) ($_GET['room_id'] ?? 0);
+        $values = [
+            'room_id' => $selectedRoomId,
+            'user_name' => $_SESSION['user_name'] ?? '',
+            'user_dept' => $_SESSION['department'] ?? '',
+            'title' => '',
+            'date' => $this->validRequestedDate((string) ($_GET['date'] ?? '')),
+            'start_time' => '09:00',
+            'end_time' => '10:00',
+            'purpose' => '',
+            'activity_type' => 'internal_divisi',
+            'attendees_count' => 1,
+        ];
         $error = '';
-
-        // Tampilkan seluruh ruangan agar status perawatan juga terlihat jelas
-        // sebagai tidak dapat dipilih pada pemeriksa ketersediaan.
-        $rooms = $this->roomModel->getAllRooms();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->validateCsrf('booking.php');
+            $values = $this->readBookingInput($_POST);
+            $selectedRoomId = $values['room_id'];
+            $error = $this->validateBookingInput($values);
 
-            $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') 
-                      || (isset($_POST['is_ajax']) && $_POST['is_ajax'] === '1');
-
-            $room_id = (int)($_POST['room_id'] ?? 0);
-            $user_name = trim($_POST['user_name'] ?? '');
-            $user_dept = trim($_POST['user_dept'] ?? '');
-            $title = trim($_POST['title'] ?? '');
-            $date = trim($_POST['date'] ?? '');
-            $start_time = trim($_POST['start_time'] ?? '');
-            $end_time = trim($_POST['end_time'] ?? '');
-            $purpose = trim($_POST['purpose'] ?? '');
-            $attendees_count = (int)($_POST['attendees_count'] ?? 1);
-            $activity_type = trim($_POST['activity_type'] ?? 'internal_divisi');
-            if (!array_key_exists($activity_type, SawService::ACTIVITY_TYPES)) {
-                $activity_type = 'internal_divisi';
-            }
-
-            $dateValue = DateTimeImmutable::createFromFormat('!Y-m-d', $date);
-            $dateIsValid = $dateValue && $dateValue->format('Y-m-d') === $date;
-            $timePattern = '/^(?:[01]\d|2[0-3]):[0-5]\d$/';
-
-            if (!$room_id || empty($title) || empty($date) || empty($start_time) || empty($end_time) || empty($user_name) || empty($user_dept)) {
-                $error = 'Harap isi semua kolom wajib (*)!';
-            } else if (!$dateIsValid || $date < date('Y-m-d')) {
-                $error = 'Tanggal pemesanan tidak valid atau sudah lewat!';
-            } else if (!preg_match($timePattern, $start_time) || !preg_match($timePattern, $end_time) || $end_time <= $start_time) {
-                $error = 'Waktu selesai harus lebih lambat dari waktu mulai!';
-            } else if ($attendees_count < 1 || $attendees_count > 100) {
-                $error = 'Jumlah peserta harus antara 1 dan 100 orang.';
-            } else {
+            if ($error === '') {
                 $isAdmin = is_admin();
-                $data = [
-                    'user_id' => $_SESSION['user_id'],
-                    'user_name' => $user_name,
-                    'user_dept' => $user_dept,
-                    'room_id' => $room_id,
-                    'title' => $title,
-                    'date' => $date,
-                    'start_time' => $start_time,
-                    'end_time' => $end_time,
-                    'purpose' => $purpose,
-                    'activity_type' => $activity_type,
-                    'attendees_count' => $attendees_count,
-                ];
+                $result = $this->bookingModel->createWithSchedulePolicy(
+                    array_merge($values, ['user_id' => (int) $_SESSION['user_id']]),
+                    $isAdmin
+                );
 
-                $result = $this->bookingModel->createWithSchedulePolicy($data, $isAdmin);
-
-                if ($result['success']) {
+                if (!empty($result['success'])) {
                     $status = $result['status'];
                     if (!empty($result['pending_conflict'])) {
-                        $msg = 'Pengajuan berhasil dicatat sebagai Pending. Ada pengajuan lain pada jadwal yang sama; Administrator akan menentukan prioritas menggunakan metode SAW.';
+                        $message = 'Pengajuan berhasil dicatat sebagai Pending. Ada pengajuan lain pada jadwal yang sama; Administrator akan menentukan prioritas menggunakan metode SAW.';
                     } else {
-                        $msg = $status === 'confirmed'
+                        $message = $status === 'confirmed'
                             ? 'Pemesanan ruangan oleh Admin berhasil dibuat dan langsung terkonfirmasi ke jadwal!'
                             : 'Pengajuan booking berhasil dikirim! Status saat ini menunggu persetujuan Administrator.';
                     }
@@ -98,62 +57,130 @@ class BookingController extends Controller {
                     if ($status === 'pending') {
                         $this->notificationModel->createForPendingBooking((int) $result['booking_id']);
                     }
-                    set_flash('success', $msg);
+                    set_flash('success', $message);
 
-                    if ($isAjax) {
-                        header('Content-Type: application/json; charset=utf-8');
-                        echo json_encode([
+                    if ($this->isAjax()) {
+                        $this->jsonResponse([
                             'success' => true,
-                            'message' => $msg,
-                            'redirect' => 'my_bookings.php'
-                        ], JSON_UNESCAPED_UNICODE);
-                        exit;
+                            'message' => $message,
+                            'redirect' => 'my_bookings.php',
+                        ]);
                     }
                     $this->redirect('my_bookings.php');
-                } else {
-                    $reason = $result['reason'] ?? 'database_error';
-                    if ($reason === 'confirmed_conflict') {
-                        $conflict = $result['conflict'];
-                        $error = 'Ruangan sudah terkonfirmasi untuk jadwal '
-                            . substr($conflict['start_time'], 0, 5) . '–' . substr($conflict['end_time'], 0, 5)
-                            . '. Pilih ruangan atau waktu lain.';
-                    } elseif ($reason === 'maintenance') {
-                        $error = 'Ruangan sedang dalam perawatan dan belum dapat dipesan.';
-                    } elseif ($reason === 'insufficient_capacity') {
-                        $room = $result['room'];
-                        $error = 'Jumlah peserta melebihi kapasitas maksimum ' . $room['name'] . ' (' . $room['capacity'] . ' orang).';
-                    } elseif ($reason === 'room_not_found') {
-                        $error = 'Ruangan yang dipilih tidak ditemukan.';
-                    } else {
-                        $error = 'Gagal menyimpan pemesanan, terjadi kesalahan database.';
-                    }
                 }
+
+                $error = $this->bookingResultError($result);
             }
 
-            if ($isAjax && !empty($error)) {
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => false,
-                    'error' => $error
-                ]);
-                exit;
+            if ($this->isAjax() && $error !== '') {
+                $this->jsonResponse(['success' => false, 'error' => $error], 422);
             }
         }
 
         $this->view('booking/create', [
-            'rooms' => $rooms,
-            'selected_room_id' => $selected_room_id,
-            'user_name' => $user_name,
-            'user_dept' => $user_dept,
-            'title' => $title,
-            'date' => $date,
-            'start_time' => $start_time,
-            'end_time' => $end_time,
-            'purpose' => $purpose,
-            'activity_type' => $activity_type ?? 'internal_divisi',
+            'rooms' => $this->roomModel->getAllRooms(),
+            'selected_room_id' => $selectedRoomId,
+            'user_name' => $values['user_name'],
+            'user_dept' => $values['user_dept'],
+            'title' => $values['title'],
+            'date' => $values['date'],
+            'start_time' => $values['start_time'],
+            'end_time' => $values['end_time'],
+            'purpose' => $values['purpose'],
+            'activity_type' => $values['activity_type'],
             'activity_types' => SawService::ACTIVITY_TYPES,
-            'attendees_count' => $attendees_count,
-            'error' => $error
+            'attendees_count' => $values['attendees_count'],
+            'error' => $error,
+        ]);
+    }
+
+    public function edit() {
+        $this->requireAuth();
+
+        $bookingId = filter_var($_GET['id'] ?? $_POST['booking_id'] ?? null, FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 1],
+        ]);
+        $returnTo = $this->resolveEditReturnUrl((string) ($_GET['return_to'] ?? $_POST['return_to'] ?? ''));
+        if ($bookingId === false || $bookingId === null) {
+            set_flash('danger', 'Booking yang akan diedit tidak valid.');
+            $this->redirect($returnTo);
+        }
+
+        $booking = $this->bookingModel->getById((int) $bookingId);
+        if (!$booking) {
+            set_flash('danger', 'Booking tidak ditemukan.');
+            $this->redirect($returnTo);
+        }
+        if (!$this->canEditBooking($booking)) {
+            set_flash('danger', 'Booking ini tidak dapat diedit. Pemilik hanya dapat mengubah pengajuan Pending; booking terkonfirmasi hanya dapat diubah Administrator.');
+            $this->redirect($returnTo);
+        }
+
+        $values = [
+            'room_id' => (int) $booking['room_id'],
+            'user_name' => (string) ($booking['user_name'] ?: $booking['requester_name']),
+            'user_dept' => (string) ($booking['user_dept'] ?: $booking['requester_department']),
+            'title' => (string) $booking['title'],
+            'date' => (string) $booking['date'],
+            'start_time' => substr((string) $booking['start_time'], 0, 5),
+            'end_time' => substr((string) $booking['end_time'], 0, 5),
+            'purpose' => (string) ($booking['purpose'] ?? ''),
+            'activity_type' => (string) ($booking['activity_type'] ?? 'internal_divisi'),
+            'attendees_count' => (int) $booking['attendees_count'],
+        ];
+        if (!array_key_exists($values['activity_type'], SawService::ACTIVITY_TYPES)) {
+            $values['activity_type'] = 'internal_divisi';
+        }
+
+        $error = '';
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $csrfFallback = 'edit_booking.php?id=' . (int) $bookingId;
+            if ($returnTo === 'admin_bookings.php') {
+                $csrfFallback .= '&return_to=admin_bookings.php';
+            }
+            $this->validateCsrf($csrfFallback);
+            $values = $this->readBookingInput($_POST);
+            $error = $this->validateBookingInput($values);
+
+            if ($error === '') {
+                $result = $this->bookingModel->updateWithSchedulePolicy(
+                    (int) $bookingId,
+                    $values,
+                    (int) $_SESSION['user_id'],
+                    is_admin()
+                );
+
+                if (!empty($result['success'])) {
+                    if (($result['status'] ?? '') === 'pending') {
+                        $this->notificationModel->refreshForPendingBooking((int) $bookingId);
+                    }
+                    if (!empty($result['pending_conflict']) && ($result['status'] ?? '') === 'confirmed') {
+                        $message = 'Booking terkonfirmasi berhasil diperbarui. Ada pengajuan Pending yang beririsan; Administrator perlu meninjau pengajuan tersebut pada analisis SAW.';
+                    } elseif (!empty($result['pending_conflict'])) {
+                        $message = 'Booking berhasil diperbarui. Jadwal ini memiliki pengajuan bersaing dan tetap akan dianalisis menggunakan SAW.';
+                    } else {
+                        $message = 'Booking berhasil diperbarui.';
+                    }
+                    set_flash('success', $message);
+                    $this->redirect($returnTo);
+                }
+
+                $reason = $result['reason'] ?? 'database_error';
+                if (in_array($reason, ['forbidden', 'booking_not_found'], true)) {
+                    set_flash('danger', 'Booking berubah atau Anda tidak lagi memiliki izin untuk mengeditnya.');
+                    $this->redirect($returnTo);
+                }
+                $error = $this->bookingResultError($result);
+            }
+        }
+
+        $this->view('booking/edit', [
+            'booking' => $booking,
+            'rooms' => $this->roomModel->getAllRooms(),
+            'values' => $values,
+            'activity_types' => SawService::ACTIVITY_TYPES,
+            'return_to' => $returnTo,
+            'error' => $error,
         ]);
     }
 
@@ -163,10 +190,10 @@ class BookingController extends Controller {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $this->validateCsrf('my_bookings.php');
             $action = $_POST['action'];
-            $booking_id = (int)($_POST['booking_id'] ?? 0);
+            $bookingId = (int) ($_POST['booking_id'] ?? 0);
 
-            if ($booking_id > 0 && $action === 'cancel') {
-                if ($this->bookingModel->cancel($booking_id, $_SESSION['user_id'], false)) {
+            if ($bookingId > 0 && $action === 'cancel') {
+                if ($this->bookingModel->cancel($bookingId, $_SESSION['user_id'], false)) {
                     set_flash('success', 'Pemesanan telah berhasil dibatalkan.');
                 } else {
                     set_flash('danger', 'Pemesanan tidak dapat dibatalkan atau bukan milik akun Anda.');
@@ -175,10 +202,97 @@ class BookingController extends Controller {
             $this->redirect('my_bookings.php');
         }
 
-        $my_bookings = $this->bookingModel->getByUserId($_SESSION['user_id']);
-
         $this->view('booking/my_bookings', [
-            'my_bookings' => $my_bookings
+            'my_bookings' => $this->bookingModel->getByUserId($_SESSION['user_id']),
         ]);
+    }
+
+    private function validRequestedDate(string $requestedDate): string {
+        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $requestedDate)
+            && strtotime($requestedDate) >= strtotime(date('Y-m-d'))
+            ? $requestedDate
+            : date('Y-m-d');
+    }
+
+    private function readBookingInput(array $source): array {
+        $activityType = trim((string) ($source['activity_type'] ?? 'internal_divisi'));
+        if (!array_key_exists($activityType, SawService::ACTIVITY_TYPES)) {
+            $activityType = 'internal_divisi';
+        }
+
+        return [
+            'room_id' => (int) ($source['room_id'] ?? 0),
+            'user_name' => trim((string) ($source['user_name'] ?? '')),
+            'user_dept' => trim((string) ($source['user_dept'] ?? '')),
+            'title' => trim((string) ($source['title'] ?? '')),
+            'date' => trim((string) ($source['date'] ?? '')),
+            'start_time' => trim((string) ($source['start_time'] ?? '')),
+            'end_time' => trim((string) ($source['end_time'] ?? '')),
+            'purpose' => trim((string) ($source['purpose'] ?? '')),
+            'activity_type' => $activityType,
+            'attendees_count' => (int) ($source['attendees_count'] ?? 1),
+        ];
+    }
+
+    private function validateBookingInput(array $input): string {
+        if (!$input['room_id'] || $input['title'] === '' || $input['date'] === ''
+            || $input['start_time'] === '' || $input['end_time'] === ''
+            || $input['user_name'] === '' || $input['user_dept'] === '') {
+            return 'Harap isi semua kolom wajib (*)!';
+        }
+
+        $dateValue = DateTimeImmutable::createFromFormat('!Y-m-d', $input['date']);
+        if (!$dateValue || $dateValue->format('Y-m-d') !== $input['date'] || $input['date'] < date('Y-m-d')) {
+            return 'Tanggal pemesanan tidak valid atau sudah lewat!';
+        }
+
+        $timePattern = '/^(?:[01]\d|2[0-3]):[0-5]\d$/';
+        if (!preg_match($timePattern, $input['start_time'])
+            || !preg_match($timePattern, $input['end_time'])
+            || $input['end_time'] <= $input['start_time']) {
+            return 'Waktu selesai harus lebih lambat dari waktu mulai!';
+        }
+
+        if ($input['attendees_count'] < 1 || $input['attendees_count'] > 100) {
+            return 'Jumlah peserta harus antara 1 dan 100 orang.';
+        }
+        return '';
+    }
+
+    private function bookingResultError(array $result): string {
+        $reason = $result['reason'] ?? 'database_error';
+        if ($reason === 'confirmed_conflict') {
+            $conflict = $result['conflict'];
+            return 'Ruangan sudah terkonfirmasi untuk jadwal '
+                . substr($conflict['start_time'], 0, 5) . '–' . substr($conflict['end_time'], 0, 5)
+                . '. Pilih ruangan atau waktu lain.';
+        }
+        if ($reason === 'maintenance') {
+            return 'Ruangan sedang dalam perawatan dan belum dapat dipesan.';
+        }
+        if ($reason === 'insufficient_capacity') {
+            $room = $result['room'];
+            return 'Jumlah peserta melebihi kapasitas maksimum ' . $room['name'] . ' (' . $room['capacity'] . ' orang).';
+        }
+        if ($reason === 'room_not_found') {
+            return 'Ruangan yang dipilih tidak ditemukan.';
+        }
+        return 'Gagal menyimpan perubahan, terjadi kesalahan database.';
+    }
+
+    private function canEditBooking(array $booking): bool {
+        $status = (string) ($booking['status'] ?? '');
+        if (is_admin()) {
+            return in_array($status, ['pending', 'confirmed'], true);
+        }
+
+        return $status === 'pending'
+            && (int) ($booking['user_id'] ?? 0) === (int) $_SESSION['user_id'];
+    }
+
+    private function resolveEditReturnUrl(string $requested): string {
+        return $requested === 'admin_bookings.php' && is_admin()
+            ? 'admin_bookings.php'
+            : 'my_bookings.php';
     }
 }

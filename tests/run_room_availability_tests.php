@@ -49,9 +49,13 @@ try {
     );
 
     $insert->execute([$userId, $roomId, 'TEST-PENDING', $testDate, '09:00:00', '10:00:00', 'pending']);
+    $pendingBookingId = (int) $pdo->lastInsertId();
     $pendingRoom = findRoomResult($service->getAvailability($testDate, '09:15', '09:45', 1), $roomId);
     expectAvailability($pendingRoom['availability_status'] === 'pending_conflict', 'Bentrok pending ditandai kuning sebagai pengajuan bersaing.');
     expectAvailability($pendingRoom['selectable'] === true, 'Ruangan dengan bentrok pending tetap dapat dipilih untuk analisis SAW.');
+
+    $excludedRoom = findRoomResult($service->getAvailability($testDate, '09:15', '09:45', 1, $pendingBookingId), $roomId);
+    expectAvailability($excludedRoom['availability_status'] === 'available', 'Booking yang sedang diedit dapat dikecualikan dari pemeriksaan jadwal.');
 
     $insert->execute([$userId, $roomId, 'TEST-CONFIRMED', $testDate, '11:00:00', '12:00:00', 'confirmed']);
     $confirmedRoom = findRoomResult($service->getAvailability($testDate, '11:15', '11:45', 1), $roomId);
@@ -124,4 +128,4 @@ try {
     $cleanup->execute([$testPrefix . '%']);
 }
 
-echo PHP_EOL . 'Hasil: 15 lulus, 0 gagal.' . PHP_EOL;
+echo PHP_EOL . 'Hasil: 16 lulus, 0 gagal.' . PHP_EOL;

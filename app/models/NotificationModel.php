@@ -41,6 +41,35 @@ class NotificationModel {
     }
 
     /**
+     * Menyegarkan isi notifikasi setelah pengajuan pending diedit dan memastikan
+     * administrator baru tetap menerima notifikasi untuk booking tersebut.
+     */
+    public function refreshForPendingBooking(int $bookingId): bool {
+        if (!$this->db || $bookingId <= 0) return false;
+
+        try {
+            $statement = $this->db->prepare(
+                "UPDATE notifications n
+                 JOIN bookings b ON b.id = n.booking_id
+                 JOIN users requester ON requester.id = b.user_id
+                 JOIN rooms r ON r.id = b.room_id
+                 SET n.title = 'Booking diperbarui dan menunggu persetujuan',
+                     n.message = CONCAT(IFNULL(b.user_name, requester.name), ' memperbarui ', b.title, ' di ', r.name),
+                     n.is_read = 0,
+                     n.read_at = NULL
+                 WHERE n.booking_id = ?
+                   AND n.type = 'booking_pending'
+                   AND b.status = 'pending'"
+            );
+            $statement->execute([$bookingId]);
+            return $this->createForPendingBooking($bookingId);
+        } catch (Throwable $exception) {
+            error_log('Gagal menyegarkan notifikasi booking: ' . $exception->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Membuat notifikasi attendance untuk semua admin.
      * Definisi pesan ditempatkan di sini agar service tidak mengetahui format UI.
      */

@@ -7,6 +7,7 @@ MeetSpace adalah aplikasi pemesanan ruang rapat berbasis PHP dan MySQL untuk pen
 - Pemesanan ruang dan kalender jadwal.
 - Pemeriksa ketersediaan ruangan secara langsung berdasarkan tanggal, waktu, dan jumlah peserta.
 - Approval booking oleh administrator.
+- Edit pengajuan dengan aturan akses berdasarkan pemilik, role, dan status booking.
 - Analisis prioritas ketika jadwal bentrok menggunakan metode SAW.
 - Status rapat pada monitor dihitung otomatis berdasarkan waktu jadwal.
 - Notifikasi booking untuk administrator.
@@ -92,6 +93,8 @@ Gunakan password yang panjang dan mengandung kombinasi huruf besar, huruf kecil,
 5. Booking dari user berstatus `pending` sampai disetujui admin. Booking yang dibuat admin dan tidak bentrok langsung terkonfirmasi.
 6. Pantau status melalui **Booking Saya** atau **Kalender Jadwal**.
 
+Pengajuan berstatus `pending` dapat diedit oleh pemiliknya melalui tombol **Edit Pengajuan** pada **Booking Saya**. Setelah disimpan, status tetap `pending` dan jadwal diperiksa ulang. Pemilik tidak dapat mengedit booking yang sudah `confirmed`; perubahan booking `pending` atau `confirmed` tersebut hanya dapat dilakukan Admin atau Super Admin.
+
 SAW tetap digunakan khusus untuk membandingkan beberapa pengajuan `pending` yang menginginkan ruangan dan waktu beririsan. Jadwal yang sudah `confirmed` diblokir sejak form dan diperiksa ulang oleh server saat penyimpanan.
 
 ### Menggunakan kalender
@@ -112,6 +115,7 @@ Dashboard admin tetap menggunakan tampilan katalog ruangan. Pada kolom kanan ter
 Gunakan menu **Kelola Semua Booking** untuk:
 
 - menyetujui atau menolak pengajuan;
+- mengedit booking berstatus `pending` atau `confirmed`;
 - meninjau jadwal yang bentrok;
 - melihat rekomendasi prioritas SAW;
 - memantau status serta detail peminjaman.
@@ -193,6 +197,7 @@ Pastikan MySQL aktif dan database uji dapat diakses, lalu jalankan:
 php tests/run_schedule_status_tests.php
 php tests/run_admin_dashboard_tests.php
 php tests/run_room_availability_tests.php
+php tests/run_booking_edit_tests.php
 php tests/run_role_hierarchy_tests.php
 php tests/run_user_account_tests.php
 ```

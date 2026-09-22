@@ -18,7 +18,13 @@ class RoomAvailabilityService
         $this->db = $connection ?: Database::getInstance()->getConnection();
     }
 
-    public function getAvailability(string $date, string $startTime, string $endTime, int $attendeesCount): array
+    public function getAvailability(
+        string $date,
+        string $startTime,
+        string $endTime,
+        int $attendeesCount,
+        int $excludeBookingId = 0
+    ): array
     {
         if (! $this->db) {
             throw new RuntimeException('Koneksi database tidak tersedia.');
@@ -34,12 +40,13 @@ class RoomAvailabilityService
             "SELECT room_id, status, start_time, end_time
              FROM bookings
              WHERE date = ?
+               AND id != ?
                AND status IN ('pending', 'confirmed')
                AND start_time < ?
                AND end_time > ?
              ORDER BY start_time ASC"
         );
-        $conflictStatement->execute([$date, $endTime, $startTime]);
+        $conflictStatement->execute([$date, $excludeBookingId, $endTime, $startTime]);
 
         $conflictsByRoom = [];
         foreach ($conflictStatement->fetchAll(PDO::FETCH_ASSOC) as $conflict) {
