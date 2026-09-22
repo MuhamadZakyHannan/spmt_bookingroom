@@ -89,6 +89,9 @@ $bookingFormEndTime = substr((string)$bookingFormValues['end_time'], 0, 5);
                         data-capacity="<?php echo (int)$room['capacity']; ?>"
                         data-location="<?php echo htmlspecialchars($room['location'] ?? '-', ENT_QUOTES, 'UTF-8'); ?>"
                         data-facilities="<?php echo htmlspecialchars($room['facilities'] ?? '-', ENT_QUOTES, 'UTF-8'); ?>"
+                        data-room-status="<?php echo htmlspecialchars($room['status'] ?? 'available', ENT_QUOTES, 'UTF-8'); ?>"
+                        data-original-label="<?php echo htmlspecialchars($room['name'] . ' - ' . (int)$room['capacity'] . ' orang, ' . ($room['location'] ?? '-'), ENT_QUOTES, 'UTF-8'); ?>"
+                        <?php echo ($room['status'] ?? 'available') === 'maintenance' ? 'disabled' : ''; ?>
                         <?php echo $bookingFormSelectedRoomId === (int)$room['id'] ? 'selected' : ''; ?>
                     ><?php echo htmlspecialchars($room['name']); ?> — <?php echo (int)$room['capacity']; ?> orang, <?php echo htmlspecialchars($room['location'] ?? '-'); ?></option>
                 <?php endforeach; ?>
@@ -178,6 +181,30 @@ $bookingFormEndTime = substr((string)$bookingFormValues['end_time'], 0, 5);
                 <i class="fas fa-clock"></i><span>Durasi: 1 jam</span>
             </p>
         </div>
+
+        <div data-booking-availability class="mt-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/70 p-4" aria-live="polite">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                <div>
+                    <h4 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i class="fas fa-magnifying-glass text-brand-600 dark:text-brand-400"></i>
+                        Ketersediaan Ruangan
+                    </h4>
+                    <p data-availability-message class="mt-1 text-xs text-slate-500 dark:text-slate-400">Memeriksa ruangan untuk jadwal yang dipilih…</p>
+                </div>
+                <span data-availability-loading class="hidden shrink-0 text-xs font-semibold text-brand-600 dark:text-brand-400">
+                    <i class="fas fa-spinner fa-spin mr-1"></i> Memuat
+                </span>
+            </div>
+
+            <div class="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 text-emerald-700 dark:text-emerald-300"><span class="h-2 w-2 rounded-full bg-emerald-500"></span>Tersedia</span>
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 text-amber-700 dark:text-amber-300"><span class="h-2 w-2 rounded-full bg-amber-500"></span>Pengajuan bersaing (SAW)</span>
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-rose-50 dark:bg-rose-950/40 px-2.5 py-1 text-rose-700 dark:text-rose-300"><span class="h-2 w-2 rounded-full bg-rose-500"></span>Sudah terkonfirmasi</span>
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-slate-600 dark:text-slate-300"><span class="h-2 w-2 rounded-full bg-slate-400"></span>Tidak memenuhi</span>
+            </div>
+
+            <div data-availability-list class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2"></div>
+        </div>
     </section>
 
     <section class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/40 p-4 sm:p-5">
@@ -224,6 +251,6 @@ $bookingFormEndTime = substr((string)$bookingFormValues['end_time'], 0, 5);
 
     <div class="p-3.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60 text-sky-900 dark:text-sky-300 text-xs flex items-start gap-2.5">
         <i class="fas fa-info-circle text-sky-600 dark:text-sky-400 text-sm mt-0.5 shrink-0"></i>
-        <p class="leading-relaxed"><strong>Informasi:</strong> Jika jadwal beririsan dengan agenda lain, booking tetap diterima sebagai <em>Pending</em> untuk dianalisis Administrator menggunakan metode SAW.</p>
+        <p class="leading-relaxed"><strong>Informasi:</strong> Jadwal yang sudah terkonfirmasi tidak dapat dipilih. Pengajuan yang hanya beririsan dengan pengajuan <em>Pending</em> tetap dapat dikirim dan akan dianalisis Administrator menggunakan metode SAW.</p>
     </div>
 </div>

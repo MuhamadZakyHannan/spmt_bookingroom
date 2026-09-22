@@ -5,6 +5,7 @@ MeetSpace adalah aplikasi pemesanan ruang rapat berbasis PHP dan MySQL untuk pen
 ## Fitur utama
 
 - Pemesanan ruang dan kalender jadwal.
+- Pemeriksa ketersediaan ruangan secara langsung berdasarkan tanggal, waktu, dan jumlah peserta.
 - Approval booking oleh administrator.
 - Analisis prioritas ketika jadwal bentrok menggunakan metode SAW.
 - Status rapat pada monitor dihitung otomatis berdasarkan waktu jadwal.
@@ -80,12 +81,17 @@ Gunakan password yang panjang dan mengandung kombinasi huruf besar, huruf kecil,
 ### Memesan ruangan
 
 1. Masuk ke menu **Pesan Ruangan**.
-2. Pilih ruangan, tanggal, waktu, jenis kegiatan, jumlah peserta, dan isi agenda.
-3. Kirim pengajuan.
-4. Booking dari user berstatus `pending` sampai disetujui admin. Booking yang dibuat admin dan tidak bentrok langsung terkonfirmasi.
-5. Pantau status melalui **Booking Saya** atau **Kalender Jadwal**.
+2. Tentukan tanggal, waktu, dan jumlah peserta. Panel **Ketersediaan Ruangan** akan diperbarui otomatis.
+3. Pilih kartu ruangan berdasarkan status berikut:
+   - **Hijau — Tersedia:** tidak ada jadwal yang beririsan;
+   - **Kuning — Pengajuan bersaing:** ada pengajuan pending, tetapi ruangan tetap dapat dipilih dan prioritas akan dianalisis dengan SAW;
+   - **Merah — Sudah terkonfirmasi:** ada booking confirmed dan ruangan tidak dapat dipilih;
+   - **Abu-abu — Tidak memenuhi:** ruangan sedang dirawat atau kapasitasnya tidak cukup.
+4. Isi jenis kegiatan dan agenda, lalu kirim pengajuan.
+5. Booking dari user berstatus `pending` sampai disetujui admin. Booking yang dibuat admin dan tidak bentrok langsung terkonfirmasi.
+6. Pantau status melalui **Booking Saya** atau **Kalender Jadwal**.
 
-Jika jadwal bertabrakan, pengajuan tetap dicatat sebagai pending agar administrator dapat menentukan prioritas.
+SAW tetap digunakan khusus untuk membandingkan beberapa pengajuan `pending` yang menginginkan ruangan dan waktu beririsan. Jadwal yang sudah `confirmed` diblokir sejak form dan diperiksa ulang oleh server saat penyimpanan.
 
 ### Menggunakan kalender
 
@@ -183,6 +189,7 @@ Pastikan MySQL aktif dan database uji dapat diakses, lalu jalankan:
 ```powershell
 php tests/run_schedule_status_tests.php
 php tests/run_admin_dashboard_tests.php
+php tests/run_room_availability_tests.php
 ```
 
 Pengujian membuat data sementara dan membersihkannya kembali setelah selesai.

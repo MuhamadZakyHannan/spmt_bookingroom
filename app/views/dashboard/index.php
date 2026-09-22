@@ -298,13 +298,13 @@
                 <div id="modalBookingErrorMessage" class="flex-1 leading-relaxed"></div>
             </div>
 
-            <form id="bookingModalForm" method="POST" action="booking.php" onsubmit="handleBookingSubmit(event)" class="space-y-6" data-booking-form>
+            <form id="bookingModalForm" method="POST" action="booking.php" onsubmit="handleBookingSubmit(event)" class="space-y-6" data-booking-form data-availability-url="api/room_availability.php">
                 <?php echo csrf_field(); ?>
                 <input type="hidden" name="is_ajax" value="1">
 
                 <?php
                 $bookingFormPrefix = 'modalBooking';
-                $bookingFormRooms = !empty($active_rooms) ? $active_rooms : (!empty($rooms) ? $rooms : []);
+                $bookingFormRooms = $booking_rooms ?? [];
                 $bookingFormSelectedRoomId = 0;
                 $bookingFormValues = [
                     'user_name' => $_SESSION['user_name'] ?? '',

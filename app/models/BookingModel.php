@@ -28,23 +28,123 @@ class BookingModel {
 
     public function checkConflict($roomId, $date, $startTime, $endTime, $excludeId = 0) {
         if (!$this->db) return false;
-        $stmt = $this->db->prepare("SELECT id, title, start_time, end_time, status FROM bookings 
+        $stmt = $this->db->prepare("SELECT id, title, start_time, end_time, status FROM bookings
                                     WHERE room_id = ? 
                                     AND date = ? 
                                     AND status IN ('confirmed', 'pending')
                                     AND id != ?
-                                    AND (
-                                        (start_time < ? AND end_time > ?) OR
-                                        (start_time < ? AND end_time > ?) OR
-                                        (start_time >= ? AND end_time <= ?)
-                                    )");
-        $stmt->execute([$roomId, $date, $excludeId, $endTime, $startTime, $endTime, $startTime, $startTime, $endTime]);
+                                    AND start_time < ?
+                                    AND end_time > ?
+                                    ORDER BY CASE WHEN status = 'confirmed' THEN 0 ELSE 1 END, start_time ASC
+                                    LIMIT 1");
+        $stmt->execute([$roomId, $date, $excludeId, $endTime, $startTime]);
         return $stmt->fetch();
+    }
+
+    /**
+     * Menyimpan booking dengan kebijakan jadwal yang dijalankan dalam satu transaksi.
+     * Lock pada baris ruangan membuat pemeriksaan bentrok dan insert konsisten ketika
+     * dua permintaan untuk ruangan yang sama masuk hampir bersamaan.
+     */
+    public function createWithSchedulePolicy(array $data, bool $isAdmin): array {
+        if (!$this->db) {
+            return ['success' => false, 'reason' => 'database_unavailable'];
+        }
+
+        try {
+            $this->db->beginTransaction();
+
+            $roomStatement = $this->db->prepare(
+                'SELECT id, name, capacity, status FROM rooms WHERE id = ? FOR UPDATE'
+            );
+            $roomStatement->execute([(int) $data['room_id']]);
+            $room = $roomStatement->fetch(PDO::FETCH_ASSOC);
+
+            if (!$room) {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'room_not_found'];
+            }
+
+            if (($room['status'] ?? 'available') === 'maintenance') {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'maintenance', 'room' => $room];
+            }
+
+            if ((int) $data['attendees_count'] > (int) $room['capacity']) {
+                $this->db->rollBack();
+                return ['success' => false, 'reason' => 'insufficient_capacity', 'room' => $room];
+            }
+
+            $conflictStatement = $this->db->prepare(
+                "SELECT id, status, start_time, end_time
+                 FROM bookings
+                 WHERE room_id = ?
+                   AND date = ?
+                   AND status IN ('confirmed', 'pending')
+                   AND start_time < ?
+                   AND end_time > ?
+                 ORDER BY CASE WHEN status = 'confirmed' THEN 0 ELSE 1 END, start_time ASC
+                 FOR UPDATE"
+            );
+            $conflictStatement->execute([
+                (int) $data['room_id'],
+                $data['date'],
+                $data['end_time'],
+                $data['start_time'],
+            ]);
+            $conflicts = $conflictStatement->fetchAll(PDO::FETCH_ASSOC);
+
+            $confirmedConflict = null;
+            $hasPendingConflict = false;
+            foreach ($conflicts as $conflict) {
+                if ($conflict['status'] === 'confirmed') {
+                    $confirmedConflict = $conflict;
+                    break;
+                }
+                if ($conflict['status'] === 'pending') {
+                    $hasPendingConflict = true;
+                }
+            }
+
+            if ($confirmedConflict) {
+                $this->db->rollBack();
+                return [
+                    'success' => false,
+                    'reason' => 'confirmed_conflict',
+                    'conflict' => $confirmedConflict,
+                    'room' => $room,
+                ];
+            }
+
+            $data['status'] = $hasPendingConflict ? 'pending' : ($isAdmin ? 'confirmed' : 'pending');
+            if (!$this->insertBooking($data)) {
+                throw new RuntimeException('Gagal menyimpan booking.');
+            }
+
+            $this->db->commit();
+
+            return [
+                'success' => true,
+                'status' => $data['status'],
+                'pending_conflict' => $hasPendingConflict,
+                'booking_id' => $this->lastInsertId,
+            ];
+        } catch (Throwable $exception) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log('Booking transaction error: ' . $exception->getMessage());
+            return ['success' => false, 'reason' => 'database_error'];
+        }
     }
 
     public function create($data) {
         if (!$this->db) return false;
-        
+
+        return $this->insertBooking($data);
+    }
+
+    private function insertBooking(array $data): bool {
         $activity_type = $data['activity_type'] ?? 'internal_divisi';
 
         try {
@@ -68,7 +168,11 @@ class BookingModel {
                 $this->lastInsertId = (int)$this->db->lastInsertId();
             }
             return $success;
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
+            // Kompatibilitas untuk instalasi lama yang belum memiliki kolom activity_type.
+            if ($e->getCode() !== '42S22' && (int)($e->errorInfo[1] ?? 0) !== 1054) {
+                throw $e;
+            }
             // Fallback jika database belum ada kolom activity_type
             $stmt = $this->db->prepare("INSERT INTO bookings (user_id, room_id, title, date, start_time, end_time, purpose, attendees_count, status, user_name, user_dept) 
                                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
