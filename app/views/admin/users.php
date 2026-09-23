@@ -8,6 +8,12 @@
         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Kelola hak akses pengguna aplikasi (Role: Administrator atau User).</p>
     </div>
     <div class="flex items-center gap-2">
+        <?php if (is_admin()): ?>
+        <button type="button" id="btnOpenAddUserModal" onclick="openAddUserModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-2 shadow-sm shadow-brand-500/20">
+            <i class="fas fa-user-plus text-xs"></i>
+            <span>Tambah Pengguna</span>
+        </button>
+        <?php endif; ?>
         <span class="text-xs font-semibold px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-600">
             Total: <strong id="userDataCount"><?php echo count($users); ?></strong> Pengguna
         </span>
@@ -93,18 +99,19 @@
                             <?php echo htmlspecialchars($u['username']); ?>
                         </td>
                         <td class="py-3.5 px-4 whitespace-nowrap">
-                            <?php if ($u['role'] === 'super_admin'): ?>
-                                <span class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 border border-violet-200 dark:border-violet-800 uppercase">SUPER ADMIN</span>
-                            <?php elseif (is_super_admin() && (int)$u['id'] !== (int)$_SESSION['user_id']): ?>
+                            <?php if (is_admin() && (int)$u['id'] !== (int)$_SESSION['user_id']): ?>
                                 <form method="POST" action="admin_users.php" class="inline-block">
                                     <?php echo csrf_field(); ?>
                                     <input type="hidden" name="action" value="update_role">
                                     <input type="hidden" name="user_id" value="<?php echo $u['id']; ?>">
-                                    <select name="role" onchange="this.form.submit()" class="px-2.5 py-1 text-[10px] font-bold rounded-lg border cursor-pointer focus:outline-none transition shadow-sm <?php echo $u['role'] === 'admin' ? 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800' : 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600'; ?>">
+                                    <select name="role" onchange="this.form.submit()" class="px-2.5 py-1 text-[10px] font-bold rounded-lg border cursor-pointer focus:outline-none transition shadow-sm <?php echo $u['role'] === 'super_admin' ? 'bg-violet-100 text-violet-900 border-violet-300 dark:bg-violet-950/80 dark:text-violet-300 dark:border-violet-800' : ($u['role'] === 'admin' ? 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800' : 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600'); ?>">
                                         <option value="user" <?php echo $u['role'] === 'user' ? 'selected' : ''; ?>>USER</option>
                                         <option value="admin" <?php echo $u['role'] === 'admin' ? 'selected' : ''; ?>>ADMIN</option>
+                                        <option value="super_admin" <?php echo $u['role'] === 'super_admin' ? 'selected' : ''; ?>>SUPER ADMIN</option>
                                     </select>
                                 </form>
+                            <?php elseif ($u['role'] === 'super_admin'): ?>
+                                <span class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 border border-violet-200 dark:border-violet-800 uppercase">SUPER ADMIN</span>
                             <?php elseif ($u['role'] === 'admin'): ?>
                                 <span class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 uppercase">ADMIN</span>
                             <?php else: ?>
@@ -115,12 +122,17 @@
                             <?php echo format_date($u['created_at']); ?>
                         </td>
                         <td class="py-3.5 px-4 text-right whitespace-nowrap">
-                            <?php if (is_super_admin()): ?>
+                            <?php 
+                            $isSelf = ((int)$u['id'] === (int)$_SESSION['user_id']);
+                            $canManage = is_admin();
+                            $canDelete = is_admin() && !$isSelf;
+                            ?>
+                            <?php if ($canManage): ?>
                                 <button type="button" onclick="openEditUserModal(<?php echo (int)$u['id']; ?>)" class="p-1.5 px-2 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40 rounded-lg transition" title="Edit Akun">
                                     <i class="fas fa-pen-to-square"></i>
                                 </button>
                             <?php endif; ?>
-                            <?php if (is_super_admin() && (int)$u['id'] !== (int)$_SESSION['user_id'] && $u['role'] !== 'super_admin'): ?>
+                            <?php if ($canDelete): ?>
                                 <form method="POST" action="admin_users.php" class="inline-block" onsubmit="return confirm('Hapus pengguna ini beserta data terkait?')">
                                     <?php echo csrf_field(); ?>
                                     <input type="hidden" name="action" value="delete">
@@ -129,7 +141,7 @@
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </form>
-                            <?php elseif (!is_super_admin()): ?>
+                            <?php elseif (!$canManage): ?>
                                 <span class="text-slate-400 text-[11px] italic">-</span>
                             <?php endif; ?>
                         </td>
@@ -140,7 +152,79 @@
     </div>
 </div>
 
-<?php if (is_super_admin()): ?>
+<?php if (is_admin()): ?>
+<!-- Modal Tambah Pengguna Baru -->
+<div id="addUserModal" class="responsive-modal fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="addUserModalTitle">
+    <div class="responsive-modal-panel relative w-full max-w-xl rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800">
+        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+            <div class="flex items-center gap-3">
+                <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"><i class="fas fa-user-plus"></i></span>
+                <div>
+                    <h2 id="addUserModalTitle" class="text-lg font-bold text-slate-900 dark:text-white">Tambah Pengguna Baru</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Buat akun baru untuk staf atau administrator sistem.</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeAddUserModal()" class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-white" aria-label="Tutup modal"><i class="fas fa-times"></i></button>
+        </div>
+
+        <form method="POST" action="admin_users.php" class="space-y-4 p-4 sm:p-5" id="addUserForm">
+            <?php echo csrf_field(); ?>
+            <input type="hidden" name="action" value="add">
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                    <label for="addUserUsername" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">
+                        Username * <span class="font-normal text-slate-400">(tanpa spasi/titik)</span>
+                    </label>
+                    <input type="text" name="username" id="addUserUsername" minlength="3" maxlength="100" pattern="[A-Za-z0-9_]+" autocomplete="username" required placeholder="Contoh: fikus atau spmtoperasional" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                    <p class="mt-1 text-[10px] text-slate-400 dark:text-slate-500">Gunakan huruf kecil atau angka (contoh: <code>fikus</code>, <code>spmtoperasional</code>).</p>
+                </div>
+                <div>
+                    <label for="addUserDepartment" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">
+                        Divisi *
+                    </label>
+                    <input type="text" name="department" id="addUserDepartment" required maxlength="100" placeholder="Contoh: SPMT - Kreatif" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                    <p class="mt-1 text-[10px] text-slate-400 dark:text-slate-500">Format standar: <code>SPMT - Nama Divisi</code> atau <code>Subreg - Nama Divisi</code> (contoh: <code>SPMT - Kreatif</code>).</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                    <label for="addUserRole" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">Role Hak Akses *</label>
+                    <select name="role" id="addUserRole" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                        <option value="user">USER (Pemesanan Ruang)</option>
+                        <option value="admin">ADMIN (Kelola Ruang & Jadwal)</option>
+                        <option value="super_admin">SUPER ADMIN (Akses Penuh Sistem)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="addUserPassword" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">Password *</label>
+                    <div class="relative">
+                        <input type="password" name="password" id="addUserPassword" minlength="8" required autocomplete="new-password" aria-describedby="addPasswordRequirements" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white" placeholder="Minimal 8 karakter">
+                        <div id="addPasswordPopover" class="pointer-events-none absolute left-0 right-0 top-full z-30 mt-2 hidden rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-600 dark:bg-slate-900" role="status" aria-live="polite">
+                            <div class="absolute -top-1.5 left-5 h-3 w-3 rotate-45 border-l border-t border-slate-200 bg-white dark:border-slate-600 dark:bg-slate-900"></div>
+                            <p id="addPasswordRequirementSummary" class="relative mb-2 text-[11px] font-bold text-rose-600 dark:text-rose-400">Password belum memenuhi kriteria:</p>
+                            <ul id="addPasswordRequirements" class="relative grid grid-cols-1 gap-1 text-[10px] sm:grid-cols-2">
+                                <li data-add-password-rule="length" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Minimal 8 karakter</li>
+                                <li data-add-password-rule="uppercase" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Huruf besar</li>
+                                <li data-add-password-rule="lowercase" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Huruf kecil</li>
+                                <li data-add-password-rule="number" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Angka</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <p class="mt-1.5 text-[10px] text-slate-500 dark:text-slate-400">Minimal 8 karakter: huruf besar, kecil, dan angka.</p>
+                </div>
+            </div>
+
+            <div class="flex flex-col-reverse gap-2 border-t border-slate-200 pt-4 dark:border-slate-700 sm:flex-row sm:justify-end">
+                <button type="button" onclick="closeAddUserModal()" class="w-full rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 sm:w-auto">Batal</button>
+                <button type="submit" class="w-full rounded-xl bg-brand-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-brand-500/20 hover:bg-brand-700 sm:w-auto"><i class="fas fa-plus-circle mr-1.5"></i>Tambah Pengguna</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Edit Akun -->
 <div id="editUserModal" class="responsive-modal fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="editUserModalTitle">
     <div class="responsive-modal-panel relative w-full max-w-xl rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800">
         <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
@@ -172,21 +256,17 @@
 
             <div>
                 <label for="editUserDepartment" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">Divisi</label>
-                <select name="department" id="editUserDepartment" required class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
-                    <option value="">Pilih divisi</option>
-                    <?php foreach ($departments as $department): ?>
-                        <option value="<?php echo htmlspecialchars($department, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($department); ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <input type="text" name="department" id="editUserDepartment" required maxlength="100" placeholder="Contoh: SPMT - Kreatif" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                <p class="mt-1 text-[10px] text-slate-400 dark:text-slate-500">Format standar: <code>SPMT - Nama Divisi</code> atau <code>Subreg - Nama Divisi</code> (contoh: <code>SPMT - Kreatif</code>).</p>
             </div>
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                     <label for="editUserRole" class="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-200">Role</label>
-                    <select name="role" id="editUserRole" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
+                    <select name="role" id="editUserRole" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white">
                         <option value="user">USER</option>
                         <option value="admin">ADMIN</option>
-                        <option value="super_admin" disabled>SUPER ADMIN</option>
+                        <option value="super_admin">SUPER ADMIN</option>
                     </select>
                     <p id="editUserRoleHint" class="mt-1.5 text-[10px] text-slate-500 dark:text-slate-400"></p>
                 </div>
@@ -202,11 +282,10 @@
                                 <li data-password-rule="uppercase" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Huruf besar</li>
                                 <li data-password-rule="lowercase" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Huruf kecil</li>
                                 <li data-password-rule="number" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Angka</li>
-                                <li data-password-rule="symbol" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400"><i class="fas fa-circle text-[7px]"></i>Simbol unik</li>
                             </ul>
                         </div>
                     </div>
-                    <p class="mt-1.5 text-[10px] text-slate-500 dark:text-slate-400">Minimal 8 karakter: huruf besar, kecil, angka, dan simbol.</p>
+                    <p class="mt-1.5 text-[10px] text-slate-500 dark:text-slate-400">Minimal 8 karakter: huruf besar, kecil, dan angka.</p>
                 </div>
             </div>
 
@@ -222,6 +301,7 @@
 <script>
     const currentSessionUserId = <?php echo (int)$_SESSION['user_id']; ?>;
     const currentSessionIsSuperAdmin = <?php echo is_super_admin() ? 'true' : 'false'; ?>;
+    const currentSessionIsAdmin = <?php echo is_admin() ? 'true' : 'false'; ?>;
     const csrfHiddenField = '<?php echo addslashes(csrf_field()); ?>';
     const rawUsersList = <?php echo json_encode(array_map(function($u) {
         return [
@@ -253,6 +333,15 @@
     const editPasswordPopover = document.getElementById('editPasswordPopover');
     const editPasswordRequirementSummary = document.getElementById('editPasswordRequirementSummary');
 
+    const addUserModal = document.getElementById('addUserModal');
+    const addUserUsername = document.getElementById('addUserUsername');
+    const addUserDepartment = document.getElementById('addUserDepartment');
+    const addUserRole = document.getElementById('addUserRole');
+    const addUserPassword = document.getElementById('addUserPassword');
+    const addUserForm = document.getElementById('addUserForm');
+    const addPasswordPopover = document.getElementById('addPasswordPopover');
+    const addPasswordRequirementSummary = document.getElementById('addPasswordRequirementSummary');
+
     const escapeHtml = window.MeetSpaceUI.escapeHtml;
 
     /** Memvalidasi edit password. */
@@ -263,8 +352,7 @@
             length: value.length >= 8,
             uppercase: /[A-Z]/.test(value),
             lowercase: /[a-z]/.test(value),
-            number: /\d/.test(value),
-            symbol: /[^A-Za-z0-9]/.test(value)
+            number: /\d/.test(value)
         };
         const isEmpty = value.length === 0;
         const isValid = isEmpty || Object.values(checks).every(Boolean);
@@ -299,9 +387,71 @@
         return isValid;
     }
 
+    /** Memvalidasi password tambah user baru. */
+    function validateAddPassword(showPopover = false) {
+        if (!addUserPassword) return true;
+        const value = addUserPassword.value;
+        const checks = {
+            length: value.length >= 8,
+            uppercase: /[A-Z]/.test(value),
+            lowercase: /[a-z]/.test(value),
+            number: /\d/.test(value)
+        };
+        const isEmpty = value.length === 0;
+        const isValid = !isEmpty && Object.values(checks).every(Boolean);
+
+        Object.entries(checks).forEach(([rule, passed]) => {
+            const item = document.querySelector(`[data-add-password-rule="${rule}"]`);
+            if (!item) return;
+            const icon = item.querySelector('i');
+            item.classList.toggle('text-emerald-600', passed);
+            item.classList.toggle('dark:text-emerald-400', passed);
+            item.classList.toggle('text-rose-600', !isEmpty && !passed);
+            item.classList.toggle('dark:text-rose-400', !isEmpty && !passed);
+            item.classList.toggle('text-slate-500', isEmpty);
+            item.classList.toggle('dark:text-slate-400', isEmpty);
+            if (icon) icon.className = `fas ${passed ? 'fa-circle-check' : (!isEmpty ? 'fa-circle-xmark' : 'fa-circle')} text-[10px]`;
+        });
+
+        addUserPassword.setCustomValidity(isValid ? '' : 'Password minimal 8 karakter (huruf besar, kecil, angka).');
+        addUserPassword.setAttribute('aria-invalid', isValid ? 'false' : 'true');
+        if (addPasswordRequirementSummary) {
+            addPasswordRequirementSummary.textContent = isValid
+                ? 'Password sudah memenuhi seluruh kriteria.'
+                : 'Password belum memenuhi kriteria:';
+            addPasswordRequirementSummary.classList.toggle('text-emerald-600', isValid);
+            addPasswordRequirementSummary.classList.toggle('dark:text-emerald-400', isValid);
+            addPasswordRequirementSummary.classList.toggle('text-rose-600', !isValid);
+            addPasswordRequirementSummary.classList.toggle('dark:text-rose-400', !isValid);
+        }
+        if (addPasswordPopover && showPopover) addPasswordPopover.classList.remove('hidden');
+        return isValid;
+    }
+
+    /** Menampilkan modal tambah user baru. */
+    function openAddUserModal() {
+        if (!currentSessionIsAdmin || !addUserModal) return;
+        if (addUserForm) addUserForm.reset();
+        validateAddPassword(false);
+        if (addPasswordPopover) addPasswordPopover.classList.add('hidden');
+        addUserModal.classList.remove('hidden');
+        addUserModal.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+        window.setTimeout(() => addUserUsername && addUserUsername.focus(), 0);
+    }
+
+    /** Menutup modal tambah user baru. */
+    function closeAddUserModal() {
+        if (!addUserModal) return;
+        addUserModal.classList.add('hidden');
+        addUserModal.classList.remove('flex');
+        if (addPasswordPopover) addPasswordPopover.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
     /** Menampilkan atau menutup edit user modal. */
     function openEditUserModal(userId) {
-        if (!currentSessionIsSuperAdmin || !editUserModal) return;
+        if (!currentSessionIsAdmin || !editUserModal) return;
         const user = rawUsersList.find(item => item.id === Number(userId));
         if (!user) return;
 
@@ -310,10 +460,8 @@
         editUserEmail.value = user.username || '';
         editUserDepartment.value = user.department || '';
         editUserRole.value = user.role;
-        editUserRole.disabled = user.role === 'super_admin';
-        editUserRoleHint.textContent = user.role === 'super_admin'
-            ? 'Role Super Admin dilindungi dan tidak dapat diturunkan.'
-            : 'Perubahan role berlaku pada request berikutnya.';
+        editUserRole.disabled = false;
+        editUserRoleHint.textContent = '';
         editUserPassword.value = '';
         validateEditPassword(false);
         if (editPasswordPopover) editPasswordPopover.classList.add('hidden');
@@ -495,24 +643,21 @@
             const isSelf = (u.id === currentSessionUserId);
 
             let roleHtml = '';
-            if (u.role === 'super_admin') {
-                roleHtml = `
-                    <span class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 border border-violet-200 dark:border-violet-800 uppercase">
-                        SUPER ADMIN
-                    </span>
-                `;
-            } else if (currentSessionIsSuperAdmin && !isSelf) {
+            if (currentSessionIsAdmin && !isSelf) {
                 roleHtml = `
                     <form method="POST" action="admin_users.php" class="inline-block">
                         ${csrfHiddenField}
                         <input type="hidden" name="action" value="update_role">
                         <input type="hidden" name="user_id" value="${u.id}">
-                        <select name="role" onchange="this.form.submit()" class="px-2.5 py-1 text-[10px] font-bold rounded-lg border cursor-pointer focus:outline-none transition shadow-sm ${u.role === 'admin' ? 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800' : 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600'}">
+                        <select name="role" onchange="this.form.submit()" class="px-2.5 py-1 text-[10px] font-bold rounded-lg border cursor-pointer focus:outline-none transition shadow-sm ${u.role === 'super_admin' ? 'bg-violet-100 text-violet-900 border-violet-300 dark:bg-violet-950/80 dark:text-violet-300 dark:border-violet-800' : (u.role === 'admin' ? 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800' : 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600')}">
                             <option value="user" ${u.role === 'user' ? 'selected' : ''}>USER</option>
                             <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>ADMIN</option>
+                            <option value="super_admin" ${u.role === 'super_admin' ? 'selected' : ''}>SUPER ADMIN</option>
                         </select>
                     </form>
                 `;
+            } else if (u.role === 'super_admin') {
+                roleHtml = `<span class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-violet-100 dark:bg-violet-950/60 text-violet-800 dark:text-violet-300 border border-violet-200 dark:border-violet-800 uppercase">SUPER ADMIN</span>`;
             } else if (u.role === 'admin') {
                 roleHtml = `<span class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 uppercase">ADMIN</span>`;
             } else {
@@ -520,14 +665,14 @@
             }
 
             let actionHtml = '<span class="text-slate-400 text-[11px] italic">-</span>';
-            if (currentSessionIsSuperAdmin) {
+            if (currentSessionIsAdmin) {
                 actionHtml = `
                     <button type="button" onclick="openEditUserModal(${u.id})" class="p-1.5 px-2 text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40 rounded-lg transition" title="Edit Akun">
                         <i class="fas fa-pen-to-square"></i>
                     </button>
                 `;
             }
-            if (currentSessionIsSuperAdmin && !isSelf && u.role !== 'super_admin') {
+            if (currentSessionIsAdmin && !isSelf) {
                 actionHtml += `
                     <form method="POST" action="admin_users.php" class="inline-block" onsubmit="return confirm('Hapus pengguna ini beserta data terkait?')">
                         ${csrfHiddenField}
@@ -592,11 +737,72 @@
                 }
             });
         }
+        /** Menormalkan format input divisi menjadi SPMT - Nama Divisi. */
+        function normalizeDepartmentInput(val) {
+            val = (val || '').trim();
+            if (!val) return '';
+            let prefix = 'SPMT';
+            let name = val;
+            const dashMatch = val.match(/^([A-Za-z0-9]+)\s*-\s*(.+)$/);
+            const spaceMatch = val.match(/^(spmt|subreg)\s+(.+)$/i);
+            if (dashMatch) {
+                prefix = dashMatch[1].toUpperCase() === 'SUBREG' ? 'Subreg' : dashMatch[1].toUpperCase();
+                name = dashMatch[2].trim();
+            } else if (spaceMatch) {
+                prefix = spaceMatch[1].toLowerCase() === 'subreg' ? 'Subreg' : 'SPMT';
+                name = spaceMatch[2].trim();
+            }
+            const words = name.split(/\s+/).map(w => {
+                if (w === '&' || w.toLowerCase() === 'dan' || /^[A-Z0-9&]+$/.test(w)) return w;
+                return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+            });
+            return `${prefix} - ${words.join(' ')}`;
+        }
+
+        if (addUserDepartment) {
+            addUserDepartment.addEventListener('blur', () => {
+                if (addUserDepartment.value.trim()) {
+                    addUserDepartment.value = normalizeDepartmentInput(addUserDepartment.value);
+                }
+            });
+        }
+        if (editUserDepartment) {
+            editUserDepartment.addEventListener('blur', () => {
+                if (editUserDepartment.value.trim()) {
+                    editUserDepartment.value = normalizeDepartmentInput(editUserDepartment.value);
+                }
+            });
+        }
+
         if (editUserForm) {
             editUserForm.addEventListener('submit', event => {
+                if (editUserDepartment && editUserDepartment.value.trim()) {
+                    editUserDepartment.value = normalizeDepartmentInput(editUserDepartment.value);
+                }
                 if (!validateEditPassword(true)) {
                     event.preventDefault();
                     editUserPassword.focus();
+                }
+            });
+        }
+
+        if (addUserPassword) {
+            addUserPassword.addEventListener('focus', () => validateAddPassword(true));
+            addUserPassword.addEventListener('input', () => validateAddPassword(true));
+            addUserPassword.addEventListener('blur', () => {
+                if (validateAddPassword(false) && addPasswordPopover) {
+                    window.setTimeout(() => addPasswordPopover.classList.add('hidden'), 120);
+                }
+            });
+        }
+        if (addUserForm) {
+            addUserForm.addEventListener('submit', event => {
+                if (addUserDepartment && addUserDepartment.value.trim()) {
+                    addUserDepartment.value = normalizeDepartmentInput(addUserDepartment.value);
+                }
+                if (!validateAddPassword(true)) {
+                    event.preventDefault();
+                    addUserPassword.focus();
                 }
             });
         }
@@ -608,11 +814,19 @@
             if (editUserModal && e.target === editUserModal) {
                 closeEditUserModal();
             }
+            if (addUserModal && e.target === addUserModal) {
+                closeAddUserModal();
+            }
         });
 
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && editUserModal && !editUserModal.classList.contains('hidden')) {
-                closeEditUserModal();
+            if (e.key === 'Escape') {
+                if (editUserModal && !editUserModal.classList.contains('hidden')) {
+                    closeEditUserModal();
+                }
+                if (addUserModal && !addUserModal.classList.contains('hidden')) {
+                    closeAddUserModal();
+                }
             }
         });
     });

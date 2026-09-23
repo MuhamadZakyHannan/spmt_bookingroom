@@ -443,6 +443,7 @@ html, body {
         margin: 0 !important;
         padding: 0 !important;
     }
+    /* Printable booking report */
     .booking-report-page,
     .booking-report-page * {
         overflow: visible !important;

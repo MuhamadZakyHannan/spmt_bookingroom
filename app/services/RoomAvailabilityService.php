@@ -33,7 +33,9 @@ class RoomAvailabilityService
             throw new RuntimeException('Koneksi database tidak tersedia.');
         }
 
-        (new BookingLifecycleService($this->db))->expirePendingBookings();
+        $lifecycle = new BookingLifecycleService($this->db);
+        $lifecycle->expirePendingBookings();
+        $lifecycle->completeFinishedBookings();
 
         $rooms = $this->db->query(
             'SELECT id, code, name, capacity, location, facilities, status

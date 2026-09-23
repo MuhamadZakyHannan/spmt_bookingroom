@@ -24,9 +24,11 @@ final class AdminBookingController extends Controller
         $search = trim((string) ($_GET['search'] ?? ''));
         $status = trim((string) ($_GET['status'] ?? ''));
         [$analyses, $bookingIds] = $this->analyzeConflicts();
+        $roomModel = $this->model('RoomModel');
 
         $this->view('admin/bookings', [
             'bookings' => $this->bookings->getAllBookings($search, $status),
+            'rooms' => $roomModel ? $roomModel->getActiveRooms() : [],
             'search' => $search,
             'status_filter' => $status,
             'conflict_analyses' => $analyses,
@@ -58,7 +60,35 @@ final class AdminBookingController extends Controller
         }
 
         $bookingId = (int) ($_POST['booking_id'] ?? 0);
-        if ($bookingId > 0 && $action === 'update_status') {
+        if ($bookingId > 0 && $action === 'cancel_by_admin') {
+            $reason = trim((string) ($_POST['cancel_reason'] ?? ''));
+            $success = $this->bookings->cancelByAdmin($bookingId, $reason);
+            if ($success) {
+                $notifModel = $this->model('NotificationModel');
+                if ($notifModel) $notifModel->createForCancelledBooking($bookingId, $reason);
+                set_flash('success', 'Pemesanan berhasil dibatalkan dan catatan alasan telah disampaikan ke pemohon.');
+            } else {
+                set_flash('danger', 'Gagal membatalkan pemesanan.');
+            }
+        } elseif ($bookingId > 0 && $action === 'relocate_room') {
+            $newRoomId = (int) ($_POST['new_room_id'] ?? 0);
+            $reason = trim((string) ($_POST['relocate_reason'] ?? ''));
+            $result = $this->bookings->relocateRoom($bookingId, $newRoomId, $reason);
+            if (!empty($result['success'])) {
+                $notifModel = $this->model('NotificationModel');
+                if ($notifModel) {
+                    $notifModel->createForRelocatedBooking(
+                        $bookingId,
+                        (string) ($result['old_room_name'] ?? 'Ruangan Asal'),
+                        (string) ($result['new_room_name'] ?? 'Ruangan Baru'),
+                        $reason
+                    );
+                }
+                set_flash('success', $result['message'] . ' Catatan pengalihan telah dikirim ke pemohon.');
+            } else {
+                set_flash('danger', $result['message'] ?? 'Gagal mengalihkan ruangan.');
+            }
+        } elseif ($bookingId > 0 && $action === 'update_status') {
             $this->bookings->updateStatus($bookingId, trim((string) ($_POST['status'] ?? 'confirmed')));
             set_flash('success', 'Status pemesanan berhasil diperbarui.');
         } elseif ($bookingId > 0 && $action === 'delete') {

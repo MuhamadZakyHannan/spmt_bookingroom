@@ -59,8 +59,12 @@ $sharedUtilityViews = [
 ];
 $allUseSharedUtilities = true;
 foreach ($sharedUtilityViews as $view) {
+    $content = (string) file_get_contents($root . '/' . $view);
+    if ($view === 'app/views/admin/bookings.php' && file_exists($root . '/public/js/admin-bookings.js')) {
+        $content .= (string) file_get_contents($root . '/public/js/admin-bookings.js');
+    }
     $allUseSharedUtilities = $allUseSharedUtilities
-        && str_contains((string) file_get_contents($root . '/' . $view), 'MeetSpaceUI');
+        && str_contains($content, 'MeetSpaceUI');
 }
 expectPresentation($allUseSharedUtilities, 'View interaktif menggunakan utility presentasi bersama.');
 

@@ -64,6 +64,72 @@ class NotificationModel extends BaseModel {
         }
     }
 
+    /**
+     * Membuat notifikasi untuk pemilik booking saat dibatalkan oleh admin beserta alasannya.
+     */
+    public function createForCancelledBooking(int $bookingId, string $reason): bool {
+        if (!$this->db || $bookingId <= 0) return false;
+
+        try {
+            $stmt = $this->db->prepare(
+                "INSERT INTO notifications
+                    (recipient_user_id, booking_id, type, title, message)
+                 SELECT
+                    b.user_id,
+                    b.id,
+                    'booking_cancelled_by_admin',
+                    'Pemesanan Dibatalkan oleh Admin',
+                    CONCAT('Pemesanan \"', b.title, '\" dibatalkan. Alasan: ', ?)
+                 FROM bookings b
+                 WHERE b.id = ?
+                 ON DUPLICATE KEY UPDATE
+                    title = VALUES(title),
+                    message = VALUES(message),
+                    is_read = 0,
+                    read_at = NULL,
+                    created_at = NOW()"
+            );
+            $cleanReason = mb_substr(trim($reason) !== '' ? trim($reason) : 'Jadwal dibatalkan oleh Administrator.', 0, 180);
+            return $stmt->execute([$cleanReason, $bookingId]);
+        } catch (Throwable $e) {
+            error_log('Gagal membuat notifikasi pembatalan booking: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Membuat notifikasi untuk pemilik booking saat ruangan dialihkan oleh admin beserta alasannya.
+     */
+    public function createForRelocatedBooking(int $bookingId, string $oldRoomName, string $newRoomName, string $reason): bool {
+        if (!$this->db || $bookingId <= 0) return false;
+
+        try {
+            $stmt = $this->db->prepare(
+                "INSERT INTO notifications
+                    (recipient_user_id, booking_id, type, title, message)
+                 SELECT
+                    b.user_id,
+                    b.id,
+                    'booking_relocated_by_admin',
+                    'Ruangan Rapat Dialihkan oleh Admin',
+                    CONCAT('Pemesanan \"', b.title, '\" dialihkan dari ', ?, ' ke ', ?, '. Alasan: ', ?)
+                 FROM bookings b
+                 WHERE b.id = ?
+                 ON DUPLICATE KEY UPDATE
+                    title = VALUES(title),
+                    message = VALUES(message),
+                    is_read = 0,
+                    read_at = NULL,
+                    created_at = NOW()"
+            );
+            $cleanReason = mb_substr(trim($reason) !== '' ? trim($reason) : 'Perubahan operasional ruangan.', 0, 140);
+            return $stmt->execute([$oldRoomName, $newRoomName, $cleanReason, $bookingId]);
+        } catch (Throwable $e) {
+            error_log('Gagal membuat notifikasi pengalihan ruangan: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     /** Mengambil data unread count. */
     public function getUnreadCount($recipientUserId) {
         if (!$this->db || $recipientUserId <= 0) return 0;

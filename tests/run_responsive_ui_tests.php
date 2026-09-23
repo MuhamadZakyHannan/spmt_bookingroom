@@ -54,8 +54,12 @@ $tableViews = [
 ];
 $tablesUseSharedShell = true;
 foreach ($tableViews as $view) {
+    $content = $read($view);
+    if ($view === 'app/views/admin/bookings.php' && file_exists(__DIR__ . '/../app/views/admin/partials/_booking_table.php')) {
+        $content .= $read('app/views/admin/partials/_booking_table.php');
+    }
     $tablesUseSharedShell = $tablesUseSharedShell
-        && str_contains($read($view), 'responsive-table-shell');
+        && str_contains($content, 'responsive-table-shell');
 }
 expectResponsiveUi($tablesUseSharedShell, 'Seluruh tabel admin memakai primitive responsif bersama.');
 

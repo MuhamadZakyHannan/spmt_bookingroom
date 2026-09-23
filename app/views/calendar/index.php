@@ -30,10 +30,22 @@
 
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <div class="relative min-w-0 sm:w-64">
-                    <i class="fas fa-search absolute left-3 top-2.5 text-xs text-slate-400"></i>
-                    <input type="search" id="calendarSearchInput" autocomplete="off" placeholder="Cari agenda atau ruangan" class="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 py-2 pl-9 pr-8 text-xs text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500">
-                    <button type="button" id="calendarSearchClear" class="absolute right-2.5 top-2 hidden text-slate-400 hover:text-slate-700 dark:hover:text-white" aria-label="Hapus pencarian">
-                        <i class="fas fa-times text-xs"></i>
+                    <i class="fas fa-search absolute left-3 top-2.5 text-xs text-slate-400 pointer-events-none"></i>
+                    <input 
+                        type="text" 
+                        id="calendarSearchInput" 
+                        autocomplete="off" 
+                        placeholder="Cari agenda atau ruangan..." 
+                        class="w-full rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 py-2 pl-9 pr-8 text-xs text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    >
+                    <button 
+                        type="button" 
+                        id="calendarSearchClear" 
+                        class="absolute right-3 top-2.5 hidden text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs transition" 
+                        aria-label="Hapus pencarian" 
+                        title="Hapus pencarian"
+                    >
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
                 <div class="inline-flex rounded-lg border border-slate-200 dark:border-slate-600 p-1">
@@ -199,14 +211,20 @@
         const searchInput = document.getElementById('calendarSearchInput');
         const searchClear = document.getElementById('calendarSearchClear');
         let searchQuery = '';
+        let cachedCalendarEvents = null;
+        let searchDebounceTimer = null;
 
         /** Mengubah huruf pertama teks menjadi kapital. */
         const capitalize = value => value.charAt(0).toUpperCase() + value.slice(1);
         /** Memeriksa kecocokan agenda terhadap kata pencarian aktif. */
         const matchesSearch = event => {
             if (!searchQuery) return true;
-            const props = event.extendedProps || {};
-            return [event.title, props.title, props.room, props.user, props.purpose]
+            const props = event.extendedProps || event;
+            const title = event.title || props.title || '';
+            const room = props.room || '';
+            const user = props.user || '';
+            const purpose = props.purpose || '';
+            return [title, room, user, purpose]
                 .some(value => String(value || '').toLowerCase().includes(searchQuery));
         };
 
@@ -240,7 +258,30 @@
             eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
             listDayFormat: { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' },
             listDaySideFormat: false,
-            events: 'api/get_events.php?room_id=<?php echo (int)$room_filter; ?>',
+            events: function(info, successCallback, failureCallback) {
+                if (cachedCalendarEvents !== null) {
+                    const filtered = searchQuery 
+                        ? cachedCalendarEvents.filter(matchesSearch) 
+                        : cachedCalendarEvents;
+                    successCallback(filtered);
+                    return;
+                }
+                fetch('api/get_events.php?room_id=<?php echo (int)$room_filter; ?>')
+                    .then(response => {
+                        if (!response.ok) throw new Error('Gagal memuat agenda');
+                        return response.json();
+                    })
+                    .then(data => {
+                        cachedCalendarEvents = Array.isArray(data) ? data : [];
+                        const filtered = searchQuery 
+                            ? cachedCalendarEvents.filter(matchesSearch) 
+                            : cachedCalendarEvents;
+                        successCallback(filtered);
+                    })
+                    .catch(err => {
+                        failureCallback(err);
+                    });
+            },
             eventSourceFailure: () => {
                 loadingElement.classList.add('hidden');
                 calendarElement.classList.add('opacity-0');
@@ -402,13 +443,23 @@
         searchInput.addEventListener('input', () => {
             searchQuery = searchInput.value.trim().toLowerCase();
             searchClear.classList.toggle('hidden', searchQuery === '');
-            calendarInstance.rerenderEvents();
-            updateVisibleEventCount();
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                if (calendarInstance) {
+                    calendarInstance.refetchEvents();
+                    updateVisibleEventCount();
+                }
+            }, 120);
         });
 
         searchClear.addEventListener('click', () => {
             searchInput.value = '';
-            searchInput.dispatchEvent(new Event('input'));
+            searchQuery = '';
+            searchClear.classList.add('hidden');
+            if (calendarInstance) {
+                calendarInstance.refetchEvents();
+                updateVisibleEventCount();
+            }
             searchInput.focus();
         });
 

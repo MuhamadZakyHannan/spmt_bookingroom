@@ -18,6 +18,7 @@ function expectAccount(bool $condition, string $message): void
 
 expectAccount(PasswordPolicy::validationError('Aa1#abc') !== null, 'Password tujuh karakter ditolak oleh kebijakan keamanan.');
 expectAccount(PasswordPolicy::validationError('Aa1#abcd') === null, 'Password delapan karakter dengan seluruh kriteria diterima.');
+expectAccount(PasswordPolicy::validationError('Password123') === null, 'Password delapan karakter tanpa simbol diterima.');
 expectAccount(UsernamePolicy::normalize('  Fikus.Admin  ') === 'fikus.admin', 'Username dinormalisasi secara konsisten.');
 expectAccount(UsernamePolicy::validationError('fikus.admin') === null, 'Username dengan format yang benar diterima.');
 expectAccount(UsernamePolicy::validationError('nama pengguna') !== null, 'Username yang mengandung spasi ditolak.');

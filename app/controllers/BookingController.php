@@ -24,14 +24,28 @@ class BookingController extends Controller {
         $this->requireAuth();
 
         $selectedRoomId = (int) ($_GET['room_id'] ?? 0);
+        $requestedDate = $this->validRequestedDate((string) ($_GET['date'] ?? ''));
+        $defaultStartTime = '09:00';
+        $defaultEndTime = '10:00';
+        if ($requestedDate === date('Y-m-d')) {
+            $nextHour = (int) date('H') + 1;
+            if ($nextHour >= 22) {
+                $requestedDate = date('Y-m-d', strtotime('+1 day'));
+                $defaultStartTime = '09:00';
+                $defaultEndTime = '10:00';
+            } else {
+                $defaultStartTime = sprintf('%02d:00', max(8, $nextHour));
+                $defaultEndTime = sprintf('%02d:00', max(9, $nextHour + 1));
+            }
+        }
         $values = [
             'room_id' => $selectedRoomId,
             'user_name' => $_SESSION['user_name'] ?? '',
             'user_dept' => $_SESSION['department'] ?? '',
             'title' => '',
-            'date' => $this->validRequestedDate((string) ($_GET['date'] ?? '')),
-            'start_time' => '09:00',
-            'end_time' => '10:00',
+            'date' => $requestedDate,
+            'start_time' => $defaultStartTime,
+            'end_time' => $defaultEndTime,
             'purpose' => '',
             'activity_type' => 'internal_divisi',
             'attendees_count' => 1,
@@ -310,6 +324,10 @@ class BookingController extends Controller {
             return 'Waktu selesai harus lebih lambat dari waktu mulai!';
         }
 
+        if ($input['date'] === date('Y-m-d') && $input['start_time'] <= date('H:i')) {
+            return 'Waktu mulai pemesanan tidak boleh mendahului waktu saat ini (sudah terlewat). Silakan sesuaikan jam pemesanan Anda.';
+        }
+
         if ($input['attendees_count'] < 1 || $input['attendees_count'] > 100) {
             return 'Jumlah peserta harus antara 1 dan 100 orang.';
         }
@@ -319,6 +337,9 @@ class BookingController extends Controller {
     /** Menjalankan proses booking result error pada booking. */
     private function bookingResultError(array $result): string {
         $reason = $result['reason'] ?? 'database_error';
+        if ($reason === 'past_time') {
+            return $result['message'] ?? 'Waktu mulai pemesanan tidak boleh mendahului waktu saat ini (sudah terlewat). Silakan sesuaikan jam pemesanan Anda.';
+        }
         if ($reason === 'confirmed_conflict') {
             $conflict = $result['conflict'];
             return 'Ruangan sudah terkonfirmasi untuk jadwal '

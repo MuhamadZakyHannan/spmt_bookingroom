@@ -60,7 +60,8 @@ final class BookingStatisticsService
 
         foreach ($bookings as $booking) {
             $status = $booking['status'];
-            if ($status === 'confirmed') $confirmedCount++;
+            $isApproved = in_array($status, ['confirmed', 'completed'], true);
+            if ($isApproved) $confirmedCount++;
             if ($status === 'pending') $pendingCount++;
 
             $attendees = (int) ($booking['attendees_count'] ?? 1);
@@ -75,12 +76,12 @@ final class BookingStatisticsService
                 $roomStats[$roomId]['booking_count']++;
                 $roomStats[$roomId]['total_hours'] += $durationHours;
                 $roomStats[$roomId]['total_attendees'] += $attendees;
-                if ($status === 'confirmed') $roomStats[$roomId]['confirmed_count']++;
+                if ($isApproved) $roomStats[$roomId]['confirmed_count']++;
             }
 
             $monthKey = date('Y-m', strtotime($booking['date']));
             $monthlyMap[$monthKey] ??= $this->emptyMonth($booking['date']);
-            if ($status === 'confirmed') $monthlyMap[$monthKey]['confirmed']++;
+            if ($isApproved) $monthlyMap[$monthKey]['confirmed']++;
             if ($status === 'pending') $monthlyMap[$monthKey]['pending']++;
             $monthlyMap[$monthKey]['hours'] += $durationHours;
 

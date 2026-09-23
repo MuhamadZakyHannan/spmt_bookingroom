@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ruangan Tidak Ditemukan - MeetSpace</title>
+    <!-- Pelindo Favicon -->
+    <link rel="icon" type="image/png" href="public/favicon.png?v=<?php echo asset_version('public/favicon.png'); ?>">
+    <link rel="shortcut icon" type="image/x-icon" href="public/favicon.ico?v=<?php echo asset_version('public/favicon.ico'); ?>">
     <link rel="stylesheet" href="public/css/tailwind.min.css?v=<?php echo asset_version('public/css/tailwind.min.css'); ?>">
 </head>
 <body class="min-h-[100dvh] bg-slate-100 p-4 font-sans text-slate-800 flex items-center justify-center">

@@ -239,9 +239,19 @@
                                 <span class="text-xs font-bold px-2 py-0.5 bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 rounded-md flex items-center gap-1">
                                     <i class="fas fa-clock text-[10px]"></i> <?php echo format_time($tb['start_time']); ?> - <?php echo format_time($tb['end_time']); ?>
                                 </span>
-                                <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded <?php echo $tb['status'] === 'confirmed' ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400'; ?>">
-                                    <?php echo ucfirst($tb['status']); ?>
-                                </span>
+                                <?php if ($tb['status'] === 'completed'): ?>
+                                    <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 flex items-center gap-1">
+                                        <i class="fas fa-check-double text-[9px]"></i> Selesai
+                                    </span>
+                                <?php elseif ($tb['status'] === 'confirmed'): ?>
+                                    <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                                        <i class="fas fa-check text-[9px]"></i> Disetujui
+                                    </span>
+                                <?php else: ?>
+                                    <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400">
+                                        <?php echo htmlspecialchars(booking_status_label($tb)); ?>
+                                    </span>
+                                <?php endif; ?>
                             </div>
                             <h4 class="font-bold text-slate-800 dark:text-slate-100 text-sm mb-1"><?php echo htmlspecialchars($tb['title']); ?></h4>
                             <p class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mb-2">

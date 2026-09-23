@@ -11,6 +11,7 @@ class BookingLifecycleService
     public const REASON_CANCELLED_BY_USER = 'cancelled_by_user';
     public const REASON_CANCELLED_BY_ADMIN = 'cancelled_by_admin';
     public const REASON_CONFLICT_NOT_SELECTED = 'conflict_not_selected';
+    public const REASON_RELOCATED_BY_ADMIN = 'relocated_by_admin';
 
     private $db;
 
@@ -58,4 +59,26 @@ class BookingLifecycleService
 
         return $expiredCount;
     }
+
+    /**
+     * Menandai pemesanan terkonfirmasi yang telah melewati waktu selesai sebagai selesai.
+     */
+    public function completeFinishedBookings(?DateTimeInterface $now = null): int
+    {
+        if (!$this->db) return 0;
+
+        $reference = $now ?: new DateTimeImmutable('now');
+        $statement = $this->db->prepare(
+            "UPDATE bookings
+             SET status = 'completed'
+             WHERE status = 'confirmed'
+               AND TIMESTAMP(date, end_time) <= ?"
+        );
+        $statement->execute([
+            $reference->format('Y-m-d H:i:s'),
+        ]);
+
+        return $statement->rowCount();
+    }
 }
+

@@ -31,7 +31,8 @@ class CalendarController extends Controller {
         ApiRequest::requireLogin();
 
         $room_filter = (int)($_GET['room_id'] ?? 0);
-        $bookings = $this->bookingModel->getCalendarEvents($room_filter);
+        $search = trim($_GET['search'] ?? '');
+        $bookings = $this->bookingModel->getCalendarEvents($room_filter, $search);
 
         $events = [];
         foreach ($bookings as $b) {
