@@ -120,6 +120,7 @@
             <select name="status" id="histStatusSelect" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer">
                 <option value="">-- Semua Status --</option>
                 <option value="confirmed" <?php echo ($filters['status'] ?? '') === 'confirmed' ? 'selected' : ''; ?>>✓ Disetujui (Aktif)</option>
+                <option value="completed" <?php echo ($filters['status'] ?? '') === 'completed' ? 'selected' : ''; ?>>✓ Selesai</option>
                 <option value="pending" <?php echo ($filters['status'] ?? '') === 'pending' ? 'selected' : ''; ?>>⏳ Menunggu Persetujuan</option>
                 <option value="cancelled" <?php echo ($filters['status'] ?? '') === 'cancelled' ? 'selected' : ''; ?>>✕ Dibatalkan / Ditolak</option>
             </select>
@@ -174,9 +175,9 @@
     <div class="responsive-table-shell">
         <table class="w-full text-left border-collapse text-xs table-fixed min-w-[900px]">
             <colgroup>
-                <col class="w-[26%]">
+                <col class="w-[24%]">
                 <col class="w-[18%]">
-                <col class="w-[14%]">
+                <col class="w-[16%]">
                 <col class="w-[14%]">
                 <col class="w-[10%]">
                 <col class="w-[8%]">
@@ -225,7 +226,8 @@
                         'duration' => $durationHours . ' Jam',
                         'attendees' => $b['attendees_count'] . ' Orang',
                         'status' => $b['status'],
-                        'status_reason' => $b['status_reason'] ?? null
+                        'status_reason' => $b['status_reason'] ?? null,
+                        'admin_notes' => $b['admin_notes'] ?? '',
                     ];
                 ?>
                     <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition">
@@ -258,11 +260,11 @@
                         </td>
 
                         <!-- 3. Ruangan -->
-                        <td class="py-3.5 px-4 overflow-hidden">
-                            <div class="font-bold text-slate-800 dark:text-slate-200 text-xs truncate" title="<?php echo htmlspecialchars($b['room_name']); ?>">
+                        <td class="py-3.5 px-4 align-top">
+                            <div class="font-bold text-slate-800 dark:text-slate-200 text-xs leading-snug break-words" title="<?php echo htmlspecialchars($b['room_name']); ?>">
                                 <?php echo htmlspecialchars($b['room_name']); ?>
                             </div>
-                            <div class="text-[10px] text-brand-600 dark:text-brand-400 font-mono font-semibold truncate mt-0.5">
+                            <div class="text-[10px] text-brand-600 dark:text-brand-400 font-mono font-semibold mt-1">
                                 [<?php echo htmlspecialchars($b['room_code'] ?? ''); ?>]
                             </div>
                         </td>
@@ -279,23 +281,7 @@
 
                         <!-- 5. Status -->
                         <td class="py-3.5 px-4 text-center whitespace-nowrap overflow-hidden">
-                            <?php if ($b['status'] === 'confirmed'): ?>
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
-                                    <i class="fas fa-check-circle text-emerald-600"></i> Disetujui
-                                </span>
-                            <?php elseif ($b['status'] === 'pending'): ?>
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-amber-50 text-amber-900 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700">
-                                    <i class="fas fa-hourglass-half text-amber-600"></i> Menunggu
-                                </span>
-                            <?php elseif ($isExpired): ?>
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
-                                    <i class="fas fa-clock-rotate-left text-slate-500"></i> Kedaluwarsa
-                                </span>
-                            <?php else: ?>
-                                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800">
-                                    <i class="fas fa-times-circle text-rose-600"></i> Dibatalkan
-                                </span>
-                            <?php endif; ?>
+                            <?php echo booking_status_badge($b, 'web'); ?>
                         </td>
 
                         <!-- 6. Detail -->
@@ -333,9 +319,12 @@
     <div class="responsive-modal-panel bg-white dark:bg-slate-800 rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-150 space-y-4">
         <div class="flex items-start justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
             <div>
-                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
-                    Rincian Riwayat Pemesanan
-                </span>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300">
+                        Rincian Riwayat Pemesanan
+                    </span>
+                    <span id="histStatusContainer"></span>
+                </div>
                 <h3 id="histTitle" class="text-base font-bold text-slate-900 dark:text-white mt-1 break-words"></h3>
             </div>
             <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
@@ -344,6 +333,14 @@
         </div>
 
         <div class="space-y-3 text-xs text-slate-600 dark:text-slate-300">
+            <!-- Catatan Admin (Jika Ada) -->
+            <div id="histAdminNotesContainer" class="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-800 hidden">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 mb-1 flex items-center gap-1.5">
+                    <i class="fas fa-info-circle"></i> Catatan Admin:
+                </div>
+                <div id="histAdminNotes" class="text-xs text-amber-900 dark:text-amber-200 font-medium break-words"></div>
+            </div>
+
             <!-- Catatan Pertemuan Lengkap -->
             <div class="bg-slate-50 dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800">
                 <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Catatan / Deskripsi Agenda:</div>
@@ -409,6 +406,7 @@
             'attendees_count' => (int)$b['attendees_count'],
             'status' => $b['status'],
             'status_reason' => $b['status_reason'] ?? null,
+            'admin_notes' => $b['admin_notes'] ?? '',
         ];
     }, $bookings)); ?>;
 
@@ -430,6 +428,24 @@
         document.getElementById('histSchedule').textContent = data.date + ' • ' + data.time;
         document.getElementById('histDuration').textContent = data.duration;
         
+        const statusBox = document.getElementById('histStatusContainer');
+        if (statusBox) {
+            statusBox.innerHTML = window.MeetSpaceUI.renderStatusBadge(data);
+        }
+
+        const adminNotesBox = document.getElementById('histAdminNotesContainer');
+        const adminNotesText = document.getElementById('histAdminNotes');
+        if (adminNotesBox && adminNotesText) {
+            const noteContent = data.admin_notes || data.adminNotes || '';
+            if (noteContent.trim() !== '') {
+                adminNotesText.textContent = noteContent;
+                adminNotesBox.classList.remove('hidden');
+            } else {
+                adminNotesText.textContent = '';
+                adminNotesBox.classList.add('hidden');
+            }
+        }
+
         const modal = document.getElementById('historyModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -629,7 +645,9 @@
                 time: b.start_time + ' - ' + b.end_time + ' WIB',
                 duration: b.duration,
                 attendees: b.attendees_count + ' Orang',
-                status: b.status
+                status: b.status,
+                status_reason: b.status_reason || null,
+                admin_notes: b.admin_notes || ''
             };
 
             const encodedData = escapeHtml(JSON.stringify(modalPayload));
@@ -640,32 +658,7 @@
             const displayDept = highlightText(b.user_dept || 'Internal', highlightQuery);
             const displayRoom = highlightText(b.room_name, highlightQuery);
 
-            let statusHtml = '';
-            if (b.status === 'confirmed') {
-                statusHtml = `
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
-                        <i class="fas fa-check-circle text-emerald-600"></i> Disetujui
-                    </span>
-                `;
-            } else if (b.status === 'pending') {
-                statusHtml = `
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-amber-50 text-amber-900 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700">
-                        <i class="fas fa-hourglass-half text-amber-600"></i> Menunggu
-                    </span>
-                `;
-            } else if (b.status_reason === 'expired') {
-                statusHtml = `
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
-                        <i class="fas fa-clock-rotate-left text-slate-500"></i> Kedaluwarsa
-                    </span>
-                `;
-            } else {
-                statusHtml = `
-                    <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800">
-                        <i class="fas fa-times-circle text-rose-600"></i> Dibatalkan
-                    </span>
-                `;
-            }
+            const statusHtml = window.MeetSpaceUI.renderStatusBadge(b);
 
             html += `
                 <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-700/30 transition">
@@ -698,11 +691,11 @@
                     </td>
 
                     <!-- 3. Ruangan -->
-                    <td class="py-3.5 px-4 overflow-hidden">
-                        <div class="font-bold text-slate-800 dark:text-slate-200 text-xs truncate" title="${escapeHtml(b.room_name)}">
+                    <td class="py-3.5 px-4 align-top">
+                        <div class="font-bold text-slate-800 dark:text-slate-200 text-xs leading-snug break-words" title="${escapeHtml(b.room_name)}">
                             ${displayRoom}
                         </div>
-                        <div class="text-[10px] text-brand-600 dark:text-brand-400 font-mono font-semibold truncate mt-0.5">
+                        <div class="text-[10px] text-brand-600 dark:text-brand-400 font-mono font-semibold mt-1">
                             [${escapeHtml(b.room_code)}]
                         </div>
                     </td>

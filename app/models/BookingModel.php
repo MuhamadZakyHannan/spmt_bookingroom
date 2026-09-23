@@ -21,7 +21,11 @@ class BookingModel extends BaseModel
     public function __construct(?PDO $connection = null)
     {
         parent::__construct($connection);
-        if ($this->db) (new BookingLifecycleService($this->db))->expirePendingBookings();
+        if ($this->db) {
+            $lifecycle = new BookingLifecycleService($this->db);
+            $lifecycle->expirePendingBookings();
+            $lifecycle->completeFinishedBookings();
+        }
     }
 
     /** Mengambil data today active bookings count. */
@@ -121,12 +125,30 @@ class BookingModel extends BaseModel
             : false;
     }
 
-    /** Mengambil data all bookings. */
-    public function getAllBookings($search = '', $status = '')
+    /** Membatalkan booking oleh admin dengan catatan alasan pembatalan. */
+    public function cancelByAdmin($bookingId, $reason = '')
+    {
+        return $this->db ? $this->commands()->cancelByAdmin((int) $bookingId, (string) $reason) : false;
+    }
+
+    /** Mengalihkan ruangan booking ke ruangan lain oleh admin. */
+    public function relocateRoom($bookingId, $newRoomId, $reason = '')
+    {
+        return $this->db ? $this->commands()->relocateRoom((int) $bookingId, (int) $newRoomId, (string) $reason) : ['success' => false, 'message' => 'Database tidak tersedia.'];
+    }
+
+    /** Mengambil data all bookings dengan dukungan pagination. */
+    public function getAllBookings($search = '', $status = '', $limit = 0, $offset = 0)
     {
         return $this->db
-            ? $this->queries()->getAll((string) $search, (string) $status)
+            ? $this->queries()->getAll((string) $search, (string) $status, (int) $limit, (int) $offset)
             : [];
+    }
+
+    /** Menghitung total data all bookings untuk pagination. */
+    public function countAllBookings($search = '', $status = '')
+    {
+        return $this->db ? $this->queries()->countAll((string) $search, (string) $status) : 0;
     }
 
     /** Memperbarui status. */
@@ -144,9 +166,9 @@ class BookingModel extends BaseModel
     }
 
     /** Mengambil data calendar events. */
-    public function getCalendarEvents($roomId = 0)
+    public function getCalendarEvents($roomId = 0, $search = '')
     {
-        return $this->db ? $this->queries()->getCalendarEvents((int) $roomId) : [];
+        return $this->db ? $this->queries()->getCalendarEvents((int) $roomId, (string) $search) : [];
     }
 
     /** Mengambil data booking history. */

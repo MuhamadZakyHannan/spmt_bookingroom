@@ -46,6 +46,10 @@ if (! preg_match($timePattern, $startTime) || ! preg_match($timePattern, $endTim
     ApiResponse::error('Rentang waktu pemesanan tidak valid.', 422, 'invalid_time_range');
 }
 
+if ($date === date('Y-m-d') && $startTime <= date('H:i')) {
+    ApiResponse::error('Waktu mulai pemesanan tidak boleh mendahului waktu saat ini (sudah terlewat). Silakan sesuaikan jam pemesanan Anda.', 422, 'past_time_range');
+}
+
 if ($attendeesCount === false) {
     ApiResponse::error('Jumlah peserta harus antara 1 dan 100 orang.', 422, 'invalid_attendee_count');
 }

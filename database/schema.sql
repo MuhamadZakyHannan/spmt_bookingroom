@@ -53,6 +53,7 @@ CREATE TABLE `bookings` (
   `attendees_count` int(11) DEFAULT 1,
   `status` enum('pending','confirmed','completed','cancelled') DEFAULT 'confirmed',
   `status_reason` varchar(50) DEFAULT NULL,
+  `admin_notes` text DEFAULT NULL,
   `attendance_status` enum('scheduled','checked_in','checked_out','no_show') DEFAULT NULL,
   `check_in_at` datetime DEFAULT NULL,
   `check_out_at` datetime DEFAULT NULL,

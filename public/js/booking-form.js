@@ -28,6 +28,21 @@
         }
     }
 
+    /** Mengambil waktu saat ini dalam menit berdasarkan zona waktu Jakarta. */
+    function getCurrentMinutesInJakarta() {
+        try {
+            const parts = new Intl.DateTimeFormat('en-GB', {
+                timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', hour12: false
+            }).formatToParts(new Date());
+            const values = {};
+            parts.forEach(part => { values[part.type] = part.value; });
+            return (Number.parseInt(values.hour, 10) * 60) + Number.parseInt(values.minute, 10);
+        } catch (error) {
+            const now = new Date();
+            return (now.getHours() * 60) + now.getMinutes();
+        }
+    }
+
     /** Memformat durasi menit menjadi teks yang mudah dibaca. */
     function formatDuration(totalMinutes) {
         const hours = Math.floor(totalMinutes / 60);
@@ -117,11 +132,24 @@
         const valid = start !== null && end !== null && end > start;
 
         if (valid) {
+            const isToday = elements.date && elements.date.value === getTodayInJakarta();
+            const currentMinutes = getCurrentMinutesInJakarta();
+            if (isToday && start <= currentMinutes) {
+                if (elements.duration) elements.duration.textContent = 'Waktu sudah lewat';
+                if (elements.scheduleError) {
+                    elements.scheduleError.textContent = 'Waktu mulai pemesanan tidak boleh mendahului waktu saat ini (sudah terlewat). Silakan sesuaikan jam pemesanan Anda.';
+                    elements.scheduleError.classList.remove('hidden');
+                }
+                elements.startTime.setAttribute('aria-invalid', 'true');
+                return false;
+            }
+
             if (elements.duration) elements.duration.textContent = `Durasi: ${formatDuration(end - start)}`;
             if (elements.scheduleError) {
                 elements.scheduleError.textContent = '';
                 elements.scheduleError.classList.add('hidden');
             }
+            elements.startTime.removeAttribute('aria-invalid');
             elements.endTime.removeAttribute('aria-invalid');
             return true;
         }
@@ -254,7 +282,10 @@
         const attendees = Number.parseInt(elements.attendees?.value || '', 10);
         const start = parseTime(elements.startTime?.value);
         const end = parseTime(elements.endTime?.value);
+        const isToday = elements.date?.value === getTodayInJakarta();
+        const isPastOnToday = isToday && start !== null && start <= getCurrentMinutesInJakarta();
         return Boolean(elements.date?.value && elements.date.value >= getTodayInJakarta()
+            && !isPastOnToday
             && start !== null && end !== null && end > start && attendees >= 1 && attendees <= 100);
     }
 
@@ -267,7 +298,13 @@
 
         if (!endpoint || !availabilityInputIsValid(elements)) {
             if (elements.availabilityList) elements.availabilityList.replaceChildren();
-            if (elements.availabilityMessage) elements.availabilityMessage.textContent = 'Lengkapi tanggal, waktu, dan jumlah peserta untuk melihat ketersediaan.';
+            const isToday = elements.date?.value === getTodayInJakarta();
+            const start = parseTime(elements.startTime?.value);
+            if (isToday && start !== null && start <= getCurrentMinutesInJakarta()) {
+                if (elements.availabilityMessage) elements.availabilityMessage.textContent = 'Waktu mulai pemesanan tidak boleh mendahului waktu saat ini (sudah terlewat). Silakan sesuaikan jam pemesanan Anda.';
+            } else {
+                if (elements.availabilityMessage) elements.availabilityMessage.textContent = 'Lengkapi tanggal, waktu, dan jumlah peserta untuk melihat ketersediaan.';
+            }
             if (elements.availabilityLoading) elements.availabilityLoading.classList.add('hidden');
             return;
         }
@@ -414,7 +451,12 @@
             return { valid: false, message: 'Tanggal pemesanan tidak boleh di masa lalu berdasarkan waktu WIB.' };
         }
         if (elements.date) elements.date.removeAttribute('aria-invalid');
-        if (!updateSchedule(form)) return { valid: false, message: 'Jam selesai harus lebih lambat dari jam mulai.' };
+        if (!updateSchedule(form)) {
+            const msg = elements.scheduleError && elements.scheduleError.textContent
+                ? elements.scheduleError.textContent
+                : 'Jam selesai harus lebih lambat dari jam mulai.';
+            return { valid: false, message: msg };
+        }
         if (!updateCapacity(form)) return { valid: false, message: elements.capacityWarning.textContent };
 
         const selectedOption = elements.room?.options[elements.room.selectedIndex];
@@ -446,7 +488,7 @@
             elements.room.addEventListener('change', () => updateRoomInformation(form));
         }
         if (elements.attendees) elements.attendees.addEventListener('input', () => { updateCapacity(form); scheduleAvailability(form); });
-        if (elements.date) elements.date.addEventListener('change', () => scheduleAvailability(form));
+        if (elements.date) elements.date.addEventListener('change', () => { updateSchedule(form); scheduleAvailability(form); });
         if (elements.startTime) elements.startTime.addEventListener('change', () => { updateSchedule(form); scheduleAvailability(form); });
         if (elements.endTime) elements.endTime.addEventListener('change', () => { updateSchedule(form); scheduleAvailability(form); });
         const documentInput = form.querySelector('input[name="supporting_document"]');

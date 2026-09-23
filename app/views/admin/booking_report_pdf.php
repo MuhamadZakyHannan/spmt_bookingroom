@@ -138,19 +138,7 @@
                                 <?php echo $b['attendees_count']; ?> Org
                             </td>
                             <td class="py-2 px-3 text-right">
-                                <?php if ($b['status'] === 'confirmed'): ?>
-                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                        DISETUJUI
-                                    </span>
-                                <?php elseif ($b['status'] === 'pending'): ?>
-                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                                        MENUNGGU
-                                    </span>
-                                <?php else: ?>
-                                    <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
-                                        BATAL
-                                    </span>
-                                <?php endif; ?>
+                                <?php echo booking_status_badge($b, 'print'); ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

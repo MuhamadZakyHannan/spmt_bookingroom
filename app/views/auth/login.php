@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Masuk - MeetSpace MVC</title>
+    <!-- Pelindo Favicon -->
+    <link rel="icon" type="image/png" href="public/favicon.png">
+    <link rel="shortcut icon" type="image/x-icon" href="public/favicon.ico">
     <!-- Tailwind CSS (Local Compiled Standalone) -->
     <link rel="stylesheet" href="public/css/tailwind.min.css">
     <script>

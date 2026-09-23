@@ -36,6 +36,17 @@ final class BookingScheduleService
     /** Menambahkan data with policy. */
     public function createWithPolicy(array $data, bool $isAdmin): array
     {
+        $today = date('Y-m-d');
+        $currentTime = date('H:i');
+        $startTime = substr((string) ($data['start_time'] ?? ''), 0, 5);
+        if ($data['date'] < $today || ($data['date'] === $today && $startTime <= $currentTime)) {
+            return [
+                'success' => false,
+                'reason' => 'past_time',
+                'message' => 'Waktu mulai pemesanan tidak boleh mendahului waktu saat ini (sudah terlewat). Silakan sesuaikan jam pemesanan Anda.',
+            ];
+        }
+
         try {
             $this->db->beginTransaction();
             $room = $this->lockRoom((int) $data['room_id']);

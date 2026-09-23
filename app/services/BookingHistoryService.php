@@ -64,13 +64,26 @@ final class BookingHistoryService
     {
         $bookings = $this->getHistory($filters);
         $confirmedCount = 0;
+        $completedCount = 0;
         $pendingCount = 0;
+        $cancelledCount = 0;
         $totalAttendees = 0;
         $totalMinutes = 0;
 
         foreach ($bookings as $booking) {
-            if ($booking['status'] === 'confirmed') $confirmedCount++;
-            if ($booking['status'] === 'pending') $pendingCount++;
+            $status = $booking['status'] ?? '';
+            if (in_array($status, ['confirmed', 'completed'], true)) {
+                $confirmedCount++;
+            }
+            if ($status === 'completed') {
+                $completedCount++;
+            }
+            if ($status === 'pending') {
+                $pendingCount++;
+            }
+            if ($status === 'cancelled') {
+                $cancelledCount++;
+            }
             $totalAttendees += (int) ($booking['attendees_count'] ?? 1);
 
             $start = strtotime($booking['date'] . ' ' . $booking['start_time']);
@@ -83,7 +96,9 @@ final class BookingHistoryService
         return [
             'total_bookings' => count($bookings),
             'confirmed_count' => $confirmedCount,
+            'completed_count' => $completedCount,
             'pending_count' => $pendingCount,
+            'cancelled_count' => $cancelledCount,
             'total_attendees' => $totalAttendees,
             'total_hours' => round($totalMinutes / 60, 1),
             'bookings' => $bookings,

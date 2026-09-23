@@ -22,6 +22,9 @@ $editView = file_get_contents(__DIR__ . '/../app/views/booking/edit.php');
 $lateUploadView = file_get_contents(__DIR__ . '/../app/views/booking/document_upload.php');
 $myBookingsView = file_get_contents(__DIR__ . '/../app/views/booking/my_bookings.php');
 $adminBookingsView = file_get_contents(__DIR__ . '/../app/views/admin/bookings.php');
+if (file_exists(__DIR__ . '/../app/views/admin/partials/_booking_table.php')) {
+    $adminBookingsView .= file_get_contents(__DIR__ . '/../app/views/admin/partials/_booking_table.php');
+}
 $downloadController = file_get_contents(__DIR__ . '/../app/controllers/BookingDocumentController.php');
 $bookingQuerySource = file_get_contents(__DIR__ . '/../app/services/BookingQueryService.php');
 $bookingConflictSource = file_get_contents(__DIR__ . '/../app/services/BookingConflictService.php');

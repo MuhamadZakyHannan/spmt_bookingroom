@@ -10,11 +10,10 @@ final class PasswordPolicy
         $isValid = strlen($password) >= self::MIN_LENGTH
             && preg_match('/[A-Z]/', $password)
             && preg_match('/[a-z]/', $password)
-            && preg_match('/\d/', $password)
-            && preg_match('/[^A-Za-z0-9]/', $password);
+            && preg_match('/\d/', $password);
 
         return $isValid
             ? null
-            : 'Password minimal 8 karakter dan wajib mengandung huruf besar, huruf kecil, angka, serta simbol unik.';
+            : 'Password minimal 8 karakter dan wajib mengandung huruf besar, huruf kecil, serta angka.';
     }
 }

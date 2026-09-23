@@ -7,6 +7,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MeetSpace - Sistem Pemesanan Ruang Rapat Perusahaan (MVC)</title>
+    <!-- Pelindo Favicon -->
+    <link rel="icon" type="image/png" href="public/favicon.png?v=<?php echo asset_version('public/favicon.png'); ?>">
+    <link rel="shortcut icon" type="image/x-icon" href="public/favicon.ico?v=<?php echo asset_version('public/favicon.ico'); ?>">
     <!-- Tailwind CSS (Local Compiled Standalone) -->
     <link rel="stylesheet" href="public/css/tailwind.min.css?v=<?php echo asset_version('public/css/tailwind.min.css'); ?>">
     <script src="public/js/theme-init.js?v=<?php echo asset_version('public/js/theme-init.js'); ?>"></script>

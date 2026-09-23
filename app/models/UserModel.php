@@ -42,15 +42,25 @@ class UserModel extends BaseModel {
         if (!$this->db) return false;
 
         $department = null;
+        $username = '';
 
         if (is_array($nameOrData)) {
-            $name = $nameOrData['name'] ?? '';
-            $email = $nameOrData['username'] ?? $nameOrData['email'] ?? '';
+            $name = trim((string)($nameOrData['name'] ?? ''));
+            $username = trim((string)($nameOrData['username'] ?? ''));
+            if ($name === '' && $username !== '') {
+                $name = $username;
+            }
+            $email = !empty($nameOrData['email']) ? $nameOrData['email'] : ($username . '@company.com');
             $password = $nameOrData['password'] ?? '';
             $role = $nameOrData['role'] ?? 'user';
             $department = trim((string)($nameOrData['department'] ?? '')) ?: null;
         } else {
-            $name = $nameOrData;
+            $name = trim((string)$nameOrData);
+            $username = trim((string)$email);
+            if ($name === '' && $username !== '') {
+                $name = $username;
+            }
+            $email = str_contains($email, '@') ? $email : ($email . '@company.com');
         }
 
         $role = in_array($role, ['user', 'admin', 'super_admin'], true) ? $role : 'user';
@@ -59,7 +69,7 @@ class UserModel extends BaseModel {
         $avatar = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80';
 
         $stmt = $this->db->prepare("INSERT INTO users (name, username, email, department, password, avatar, role) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        return $stmt->execute([$name, $email, $email, $department, $hash, $avatar, $role]);
+        return $stmt->execute([$name, $username, $email, $department, $hash, $avatar, $role]);
     }
 
     /** Mengambil data all users. */
@@ -72,6 +82,14 @@ class UserModel extends BaseModel {
     /** Mengambil seluruh data user. */
     public function getAll() {
         return $this->getAllUsers();
+    }
+
+    /** Menghitung jumlah user berdasarkan role. */
+    public function countByRole(string $role): int {
+        if (!$this->db) return 0;
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM users WHERE role = ?");
+        $stmt->execute([$role]);
+        return (int)$stmt->fetchColumn();
     }
 
     /** Memperbarui role. */

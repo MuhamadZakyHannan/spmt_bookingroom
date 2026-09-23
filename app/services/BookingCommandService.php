@@ -34,6 +34,93 @@ final class BookingCommandService
         ]);
     }
 
+    /** Membatalkan booking oleh admin dengan menyimpan catatan alasan pembatalan. */
+    public function cancelByAdmin(int $bookingId, string $reason): bool
+    {
+        $cleanReason = trim($reason);
+        $statement = $this->db->prepare(
+            "UPDATE bookings SET status = 'cancelled', status_reason = ?, admin_notes = ? WHERE id = ?"
+        );
+        return $statement->execute([
+            BookingLifecycleService::REASON_CANCELLED_BY_ADMIN,
+            $cleanReason !== '' ? $cleanReason : 'Dibatalkan oleh Administrator.',
+            $bookingId,
+        ]);
+    }
+
+    /** Mengalihkan ruangan booking ke ruangan alternatif dengan verifikasi bentrok jadwal. */
+    public function relocateRoom(int $bookingId, int $newRoomId, string $reason): array
+    {
+        if ($bookingId <= 0 || $newRoomId <= 0) {
+            return ['success' => false, 'message' => 'Pemesanan atau ruangan pengganti tidak valid.'];
+        }
+
+        $bStmt = $this->db->prepare('SELECT id, room_id, date, start_time, end_time, title, user_id FROM bookings WHERE id = ?');
+        $bStmt->execute([$bookingId]);
+        $booking = $bStmt->fetch(PDO::FETCH_ASSOC);
+        if (!$booking) {
+            return ['success' => false, 'message' => 'Data pemesanan tidak ditemukan.'];
+        }
+
+        if ((int) $booking['room_id'] === $newRoomId) {
+            return ['success' => false, 'message' => 'Ruangan tujuan sama dengan ruangan pemesanan saat ini.'];
+        }
+
+        $rStmt = $this->db->prepare('SELECT id, name, status FROM rooms WHERE id IN (?, ?)');
+        $rStmt->execute([(int) $booking['room_id'], $newRoomId]);
+        $rooms = $rStmt->fetchAll(PDO::FETCH_ASSOC);
+        $roomsById = [];
+        foreach ($rooms as $r) {
+            $roomsById[(int) $r['id']] = $r;
+        }
+
+        $oldRoomName = $roomsById[(int) $booking['room_id']]['name'] ?? 'Ruangan Asal';
+        $newRoom = $roomsById[$newRoomId] ?? null;
+        if (!$newRoom || ($newRoom['status'] ?? '') === 'maintenance') {
+            return ['success' => false, 'message' => 'Ruangan tujuan tidak ditemukan atau sedang dalam perbaikan (maintenance).'];
+        }
+        $newRoomName = $newRoom['name'];
+
+        // Cek bentrok jadwal di ruangan baru pada tanggal dan rentang jam tersebut
+        $conflictStmt = $this->db->prepare(
+            "SELECT COUNT(*) FROM bookings
+             WHERE room_id = ? AND date = ? AND status = 'confirmed' AND id != ?
+               AND start_time < ? AND end_time > ?"
+        );
+        $conflictStmt->execute([
+            $newRoomId,
+            $booking['date'],
+            $bookingId,
+            $booking['end_time'],
+            $booking['start_time']
+        ]);
+        if ((int) $conflictStmt->fetchColumn() > 0) {
+            return ['success' => false, 'message' => "Ruangan {$newRoomName} sudah terisi jadwal lain pada waktu tersebut."];
+        }
+
+        $cleanReason = trim($reason);
+        $notesText = 'Ruangan dialihkan dari ' . $oldRoomName . ' ke ' . $newRoomName . '.' . ($cleanReason !== '' ? ' Alasan: ' . $cleanReason : '');
+        $updateStmt = $this->db->prepare(
+            "UPDATE bookings SET room_id = ?, status = 'confirmed', status_reason = ?, admin_notes = ? WHERE id = ?"
+        );
+        $ok = $updateStmt->execute([
+            $newRoomId,
+            BookingLifecycleService::REASON_RELOCATED_BY_ADMIN,
+            $notesText,
+            $bookingId,
+        ]);
+
+        return [
+            'success' => $ok,
+            'message' => $ok ? "Ruangan berhasil dialihkan ke {$newRoomName}." : 'Gagal memperbarui data pengalihan ruangan.',
+            'booking_id' => $bookingId,
+            'user_id' => (int) $booking['user_id'],
+            'old_room_name' => $oldRoomName,
+            'new_room_name' => $newRoomName,
+            'reason' => $cleanReason,
+        ];
+    }
+
     /** Memperbarui status. */
     public function updateStatus(int $bookingId, string $status): bool
     {

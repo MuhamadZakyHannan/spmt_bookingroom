@@ -14,7 +14,7 @@ final class BookingQueryService
     public function getTodayActiveCount(): int
     {
         return (int) $this->db->query(
-            "SELECT COUNT(*) FROM bookings WHERE date = CURDATE() AND status = 'confirmed'"
+            "SELECT COUNT(*) FROM bookings WHERE date = CURDATE() AND status IN ('confirmed', 'completed')"
         )->fetchColumn();
     }
 
@@ -26,7 +26,7 @@ final class BookingQueryService
              FROM bookings b
              JOIN rooms r ON b.room_id = r.id
              JOIN users u ON b.user_id = u.id
-             WHERE b.date = CURDATE() AND b.status = 'confirmed'
+             WHERE b.date = CURDATE() AND b.status IN ('confirmed', 'completed')
              ORDER BY b.start_time ASC"
         );
         return $statement->fetchAll(PDO::FETCH_ASSOC);
@@ -84,8 +84,8 @@ final class BookingQueryService
         return $statement->fetch(PDO::FETCH_ASSOC);
     }
 
-    /** Mengambil seluruh data booking query. */
-    public function getAll(string $search = '', string $status = ''): array
+    /** Mengambil seluruh data booking query dengan dukungan pagination. */
+    public function getAll(string $search = '', string $status = '', int $limit = 0, int $offset = 0): array
     {
         $sql = "SELECT b.*, r.name as room_name, r.code as room_code,
                        IFNULL(b.user_name, u.name) as user_name,
@@ -111,13 +111,39 @@ final class BookingQueryService
         }
         $sql .= " ORDER BY CASE WHEN b.status = 'pending' THEN 0 ELSE 1 END, b.id DESC";
 
+        if ($limit > 0) {
+            $sql .= " LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
+        }
+
         $statement = $this->db->prepare($sql);
         $statement->execute($params);
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /** Mengambil data calendar events. */
-    public function getCalendarEvents(int $roomId = 0): array
+    /** Menghitung total data booking query untuk keperluan pagination server-side. */
+    public function countAll(string $search = '', string $status = ''): int
+    {
+        $sql = "SELECT COUNT(*) FROM bookings b
+                JOIN rooms r ON b.room_id = r.id
+                JOIN users u ON b.user_id = u.id
+                WHERE 1=1";
+        $params = [];
+        if ($search !== '') {
+            $sql .= " AND (b.title LIKE ? OR u.name LIKE ? OR r.name LIKE ? OR IFNULL(b.user_name, '') LIKE ?)";
+            $term = '%' . $search . '%';
+            array_push($params, $term, $term, $term, $term);
+        }
+        if ($status !== '') {
+            $sql .= ' AND b.status = ?';
+            $params[] = $status;
+        }
+        $statement = $this->db->prepare($sql);
+        $statement->execute($params);
+        return (int) $statement->fetchColumn();
+    }
+
+    /** Mengambil data calendar events dengan dukungan filter ruangan dan pencarian. */
+    public function getCalendarEvents(int $roomId = 0, string $search = ''): array
     {
         $sql = "SELECT b.*, r.name as room_name,
                        IFNULL(b.user_name, u.name) as user_name,
@@ -130,6 +156,11 @@ final class BookingQueryService
         if ($roomId > 0) {
             $sql .= ' AND b.room_id = ?';
             $params[] = $roomId;
+        }
+        if ($search !== '') {
+            $sql .= " AND (b.title LIKE ? OR u.name LIKE ? OR r.name LIKE ? OR IFNULL(b.user_name, '') LIKE ? OR IFNULL(b.purpose, '') LIKE ?)";
+            $term = '%' . $search . '%';
+            array_push($params, $term, $term, $term, $term, $term);
         }
         $statement = $this->db->prepare($sql);
         $statement->execute($params);

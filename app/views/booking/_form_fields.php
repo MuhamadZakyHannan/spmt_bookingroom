@@ -1,22 +1,34 @@
 <?php
 require_once __DIR__ . '/../../core/Organization.php';
+require_once __DIR__ . '/../../core/SawService.php';
 
 $bookingFormPrefix = $bookingFormPrefix ?? 'booking';
 $bookingFormRooms = $bookingFormRooms ?? [];
 $bookingFormSelectedRoomId = (int)($bookingFormSelectedRoomId ?? 0);
+$defaultFormDate = date('Y-m-d');
+$nextFormHour = (int)date('H') + 1;
+if ($nextFormHour >= 22) {
+    $defaultFormDate = date('Y-m-d', strtotime('+1 day'));
+    $defaultFormStartTime = '09:00';
+    $defaultFormEndTime = '10:00';
+} else {
+    $defaultFormStartTime = sprintf('%02d:00', max(8, $nextFormHour));
+    $defaultFormEndTime = sprintf('%02d:00', max(9, $nextFormHour + 1));
+}
+
 $bookingFormValues = array_merge([
     'user_name' => $_SESSION['user_name'] ?? '',
     'user_dept' => '',
     'title' => '',
-    'date' => date('Y-m-d'),
-    'start_time' => '09:00',
-    'end_time' => '10:00',
+    'date' => $defaultFormDate,
+    'start_time' => $defaultFormStartTime,
+    'end_time' => $defaultFormEndTime,
     'activity_type' => 'internal_divisi',
     'attendees_count' => 1,
     'purpose' => ''
 ], $bookingFormValues ?? []);
 
-$bookingFormDepartments = Organization::DEPARTMENTS;
+$bookingFormDepartments = $bookingFormDepartments ?? Organization::getAllDepartments();
 
 $bookingFormActivityTypes = $activity_types ?? SawService::ACTIVITY_TYPES;
 $bookingFormStartTime = substr((string)$bookingFormValues['start_time'], 0, 5);

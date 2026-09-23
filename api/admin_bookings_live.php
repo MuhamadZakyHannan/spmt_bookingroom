@@ -14,7 +14,16 @@ $bookingModel = new BookingModel();
 $search = trim($_GET['search'] ?? '');
 $status = trim($_GET['status'] ?? '');
 
-$bookings = $bookingModel->getAllBookings($search, $status);
+// Server-side pagination & safety limits for scalable high-volume datasets
+$page = max(1, (int)($_GET['page'] ?? 1));
+$limitParam = isset($_GET['limit']) ? (int)$_GET['limit'] : 0;
+// Memory and payload guard: ceiling cap of 500 to prevent OOM when data reaches tens of thousands
+$maxCeiling = 500;
+$limit = ($limitParam > 0) ? min($limitParam, $maxCeiling) : 0;
+$offset = ($page - 1) * $limit;
+
+$totalMatching = $bookingModel->countAllBookings($search, $status);
+$bookings = $bookingModel->getAllBookings($search, $status, $limit, $offset);
 
 $conflictGroupsRaw = $bookingModel->getConflictingGroups();
 $conflictBookingIds = [];
@@ -53,6 +62,7 @@ foreach ($bookings as $b) {
         'attendees_count' => (int)$b['attendees_count'],
         'status' => $b['status'],
         'status_reason' => $b['status_reason'] ?? null,
+        'admin_notes' => $b['admin_notes'] ?? null,
         'activity_type_label' => $actLabel,
         'document_id' => (int)($b['document_id'] ?? 0),
         'document_name' => $b['document_name'] ?? '',
@@ -63,11 +73,20 @@ foreach ($bookings as $b) {
 // Generate data hash for client-side change detection
 $dataHash = md5(json_encode($formattedBookings));
 
+// Global pending count for system notification badges across all pages
+$globalPendingCount = ($status === '' && $search === '' && $limit === 0) 
+    ? $pendingCount 
+    : $bookingModel->countAllBookings('', 'pending');
+
 ApiResponse::send([
     'success' => true,
     'hash' => $dataHash,
-    'total' => count($formattedBookings),
-    'pending_count' => $pendingCount,
+    'total' => $totalMatching,
+    'count' => count($formattedBookings),
+    'page' => $page,
+    'limit' => $limit,
+    'total_pages' => $limit > 0 ? (int)ceil($totalMatching / $limit) : 1,
+    'pending_count' => $globalPendingCount,
     'confirmed_count' => $confirmedCount,
     'server_time' => date('H:i:s'),
     'bookings' => $formattedBookings
