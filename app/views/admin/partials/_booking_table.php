@@ -210,11 +210,6 @@
                                 <?php endif; ?>
 
                                 <?php if ($b['status'] === 'confirmed'): ?>
-                                    <!-- Aksi ALIKHKAN RUANGAN -->
-                                    <button type="button" onclick="openRelocateModal(<?php echo $jsonItemPayload; ?>)" class="p-1.5 px-2 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-bold rounded-lg transition text-xs flex items-center gap-1 cursor-pointer" title="Alihkan / Pindahkan Ruangan">
-                                        <i class="fas fa-arrows-split-up-and-left"></i>
-                                    </button>
-
                                     <!-- Aksi BATALKAN DENGAN ALASAN -->
                                     <button type="button" onclick="openCancelModal(<?php echo $jsonItemPayload; ?>)" class="p-1.5 px-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-bold rounded-lg transition text-xs flex items-center gap-1 cursor-pointer" title="Batalkan Pemesanan (Sertakan Catatan Alasan)">
                                         <i class="fas fa-ban"></i>

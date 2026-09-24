@@ -32,6 +32,23 @@ foreach ($conflictGroupsRaw as $cg) {
         $conflictBookingIds[$cb['id']] = true;
     }
 }
+$usage = fn($department, $date) => $bookingModel->getDivisionMonthlyUsageCount($department, $date);
+$conflictAnalyses = [];
+foreach ($conflictGroupsRaw as $group) {
+    $analysis = SawService::analyzeConflictGroup($group['bookings'], $usage);
+    if ($analysis) {
+        $conflictAnalyses[] = array_merge($group, ['saw' => $analysis]);
+    }
+}
+$conflictCount = count($conflictAnalyses);
+$hasConflicts = $conflictCount > 0;
+$conflict_analyses = $conflictAnalyses;
+
+ob_start();
+require __DIR__ . '/../app/views/admin/partials/_booking_conflicts_tab.php';
+$conflictsHtml = ob_get_clean();
+$conflictsHash = md5($conflictsHtml);
+
 $actTypes = SawService::ACTIVITY_TYPES;
 
 $formattedBookings = [];
@@ -88,6 +105,9 @@ ApiResponse::send([
     'total_pages' => $limit > 0 ? (int)ceil($totalMatching / $limit) : 1,
     'pending_count' => $globalPendingCount,
     'confirmed_count' => $confirmedCount,
+    'conflicts_count' => $conflictCount,
+    'conflicts_hash' => $conflictsHash,
+    'conflicts_html' => $conflictsHtml,
     'server_time' => date('H:i:s'),
     'bookings' => $formattedBookings
 ]);

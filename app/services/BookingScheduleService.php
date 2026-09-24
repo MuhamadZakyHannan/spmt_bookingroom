@@ -124,6 +124,10 @@ final class BookingScheduleService
                 ]);
             }
 
+            $oldRoomId = (int) $booking['room_id'];
+            $newRoomId = (int) $data['room_id'];
+            $isRelocated = ($isAdmin && $status === 'confirmed' && $oldRoomId !== $newRoomId);
+
             if (!$this->update($bookingId, $data)) {
                 throw new RuntimeException('Gagal memperbarui booking.');
             }
@@ -134,6 +138,9 @@ final class BookingScheduleService
                 'status' => $status,
                 'pending_conflict' => $classification['has_pending'],
                 'booking_id' => $bookingId,
+                'is_relocated' => $isRelocated,
+                'old_room_id' => $oldRoomId,
+                'new_room_id' => $newRoomId,
             ];
         } catch (Throwable $exception) {
             return $this->transactionFailure('Booking update transaction error', $exception);
@@ -271,7 +278,28 @@ final class BookingScheduleService
     private function update(int $bookingId, array $data): bool
     {
         $activityType = $data['activity_type'] ?? 'internal_divisi';
+        $statusReason = array_key_exists('status_reason', $data) ? $data['status_reason'] : null;
+        $adminNotes = array_key_exists('admin_notes', $data) ? $data['admin_notes'] : null;
+
         try {
+            if ($statusReason !== null || $adminNotes !== null) {
+                $statement = $this->db->prepare(
+                    'UPDATE bookings
+                     SET room_id = ?, title = ?, date = ?, start_time = ?, end_time = ?,
+                         purpose = ?, activity_type = ?, attendees_count = ?, user_name = ?, user_dept = ?,
+                         status_reason = COALESCE(?, status_reason),
+                         admin_notes = COALESCE(?, admin_notes)
+                     WHERE id = ?'
+                );
+                return $statement->execute([
+                    $data['room_id'], $data['title'], $data['date'], $data['start_time'],
+                    $data['end_time'], $data['purpose'], $activityType, $data['attendees_count'],
+                    $data['user_name'] ?? null, $data['user_dept'] ?? null,
+                    $statusReason, $adminNotes,
+                    $bookingId,
+                ]);
+            }
+
             $statement = $this->db->prepare(
                 'UPDATE bookings
                  SET room_id = ?, title = ?, date = ?, start_time = ?, end_time = ?,

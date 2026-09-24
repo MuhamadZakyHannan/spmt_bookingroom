@@ -100,9 +100,9 @@ class BookingModel extends BaseModel
     }
 
     /** Menentukan conflict. */
-    public function resolveConflict($winnerId, array $loserIds)
+    public function resolveConflict($winnerId, array $loserIds, $rejectionReason = '')
     {
-        return $this->db ? $this->conflicts()->resolve((int) $winnerId, $loserIds) : false;
+        return $this->db ? $this->conflicts()->resolve((int) $winnerId, $loserIds, (string) $rejectionReason) : false;
     }
 
     /** Mengambil data by user id. */

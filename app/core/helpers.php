@@ -147,6 +147,9 @@ function booking_status_label(array $booking): string
     if (($booking['status'] ?? '') === 'cancelled' && ($booking['status_reason'] ?? '') === BookingLifecycleService::REASON_CANCELLED_BY_ADMIN) {
         return 'Dibatalkan oleh Admin';
     }
+    if (($booking['status'] ?? '') === 'cancelled' && ($booking['status_reason'] ?? '') === BookingLifecycleService::REASON_CONFLICT_NOT_SELECTED) {
+        return 'Ditolak (Jadwal Bentrok)';
+    }
 
     return match ($booking['status'] ?? '') {
         'pending' => 'Menunggu Persetujuan',
@@ -184,6 +187,9 @@ function booking_status_badge(array $booking, string $context = 'web'): string
         if ($status === 'cancelled' && $reason === BookingLifecycleService::REASON_CANCELLED_BY_ADMIN) {
             return '<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">BATAL (ADMIN)</span>';
         }
+        if ($status === 'cancelled' && $reason === BookingLifecycleService::REASON_CONFLICT_NOT_SELECTED) {
+            return '<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">DITOLAK (BENTROK)</span>';
+        }
         return '<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">BATAL</span>';
     }
 
@@ -217,6 +223,12 @@ function booking_status_badge(array $booking, string $context = 'web'): string
         $titleAttr = $safeNotes !== '' ? ' title="' . $safeNotes . '"' : '';
         return '<span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800"' . $titleAttr . '>'
             . '<i class="fas fa-ban text-rose-600"></i> Dibatalkan Admin'
+            . '</span>';
+    }
+    if ($status === 'cancelled' && $reason === BookingLifecycleService::REASON_CONFLICT_NOT_SELECTED) {
+        $titleAttr = $safeNotes !== '' ? ' title="' . $safeNotes . '"' : '';
+        return '<span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-amber-50 text-amber-900 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"' . $titleAttr . '>'
+            . '<i class="fas fa-calendar-xmark text-amber-600"></i> Ditolak (Jadwal Bentrok)'
             . '</span>';
     }
     return '<span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800">'

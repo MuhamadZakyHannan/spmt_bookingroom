@@ -32,6 +32,7 @@
         if (status === 'cancelled' && reason === 'expired') return 'Kedaluwarsa';
         if (status === 'confirmed' && reason === 'relocated_by_admin') return 'Disetujui (Dialihkan)';
         if (status === 'cancelled' && reason === 'cancelled_by_admin') return 'Dibatalkan oleh Admin';
+        if (status === 'cancelled' && reason === 'conflict_not_selected') return 'Ditolak (Jadwal Bentrok)';
         switch (status) {
             case 'pending': return 'Menunggu Persetujuan';
             case 'confirmed': return 'Disetujui';
@@ -89,6 +90,13 @@
             return `
                 <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800"${titleAttr}>
                     <i class="fas fa-ban text-rose-600"></i> Dibatalkan Admin
+                </span>
+            `;
+        }
+        if (status === 'cancelled' && reason === 'conflict_not_selected') {
+            return `
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg border bg-amber-50 text-amber-900 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"${titleAttr}>
+                    <i class="fas fa-calendar-xmark text-amber-600"></i> Ditolak (Jadwal Bentrok)
                 </span>
             `;
         }

@@ -110,6 +110,41 @@ $bookingFormCurrentDocument = $bookingFormCurrentDocument ?? null;
             </div>
         </div>
 
+        <?php if (!empty($bookingFormIsEdit) && !empty($bookingFormIsAdmin) && !empty($bookingFormIsConfirmed)): ?>
+            <?php 
+                $isRoomChanged = ((int) $bookingFormSelectedRoomId !== (int) $bookingFormOriginalRoomId);
+            ?>
+            <div id="<?php echo $bookingFormPrefix; ?>RelocateSection" data-relocate-section class="mt-3.5 p-4 rounded-xl border border-amber-200 dark:border-amber-800/80 bg-amber-50/70 dark:bg-amber-950/30 transition-all duration-200">
+                <div class="flex items-start gap-2.5 mb-2">
+                    <span class="w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center text-xs shrink-0 mt-0.5">
+                        <i class="fas fa-arrows-split-up-and-left"></i>
+                    </span>
+                    <div class="flex-1 min-w-0">
+                        <label for="<?php echo $bookingFormPrefix; ?>RelocateReason" class="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                            Alasan / Keterangan Pemindahan Ruangan 
+                            <span id="<?php echo $bookingFormPrefix; ?>RelocateStar" data-relocate-star class="text-rose-500 <?php echo $isRoomChanged ? '' : 'hidden'; ?> font-bold">*</span>
+                        </label>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5" id="<?php echo $bookingFormPrefix; ?>RelocateHint" data-relocate-hint>
+                            <?php if ($isRoomChanged): ?>
+                                <strong class="text-amber-700 dark:text-amber-300">Perubahan ruangan terdeteksi.</strong> Wajib isi alasan pemindahan agar pemohon menerima informasi mengapa ruangan dipindah.
+                            <?php else: ?>
+                                Wajib diisi jika Anda memindahkan ruangan rapat. Alasan ini akan tampil pada status booking dan dikirimkan sebagai notifikasi kepada pemohon.
+                            <?php endif; ?>
+                        </p>
+                    </div>
+                </div>
+                <textarea
+                    name="relocate_reason"
+                    id="<?php echo $bookingFormPrefix; ?>RelocateReason"
+                    data-relocate-reason
+                    rows="2"
+                    class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-900 border <?php echo $isRoomChanged ? 'border-amber-400 dark:border-amber-600 ring-1 ring-amber-400/30' : 'border-slate-200 dark:border-slate-700'; ?> rounded-xl text-slate-800 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition resize-y"
+                    placeholder="Contoh: Ruangan utama dialihkan karena perbaikan mendadak fasilitas AC / dipakai kegiatan Direksi..."
+                    <?php echo $isRoomChanged ? 'required' : ''; ?>
+                ><?php echo htmlspecialchars($bookingFormRelocateReason ?? ''); ?></textarea>
+            </div>
+        <?php endif; ?>
+
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
             <div>
                 <label for="<?php echo $bookingFormPrefix; ?>Date" class="block text-sm font-bold text-slate-800 dark:text-slate-200 mb-1.5">Tanggal <span class="text-rose-500">*</span></label>

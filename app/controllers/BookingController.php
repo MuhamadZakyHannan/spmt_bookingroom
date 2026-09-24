@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../core/SawService.php';
+require_once __DIR__ . '/../services/BookingLifecycleService.php';
 
 class BookingController extends Controller {
     private $roomModel;
@@ -178,6 +179,10 @@ class BookingController extends Controller {
             $values['activity_type'] = 'internal_divisi';
         }
 
+        $isConfirmed = ($booking['status'] ?? '') === 'confirmed';
+        $oldRoomId = (int) $booking['room_id'];
+        $relocateReason = '';
+
         $error = '';
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $csrfFallback = 'edit_booking.php?id=' . (int) $bookingId;
@@ -192,7 +197,35 @@ class BookingController extends Controller {
                 $error = $documentUpload['error'];
             }
 
+            $newRoomId = (int) $values['room_id'];
+            $isRoomChanged = ($oldRoomId !== $newRoomId);
+            $relocateReason = trim((string) ($_POST['relocate_reason'] ?? ''));
+
+            if ($error === '' && is_admin() && $isConfirmed && $isRoomChanged) {
+                if ($relocateReason === '') {
+                    $error = 'Harap sertakan alasan pemindahan ruangan agar pemohon mengetahui alasan jadwalnya dipindahkan.';
+                }
+            }
+
             if ($error === '') {
+                $oldRoomName = '';
+                $newRoomName = '';
+                if ($isRoomChanged) {
+                    $allRooms = $this->roomModel->getAllRooms();
+                    foreach ($allRooms as $rm) {
+                        if ((int) $rm['id'] === $oldRoomId) $oldRoomName = (string) $rm['name'];
+                        if ((int) $rm['id'] === $newRoomId) $newRoomName = (string) $rm['name'];
+                    }
+                    if ($oldRoomName === '') $oldRoomName = 'Ruangan Asal';
+                    if ($newRoomName === '') $newRoomName = 'Ruangan Baru';
+                }
+
+                if (is_admin() && $isConfirmed && $isRoomChanged) {
+                    $cleanReason = trim($relocateReason);
+                    $values['status_reason'] = BookingLifecycleService::REASON_RELOCATED_BY_ADMIN;
+                    $values['admin_notes'] = 'Ruangan dialihkan dari ' . $oldRoomName . ' ke ' . $newRoomName . '.' . ($cleanReason !== '' ? ' Alasan: ' . $cleanReason : '');
+                }
+
                 $result = $this->bookingModel->updateWithSchedulePolicy(
                     (int) $bookingId,
                     $values,
@@ -215,7 +248,15 @@ class BookingController extends Controller {
                     if (($result['status'] ?? '') === 'pending') {
                         $this->notificationModel->refreshForPendingBooking((int) $bookingId);
                     }
-                    if (!empty($result['pending_conflict']) && ($result['status'] ?? '') === 'confirmed') {
+                    if (!empty($result['is_relocated'])) {
+                        $this->notificationModel->createForRelocatedBooking(
+                            (int) $bookingId,
+                            $oldRoomName,
+                            $newRoomName,
+                            $relocateReason
+                        );
+                        $message = 'Booking berhasil diperbarui dan ruangan dialihkan ke ' . $newRoomName . '. Catatan alasan telah dikirim ke pemohon.';
+                    } elseif (!empty($result['pending_conflict']) && ($result['status'] ?? '') === 'confirmed') {
                         $message = 'Booking terkonfirmasi berhasil diperbarui. Ada pengajuan yang masih menunggu dan beririsan; Administrator perlu meninjau pengajuan tersebut.';
                     } elseif (!empty($result['pending_conflict'])) {
                         $message = 'Booking berhasil diperbarui. Ada pengajuan lain pada jadwal yang sama dan Administrator akan meninjau prioritasnya.';
@@ -248,6 +289,7 @@ class BookingController extends Controller {
             ] : null,
             'return_to' => $returnTo,
             'error' => $error,
+            'relocate_reason' => $relocateReason,
         ]);
     }
 
