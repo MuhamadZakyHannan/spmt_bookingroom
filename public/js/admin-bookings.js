@@ -10,6 +10,8 @@
     let rawBookingsList = Array.isArray(config.initialBookings) ? config.initialBookings : [];
     let currentHash = '';
     let previousPendingCount = parseInt(config.initialPendingCount || 0, 10);
+    let currentConflictsHash = '';
+    let previousConflictsCount = null;
 
     const { escapeHtml, highlightText } = window.MeetSpaceUI || {
         escapeHtml: (str) => String(str).replace(/[&<>'"]/g, tag => ({
@@ -105,7 +107,12 @@
         if (notesContainer && notesEl) {
             if (data.adminNotes) {
                 notesEl.textContent = data.adminNotes;
-                if (data.status === 'cancelled') {
+                if (data.statusReason === 'conflict_not_selected') {
+                    notesLabel.textContent = 'Alasan Penolakan:';
+                    notesContainer.className = 'p-2.5 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-900/60';
+                    notesLabel.className = 'text-[10px] text-amber-700 dark:text-amber-400 block font-bold';
+                    notesEl.className = 'text-xs text-amber-900 dark:text-amber-200 block font-medium mt-0.5 whitespace-pre-wrap';
+                } else if (data.status === 'cancelled') {
                     notesLabel.textContent = 'Alasan Pembatalan dari Admin:';
                     notesContainer.className = 'p-2.5 bg-rose-50 dark:bg-rose-950/40 rounded-xl border border-rose-200 dark:border-rose-900/60';
                     notesLabel.className = 'text-[10px] text-rose-700 dark:text-rose-400 block font-bold';
@@ -169,10 +176,16 @@
      * @returns {void}
      */
     function openRelocateModal(data) {
-        document.getElementById('relocateModalBookingId').value = data.id;
-        document.getElementById('relocateModalTitle').textContent = data.title;
-        document.getElementById('relocateModalInfo').textContent = (data.userName || '') + ' • Ruangan Saat Ini: ' + (data.roomName || '') + ' (' + (data.date || '') + ' ' + (data.time || '') + ')';
-        document.getElementById('relocateModalReason').value = '';
+        const modal = document.getElementById('relocateBookingModal');
+        if (!modal) return;
+        const bookingIdEl = document.getElementById('relocateModalBookingId');
+        if (bookingIdEl) bookingIdEl.value = data.id;
+        const titleEl = document.getElementById('relocateModalTitle');
+        if (titleEl) titleEl.textContent = data.title;
+        const infoEl = document.getElementById('relocateModalInfo');
+        if (infoEl) infoEl.textContent = (data.userName || '') + ' • Ruangan Saat Ini: ' + (data.roomName || '') + ' (' + (data.date || '') + ' ' + (data.time || '') + ')';
+        const reasonEl = document.getElementById('relocateModalReason');
+        if (reasonEl) reasonEl.value = '';
 
         const select = document.getElementById('relocateNewRoomSelect');
         if (select) {
@@ -185,10 +198,12 @@
             }
         }
 
-        const modal = document.getElementById('relocateBookingModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
-        window.setTimeout(() => document.getElementById('relocateModalReason').focus(), 50);
+        window.setTimeout(() => {
+            const rEl = document.getElementById('relocateModalReason');
+            if (rEl) rEl.focus();
+        }, 50);
     }
 
     /**
@@ -197,6 +212,7 @@
      */
     function closeRelocateModal() {
         const modal = document.getElementById('relocateBookingModal');
+        if (!modal) return;
         modal.classList.add('hidden');
         modal.classList.remove('flex');
     }
@@ -524,9 +540,6 @@
                 actionHtml = `
                     <div class="flex items-center justify-center gap-1.5">
                         ${editAction}
-                        <button type="button" onclick="openRelocateModal(${encodedItemPayload})" class="p-1.5 px-2 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 font-bold rounded-lg transition text-xs flex items-center gap-1 cursor-pointer" title="Alihkan / Pindahkan Ruangan">
-                            <i class="fas fa-arrows-split-up-and-left"></i>
-                        </button>
                         <button type="button" onclick="openCancelModal(${encodedItemPayload})" class="p-1.5 px-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-800 font-bold rounded-lg transition text-xs flex items-center gap-1 cursor-pointer" title="Batalkan Pemesanan (Sertakan Catatan Alasan)">
                             <i class="fas fa-ban"></i>
                         </button>
@@ -687,6 +700,58 @@
                 }
             } else if (!currentHash) {
                 rawBookingsList = data.bookings;
+            }
+
+            const allBadge = document.getElementById('tabAllBadge');
+            if (allBadge && typeof data.total === 'number') {
+                allBadge.textContent = data.total;
+            }
+
+            if (typeof data.conflicts_count === 'number') {
+                const badgeEl = document.getElementById('tabConflictsBadge');
+                if (badgeEl) {
+                    if (data.conflicts_count > 0) {
+                        badgeEl.innerHTML = `
+                            <span class="px-2 py-0.5 bg-rose-500 text-white text-[10px] font-extrabold rounded-full animate-bounce shadow-sm">
+                                ${data.conflicts_count} Konflik
+                            </span>
+                        `;
+                    } else {
+                        badgeEl.innerHTML = `
+                            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 text-[10px] font-bold rounded-full">
+                                0
+                            </span>
+                        `;
+                    }
+                }
+            }
+
+            if (data.conflicts_hash && data.conflicts_html) {
+                if (currentConflictsHash && data.conflicts_hash !== currentConflictsHash) {
+                    const tabConflicts = document.getElementById('tabContentConflicts');
+                    if (tabConflicts) {
+                        const isCurrentlyHidden = tabConflicts.classList.contains('hidden');
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = data.conflicts_html;
+                        const newConflictsEl = tempDiv.firstElementChild;
+                        if (newConflictsEl) {
+                            if (isCurrentlyHidden) {
+                                newConflictsEl.classList.add('hidden');
+                            } else {
+                                newConflictsEl.classList.remove('hidden');
+                            }
+                            tabConflicts.replaceWith(newConflictsEl);
+                        }
+                    }
+
+                    if (previousConflictsCount !== null && data.conflicts_count > previousConflictsCount) {
+                        showToast(`⚠️ Terdeteksi ${data.conflicts_count - previousConflictsCount} bentrok jadwal baru yang memerlukan keputusan SAW!`, 'warning');
+                    } else if (previousConflictsCount !== null && data.conflicts_count < previousConflictsCount) {
+                        showToast(`Resolusi konflik jadwal berhasil diperbarui.`, 'success');
+                    }
+                }
+                currentConflictsHash = data.conflicts_hash;
+                previousConflictsCount = data.conflicts_count;
             }
 
             currentHash = data.hash;

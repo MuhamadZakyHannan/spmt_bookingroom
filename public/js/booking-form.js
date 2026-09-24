@@ -70,7 +70,11 @@
             capacityWarning: form.querySelector('[data-booking-capacity-warning]'),
             availabilityMessage: form.querySelector('[data-availability-message]'),
             availabilityLoading: form.querySelector('[data-availability-loading]'),
-            availabilityList: form.querySelector('[data-availability-list]')
+            availabilityList: form.querySelector('[data-availability-list]'),
+            relocateSection: form.querySelector('[data-relocate-section]'),
+            relocateReason: form.querySelector('[data-relocate-reason]'),
+            relocateStar: form.querySelector('[data-relocate-star]'),
+            relocateHint: form.querySelector('[data-relocate-hint]')
         };
     }
 
@@ -99,6 +103,30 @@
         if (elements.roomLocation) elements.roomLocation.textContent = option.dataset.location || '-';
         if (elements.roomFacilities) elements.roomFacilities.textContent = option.dataset.facilities || '-';
         if (elements.roomInfo) elements.roomInfo.classList.remove('hidden');
+
+        const originalRoomId = form.dataset.originalRoomId;
+        if (originalRoomId && elements.relocateReason) {
+            const currentRoomId = elements.room ? elements.room.value : '';
+            const isRoomChanged = Boolean(currentRoomId && String(currentRoomId) !== String(originalRoomId));
+            if (isRoomChanged) {
+                if (elements.relocateStar) elements.relocateStar.classList.remove('hidden');
+                if (elements.relocateHint) {
+                    elements.relocateHint.innerHTML = '<strong class="text-amber-700 dark:text-amber-300">Perubahan ruangan terdeteksi.</strong> Wajib isi alasan pemindahan agar pemohon menerima informasi mengapa ruangan dipindah.';
+                }
+                elements.relocateReason.required = true;
+                elements.relocateReason.classList.add('border-amber-400', 'dark:border-amber-600', 'ring-1', 'ring-amber-400/30');
+                elements.relocateReason.classList.remove('border-slate-200', 'dark:border-slate-700');
+            } else {
+                if (elements.relocateStar) elements.relocateStar.classList.add('hidden');
+                if (elements.relocateHint) {
+                    elements.relocateHint.textContent = 'Wajib diisi jika Anda memindahkan ruangan rapat. Alasan ini akan tampil pada status booking dan dikirimkan sebagai notifikasi kepada pemohon.';
+                }
+                elements.relocateReason.required = false;
+                elements.relocateReason.classList.remove('border-amber-400', 'dark:border-amber-600', 'ring-1', 'ring-amber-400/30');
+                elements.relocateReason.classList.add('border-slate-200', 'dark:border-slate-700');
+            }
+        }
+
         updateCapacity(form);
     }
 
@@ -463,6 +491,16 @@
         if (selectedOption?.dataset.availabilitySelectable === '0' || selectedOption?.disabled) {
             return { valid: false, message: 'Ruangan tidak tersedia untuk jadwal atau jumlah peserta yang dipilih.' };
         }
+
+        const originalRoomId = form.dataset.originalRoomId;
+        if (originalRoomId && elements.relocateReason && elements.room) {
+            const isRoomChanged = Boolean(elements.room.value && String(elements.room.value) !== String(originalRoomId));
+            if (isRoomChanged && !elements.relocateReason.value.trim()) {
+                elements.relocateReason.focus();
+                return { valid: false, message: 'Harap sertakan alasan pemindahan ruangan agar pemohon mengetahui alasannya.' };
+            }
+        }
+
         return validateDocumentInput(documentInput);
     }
 

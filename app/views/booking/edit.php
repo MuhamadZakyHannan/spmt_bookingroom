@@ -45,6 +45,7 @@ $statusClass = $isConfirmed
             data-booking-form
             data-availability-url="api/room_availability.php"
             data-exclude-booking-id="<?php echo (int) $booking['id']; ?>"
+            data-original-room-id="<?php echo (int) $booking['room_id']; ?>"
         >
             <?php echo csrf_field(); ?>
             <input type="hidden" name="booking_id" value="<?php echo (int) $booking['id']; ?>">
@@ -58,6 +59,11 @@ $statusClass = $isConfirmed
             $bookingFormInfoText = $isConfirmed
                 ? 'Booking ini sudah terkonfirmasi. Hanya Administrator yang dapat menyimpan perubahan, dan bentrok dengan jadwal terkonfirmasi lain tetap ditolak.'
                 : 'Status tetap menunggu persetujuan setelah diedit. Jika beririsan dengan pengajuan lain, Administrator akan meninjau dan menentukan prioritasnya.';
+            $bookingFormIsEdit = true;
+            $bookingFormOriginalRoomId = (int) $booking['room_id'];
+            $bookingFormIsAdmin = is_admin();
+            $bookingFormIsConfirmed = $isConfirmed;
+            $bookingFormRelocateReason = $relocate_reason ?? ($values['relocate_reason'] ?? '');
             require __DIR__ . '/_form_fields.php';
             ?>
 

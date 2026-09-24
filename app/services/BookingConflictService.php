@@ -105,9 +105,9 @@ final class BookingConflictService
     }
 
     /**
-     * Menyetujui pemenang dan membatalkan booking lain dalam satu transaksi.
+     * Menyetujui pemenang dan membatalkan booking lain dalam satu transaksi dengan mencatat alasan penolakan.
      */
-    public function resolve(int $winnerId, array $loserIds): bool
+    public function resolve(int $winnerId, array $loserIds, string $rejectionReason = ''): bool
     {
         try {
             $this->db->beginTransaction();
@@ -118,12 +118,15 @@ final class BookingConflictService
 
             if ($loserIds) {
                 $placeholders = implode(',', array_fill(0, count($loserIds), '?'));
+                $defaultReason = 'Pengajuan ditolak karena ada agenda lain yang disetujui.';
+                $cleanNotes = trim($rejectionReason) !== '' ? trim($rejectionReason) : $defaultReason;
                 $losers = $this->db->prepare(
-                    "UPDATE bookings SET status = 'cancelled', status_reason = ?
+                    "UPDATE bookings SET status = 'cancelled', status_reason = ?, admin_notes = ?
                      WHERE id IN ($placeholders)"
                 );
                 $losers->execute(array_merge([
                     BookingLifecycleService::REASON_CONFLICT_NOT_SELECTED,
+                    $cleanNotes,
                 ], $loserIds));
             }
 

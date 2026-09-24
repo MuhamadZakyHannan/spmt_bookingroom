@@ -47,12 +47,28 @@ final class AdminBookingController extends Controller
                 'intval',
                 explode(',', (string) ($_POST['loser_ids'] ?? ''))
             ));
+            $rejectionReason = trim((string) ($_POST['rejection_reason'] ?? ''));
             if ($winnerId > 0) {
-                $success = $this->bookings->resolveConflict($winnerId, $loserIds);
+                if ($rejectionReason === '') {
+                    $winnerBooking = $this->bookings->getById($winnerId);
+                    $winnerTitle = $winnerBooking['title'] ?? '';
+                    $rejectionReason = $winnerTitle !== ''
+                        ? 'Pengajuan ditolak karena ada agenda ' . $winnerTitle
+                        : 'Pengajuan ditolak karena ada agenda lain yang disetujui.';
+                }
+                $success = $this->bookings->resolveConflict($winnerId, $loserIds, $rejectionReason);
+                if ($success) {
+                    $notifModel = $this->model('NotificationModel');
+                    if ($notifModel && !empty($loserIds)) {
+                        foreach ($loserIds as $loserId) {
+                            $notifModel->createForCancelledBooking((int) $loserId, $rejectionReason);
+                        }
+                    }
+                }
                 set_flash(
                     $success ? 'success' : 'danger',
                     $success
-                        ? 'Rekomendasi keputusan berhasil diterapkan. Jadwal terpilih disetujui dan jadwal bentrok lainnya dibatalkan.'
+                        ? 'Rekomendasi keputusan berhasil diterapkan. Jadwal terpilih disetujui, jadwal bentrok lainnya dibatalkan, dan catatan alasan telah disampaikan ke pemohon.'
                         : 'Gagal menerapkan keputusan jadwal.'
                 );
             }

@@ -89,11 +89,12 @@
                     $isCompleted = ($b['status'] === 'completed');
                     $isCancelled = ($b['status'] === 'cancelled');
                     $isCancelledByAdmin = $isCancelled && (($b['status_reason'] ?? '') === 'cancelled_by_admin');
+                    $isConflictNotSelected = $isCancelled && (($b['status_reason'] ?? '') === 'conflict_not_selected');
                     $isRelocated = $isConfirmed && (($b['status_reason'] ?? '') === 'relocated_by_admin');
                     $isExpired = is_booking_expired($b);
                     $purposeText = $b['purpose'] ?: 'Tidak ada catatan agenda tambahan.';
                     $isLong = strlen($purposeText) > 60;
-                    $borderColor = $isExpired ? 'border-l-slate-400' : ($isPending ? 'border-l-amber-500' : ($isRelocated ? 'border-l-amber-500' : ($isConfirmed ? 'border-l-emerald-500' : ($isCompleted ? 'border-l-blue-500' : 'border-l-rose-500'))));
+                    $borderColor = $isExpired ? 'border-l-slate-400' : ($isPending ? 'border-l-amber-500' : ($isRelocated ? 'border-l-amber-500' : ($isConflictNotSelected ? 'border-l-amber-500' : ($isConfirmed ? 'border-l-emerald-500' : ($isCompleted ? 'border-l-blue-500' : 'border-l-rose-500')))));
                 ?>
                 <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700/80 border-l-4 <?php echo $borderColor; ?> shadow-sm p-4 sm:p-5 hover:shadow-md transition <?php echo $isPending ? 'bg-amber-50/20 dark:bg-amber-950/10' : ''; ?>">
                     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -123,6 +124,10 @@
                                 <?php elseif ($isCancelledByAdmin): ?>
                                     <span class="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
                                         <i class="fas fa-ban text-rose-600"></i> Dibatalkan oleh Admin
+                                    </span>
+                                <?php elseif ($isConflictNotSelected): ?>
+                                    <span class="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
+                                        <i class="fas fa-calendar-xmark text-amber-600"></i> Ditolak (Jadwal Bentrok)
                                     </span>
                                 <?php else: ?>
                                     <span class="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
@@ -198,7 +203,15 @@
                             <?php endif; ?>
 
                             <!-- Catatan / Keterangan dari Admin (Pembatalan atau Pengalihan Jadwal) -->
-                            <?php if ($isCancelledByAdmin && !empty($b['admin_notes'])): ?>
+                            <?php if ($isConflictNotSelected && !empty($b['admin_notes'])): ?>
+                                <div class="text-xs text-amber-900 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 p-3 rounded-xl border border-amber-200 dark:border-amber-900 mt-2 flex items-start gap-2.5">
+                                    <i class="fas fa-circle-exclamation text-amber-600 dark:text-amber-400 mt-0.5 shrink-0 text-sm"></i>
+                                    <div>
+                                        <div class="font-bold text-[10px] uppercase tracking-wider text-amber-800 dark:text-amber-300 mb-0.5">Alasan Penolakan:</div>
+                                        <div class="leading-relaxed"><?php echo nl2br(htmlspecialchars($b['admin_notes'])); ?></div>
+                                    </div>
+                                </div>
+                            <?php elseif ($isCancelledByAdmin && !empty($b['admin_notes'])): ?>
                                 <div class="text-xs text-rose-800 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 p-3 rounded-xl border border-rose-200 dark:border-rose-900 mt-2 flex items-start gap-2.5">
                                     <i class="fas fa-circle-exclamation text-rose-600 dark:text-rose-400 mt-0.5 shrink-0 text-sm"></i>
                                     <div>
@@ -359,7 +372,11 @@
 
         if (adminNotesContainer && data.adminNotes && data.adminNotes.trim()) {
             adminNotesText.textContent = data.adminNotes;
-            if (data.statusReason === 'cancelled_by_admin' || data.status === 'cancelled') {
+            if (data.statusReason === 'conflict_not_selected') {
+                adminNotesLabel.textContent = 'Alasan Penolakan:';
+                adminNotesContainer.className = 'p-3.5 rounded-xl border bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900 text-amber-900 dark:text-amber-200';
+                adminNotesLabel.className = 'text-[10px] font-bold uppercase tracking-wider mb-1 text-amber-800 dark:text-amber-300';
+            } else if (data.statusReason === 'cancelled_by_admin' || data.status === 'cancelled') {
                 adminNotesLabel.textContent = 'Alasan Pembatalan dari Admin:';
                 adminNotesContainer.className = 'p-3.5 rounded-xl border bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-200';
                 adminNotesLabel.className = 'text-[10px] font-bold uppercase tracking-wider mb-1 text-rose-700 dark:text-rose-300';
@@ -561,10 +578,11 @@
             const isCompleted = (b.status === 'completed');
             const isCancelled = (b.status === 'cancelled');
             const isCancelledByAdmin = isCancelled && (b.status_reason === 'cancelled_by_admin');
+            const isConflictNotSelected = isCancelled && (b.status_reason === 'conflict_not_selected');
             const isRelocated = isConfirmed && (b.status_reason === 'relocated_by_admin');
             const isExpired = isCancelled && b.status_reason === 'expired';
 
-            const borderColor = isExpired ? 'border-l-slate-400' : (isPending ? 'border-l-amber-500' : (isRelocated ? 'border-l-amber-500' : (isConfirmed ? 'border-l-emerald-500' : (isCompleted ? 'border-l-blue-500' : 'border-l-rose-500'))));
+            const borderColor = isExpired ? 'border-l-slate-400' : (isPending ? 'border-l-amber-500' : (isRelocated ? 'border-l-amber-500' : (isConflictNotSelected ? 'border-l-amber-500' : (isConfirmed ? 'border-l-emerald-500' : (isCompleted ? 'border-l-blue-500' : 'border-l-rose-500')))));
             const bgClass = isPending ? 'bg-amber-50/20 dark:bg-amber-950/10' : '';
 
             let badgeHtml = '';
@@ -604,6 +622,12 @@
                         <i class="fas fa-ban text-rose-600"></i> Dibatalkan oleh Admin
                     </span>
                 `;
+            } else if (isConflictNotSelected) {
+                badgeHtml = `
+                    <span class="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
+                        <i class="fas fa-calendar-xmark text-amber-600"></i> Ditolak (Jadwal Bentrok)
+                    </span>
+                `;
             } else {
                 badgeHtml = `
                     <span class="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800 rounded-lg font-bold text-[10px] uppercase flex items-center gap-1">
@@ -639,7 +663,17 @@
             ` : '';
 
             let adminNotesHtml = '';
-            if (isCancelledByAdmin && b.admin_notes) {
+            if (isConflictNotSelected && b.admin_notes) {
+                adminNotesHtml = `
+                    <div class="text-xs text-amber-900 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/40 p-3 rounded-xl border border-amber-200 dark:border-amber-900 mt-2 flex items-start gap-2.5">
+                        <i class="fas fa-circle-exclamation text-amber-600 dark:text-amber-400 mt-0.5 shrink-0 text-sm"></i>
+                        <div>
+                            <div class="font-bold text-[10px] uppercase tracking-wider text-amber-800 dark:text-amber-300 mb-0.5">Alasan Penolakan:</div>
+                            <div class="leading-relaxed">${escapeHtml(b.admin_notes).replace(/\n/g, '<br>')}</div>
+                        </div>
+                    </div>
+                `;
+            } else if (isCancelledByAdmin && b.admin_notes) {
                 adminNotesHtml = `
                     <div class="text-xs text-rose-800 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 p-3 rounded-xl border border-rose-200 dark:border-rose-900 mt-2 flex items-start gap-2.5">
                         <i class="fas fa-circle-exclamation text-rose-600 dark:text-rose-400 mt-0.5 shrink-0 text-sm"></i>

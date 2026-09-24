@@ -272,7 +272,7 @@
                 </div>
 
                 <!-- Winner Decision Action Bar -->
-                <div class="p-4 sm:p-5 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 dark:from-emerald-950/40 dark:via-teal-950/30 dark:to-emerald-950/40 border-t border-emerald-200 dark:border-emerald-800 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="p-4 sm:p-5 bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 dark:from-emerald-950/40 dark:via-teal-950/30 dark:to-emerald-950/40 border-t border-emerald-200 dark:border-emerald-800 flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 bg-emerald-600 text-white rounded-xl flex items-center justify-center text-lg font-bold shadow-md shadow-emerald-600/30 shrink-0">
                             <i class="fas fa-award"></i>
@@ -288,14 +288,27 @@
                         </div>
                     </div>
 
-                    <form method="POST" action="admin_bookings.php" onsubmit="return confirm('Terapkan keputusan rekomendasi SAW?\n\n- Alternatif <?php echo $winner['code']; ?> (<?php echo addslashes($winner['booking']['title']); ?>) akan DISETUJUI (Confirmed).\n- Jadwal bentrok lainnya akan DIBATALKAN otomatis.')">
+                    <?php 
+                        $defaultRejectionReason = "Pengajuan ditolak karena ada agenda " . $winner['booking']['title'];
+                    ?>
+                    <form method="POST" action="admin_bookings.php" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full xl:w-auto" onsubmit="return confirm('Terapkan keputusan rekomendasi SAW?\n\n- Alternatif <?php echo $winner['code']; ?> (<?php echo addslashes($winner['booking']['title']); ?>) akan DISETUJUI (Confirmed).\n- Jadwal bentrok lainnya akan DIBATALKAN otomatis dengan catatan alasan penolakan.')">
                         <?php echo csrf_field(); ?>
                         <input type="hidden" name="action" value="apply_saw_decision">
                         <input type="hidden" name="winner_id" value="<?php echo $winner['booking_id']; ?>">
                         <input type="hidden" name="loser_ids" value="<?php echo implode(',', $loserIds); ?>">
-                        <button type="submit" class="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer">
+                        <div class="relative flex-grow sm:w-80">
+                            <input 
+                                type="text" 
+                                name="rejection_reason" 
+                                value="<?php echo htmlspecialchars($defaultRejectionReason); ?>" 
+                                placeholder="Alasan penolakan pengajuan lain..." 
+                                class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-emerald-300 dark:border-emerald-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm"
+                                title="Catatan alasan ini akan dikirimkan kepada pemohon jadwal lain yang tidak terpilih"
+                            >
+                        </div>
+                        <button type="submit" class="shrink-0 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2 cursor-pointer">
                             <i class="fas fa-check-double"></i>
-                            <span>Terapkan Rekomendasi SAW (Setujui <?php echo $winner['code']; ?>)</span>
+                            <span>Terapkan Rekomendasi (Setujui <?php echo $winner['code']; ?>)</span>
                         </button>
                     </form>
                 </div>

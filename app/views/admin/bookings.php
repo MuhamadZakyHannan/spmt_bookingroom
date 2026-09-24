@@ -43,15 +43,17 @@
     >
         <i class="fas fa-balance-scale <?php echo $hasConflicts ? 'text-amber-500 animate-pulse' : ''; ?>"></i>
         <span>Konflik Jadwal & SPK SAW</span>
-        <?php if ($hasConflicts): ?>
-            <span class="px-2 py-0.5 bg-rose-500 text-white text-[10px] font-extrabold rounded-full animate-bounce shadow-sm">
-                <?php echo $conflictCount; ?> Konflik
-            </span>
-        <?php else: ?>
-            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 text-[10px] font-bold rounded-full">
-                0
-            </span>
-        <?php endif; ?>
+        <span id="tabConflictsBadge">
+            <?php if ($hasConflicts): ?>
+                <span class="px-2 py-0.5 bg-rose-500 text-white text-[10px] font-extrabold rounded-full animate-bounce shadow-sm">
+                    <?php echo $conflictCount; ?> Konflik
+                </span>
+            <?php else: ?>
+                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 text-[10px] font-bold rounded-full">
+                    0
+                </span>
+            <?php endif; ?>
+        </span>
     </button>
 
     <!-- Tab 2: Semua Booking (Reguler) -->
@@ -63,7 +65,7 @@
     >
         <i class="fas fa-list"></i>
         <span>Semua Pemesanan (Reguler)</span>
-        <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold rounded-full">
+        <span id="tabAllBadge" class="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-bold rounded-full">
             <?php echo count($bookings); ?>
         </span>
     </button>
